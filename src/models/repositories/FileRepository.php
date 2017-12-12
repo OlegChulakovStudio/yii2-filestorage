@@ -8,16 +8,16 @@
 
 namespace chulakov\filestorage\models\repositories;
 
-use chulakov\filestorage\models\File;
+use chulakov\filestorage\models\BaseFile;
 
 class FileRepository
 {
     /**
-     * @param File $file
+     * @param BaseFile $file
      * @return bool
      * @throws \Exception
      */
-    public function save(File $file)
+    public function save(BaseFile $file)
     {
         if (!$file->save()) {
             throw new \Exception('Модель file не сохранена.');

@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\models\services;
 
+use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\repositories\FileRepository;
 use chulakov\filestorage\models\File;
 use yii\web\UploadedFile;
@@ -28,9 +29,21 @@ class FileService
      * @return File|null
      * @throws \Exception
      */
-    public function create(UploadedFile $uploadedFile, array $config = [])
+    public function createFile(UploadedFile $uploadedFile, array $config = [])
     {
         $file = new File($uploadedFile, $config);
+        return $this->repository->save($file) ? $file : null;
+    }
+
+    /**
+     * @param UploadedFile $uploadedFile
+     * @param array $config
+     * @return Image|null
+     * @throws \Exception
+     */
+    public function createImage(UploadedFile $uploadedFile, array $config = [])
+    {
+        $file = new Image($uploadedFile, $config);
         return $this->repository->save($file) ? $file : null;
     }
 
