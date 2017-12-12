@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл класса UploadParams.php
+ * Файл класса UploadParams
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -11,15 +11,11 @@ namespace chulakov\filestorage;
 class UploadParams
 {
     public $group_code;
-    public $object_id;
-    public $save;
+    public $object_id = null;
+    public $save = false;
 
-    public function __construct(array $config = [])
+    public function __construct($group = 'default')
     {
-        list(
-            $this->group_code,
-            $this->object_id,
-            $this->save,
-            ) = $config;
+        $this->group_code = $group;
     }
 }
