@@ -29,12 +29,10 @@ abstract class BaseFile extends \yii\db\ActiveRecord
      *
      * Группы:
      *
-     * GROUP_FILE - файлы
-     * GROUP_IMAGE - картинки
+     * GROUP_DEFAULT - default группа. Базовая группа для хранения данных.
      */
 
-    const GROUP_FILE = 1;
-    const GROUP_IMAGE = 10;
+    const GROUP_DEFAULT = 10;
 
     /**
      * Загруженный файл
