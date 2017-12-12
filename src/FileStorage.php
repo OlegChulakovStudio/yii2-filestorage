@@ -10,11 +10,14 @@ namespace chulakov\filestorage;
 
 use Yii;
 use yii\base\Component;
+use yii\base\Exception;
 use yii\base\InvalidConfigException;
+use yii\base\UnknownClassException;
 use yii\helpers\FileHelper;
 use yii\helpers\Url;
 use yii\web\UploadedFile;
 use chulakov\filestorage\models\File;
+use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\models\services\FileService;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 
@@ -26,25 +29,135 @@ class FileStorage extends Component
      * @var string|false
      */
     public $storageBaseUrl = false;
-
     /**
      * Базовый путь к доступной из web директории,
      * в которой будет размещаться директория для хранения файлов [[$storageDir]]
      * @var string
      */
     public $storagePath = '@webroot';
-
     /**
      * Наименование директории для хранения файлов
      * @var string
      */
     public $storageDir = 'upload';
+    /**
+     * @var string
+     */
+    public $storagePattern = '{group}/{id}';
+    /**
+     * Если заданы права, то после создания файла они будут принудительно назначены
+     *
+     * @var number|null
+     */
+    public $fileMode;
 
     /**
-     * Файл, для которого производится вычисление путей
-     * @var File|null
+     * @var FileService
      */
-    protected $fileModel;
+    protected $service;
+
+    /**
+     * Конструктор с зависимостью от сервиса
+     *
+     * @param FileService $service
+     * @param array $config
+     */
+    public function __construct(FileService $service, array $config = [])
+    {
+        $this->service = $service;
+        parent::__construct($config);
+    }
+
+    /**
+     * Загрузка файл
+     *
+     * @param UploadInterface|UploadInterface[] $files
+     * @param UploadParams $params
+     * @return mixed
+     * @throws UnknownClassException
+     * @throws NotUploadFileException
+     * @throws \Exception
+     */
+    public function uploadFile($files, UploadParams $params)
+    {
+        if (!is_array($files)) {
+            return $this->saveFile($files, $params);
+        }
+
+        $result = [];
+        foreach ($files as $file) {
+            try {
+                $result[] = $this->saveFile($file, $params);
+            } catch (\Exception $e) {
+                foreach ($result as $item) {
+                    $item->delete();
+                }
+                throw $e;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * @param UploadInterface $file
+     * @param UploadParams $params
+     * @return File|null
+     * @throws UnknownClassException
+     * @throws NotUploadFileException
+     */
+    protected function saveFile(UploadInterface $file, UploadParams $params)
+    {
+        $path = $this->getSavePath($params);
+        $name = $this->getSaveName($file->getExtension());
+
+        if (!$this->checkPath($path)) {
+            throw new NotUploadFileException('Нет доступа к каталогу для сохранения файла.');
+        }
+
+        $full = $path . '/' . $name;
+        $file->saveAs(Yii::getAlias($this->storagePath) . '/' . $full);
+
+        $model = $this->service->createFile($file, $params);
+        $model->sys_file = $full;
+        if (!$model->save()) {
+            throw new NotUploadFileException('Не удалось сохранить данные о файле: ' . $file->getBaseName());
+        }
+
+        return $model;
+    }
+
+    protected function getSavePath(UploadParams $params)
+    {
+        return implode('/', array_filter([
+            $this->storageDir, strtr($this->storagePattern, [
+                '{id}' => $params->object_id,
+                '{group}' => $params->group_code,
+            ])
+        ]));
+    }
+
+    protected function getSaveName($ext)
+    {
+        return implode('.', array_filter([uniqid(), $ext]));
+    }
+
+    /**
+     * Сохранение файла
+     *
+     * @return boolean
+     */
+    protected function checkPath($path)
+    {
+        $full = Yii::getAlias($this->storagePath) . '/' . $path;
+        if (!is_dir($full)) {
+            try {
+                return FileHelper::createDirectory($full, $this->fileMode);
+            } catch (Exception $e) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * Проверка файла на изображение
@@ -184,88 +297,6 @@ class FileStorage extends Component
     public function getFile()
     {
         return $this->fileModel;
-    }
-
-    /**
-     * Загрузить файл
-     *
-     * @param UploadedFile $file
-     * @param UploadParams $uploadParams
-     * @return bool
-     * @throws InvalidConfigException
-     * @throws NotUploadFileException
-     * @throws \Exception
-     * @throws \yii\base\Exception
-     */
-    public function uploadFile(UploadedFile $file, UploadParams $uploadParams)
-    {
-        /** @var FileService $fileService */
-        $fileService = Yii::createObject(FileService::class);
-
-        $this->fileModel = $fileService->createFile($file, [
-            'group_code' => $uploadParams->group_code,
-            'object_id' => $uploadParams->object_id
-        ]);
-
-        //TODO: упростить функции uploadFile и uploadImage
-
-        if ($uploadParams->save && !$this->saveFile()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Загрузить изображение
-     *
-     * @param UploadedFile $file
-     * @param UploadParams $uploadParams
-     * @return bool
-     * @throws InvalidConfigException
-     * @throws NotUploadFileException
-     * @throws \Exception
-     * @throws \yii\base\Exception
-     */
-    public function uploadImage(UploadedFile $file, UploadParams $uploadParams)
-    {
-        /** @var FileService $fileService */
-        $fileService = Yii::createObject(FileService::class);
-
-        $this->fileModel = $fileService->createImage($file, [
-            'group_code' => $uploadParams->group_code,
-            'object_id' => $uploadParams->object_id
-        ]);
-
-        //TODO: упростить функции uploadFile и uploadImage
-
-        if ($uploadParams->save && !$this->saveFile()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Сохранение файла
-     *
-     * @return bool
-     * @throws \yii\base\Exception
-     * @throws NotUploadFileException
-     */
-    protected function saveFile()
-    {
-        if (!$this->fileModel) {
-            throw new NotUploadFileException('Файл не был загружен.');
-        }
-
-        if (!$this->touchUploadDir()) {
-            return false;
-        }
-
-        return $this->fileModel->file->saveAs(
-            $this->getFilePath()
-        );
     }
 
     /**
