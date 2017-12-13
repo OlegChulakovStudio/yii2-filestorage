@@ -31,10 +31,6 @@ class FileUploadBehavior extends Behavior
      */
     public $group = 'default';
     /**
-     * @var bool
-     */
-    public $save = false;
-    /**
      * @var string|UploadInterface
      */
     public $repository;
@@ -117,9 +113,8 @@ class FileUploadBehavior extends Behavior
             throw new NotUploadFileException('Нет файлов для сохранения.');
         }
         $params = new UploadParams($this->group);
-        $params->save = $this->save;
-        if (method_exists($this->owner, 'getId')) {
-            $params = $this->owner->getId();
+        if (method_exists($this->owner, 'getPrimaryKey')) {
+            $params = $this->owner->getPrimaryKey();
         }
         return $this->storage->uploadFile($files, $params);
     }
