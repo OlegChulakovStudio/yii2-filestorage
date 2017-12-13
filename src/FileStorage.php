@@ -17,7 +17,7 @@ use yii\helpers\FileHelper;
 use yii\helpers\Url;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\UploadInterface;
-use chulakov\filestorage\models\services\FileService;
+use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 
 class FileStorage extends Component

@@ -6,7 +6,7 @@
  * @link http://chulakov.com/
  */
 
-namespace chulakov\filestorage\models\services;
+namespace chulakov\filestorage\services;
 
 use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\File;
