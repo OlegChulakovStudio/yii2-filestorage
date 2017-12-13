@@ -6,7 +6,7 @@
  * @link http://chulakov.com/
  */
 
-namespace chulakov\filestorage\models\behaviors;
+namespace chulakov\filestorage\behaviors;
 
 use yii\di\Instance;
 use yii\base\Model;

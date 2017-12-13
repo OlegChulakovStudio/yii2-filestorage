@@ -6,7 +6,7 @@
  * @link http://chulakov.com/
  */
 
-namespace chulakov\filestorage\models\behaviors;
+namespace chulakov\filestorage\behaviors;
 
 class FilesUploadBehavior extends FileUploadBehavior
 {
