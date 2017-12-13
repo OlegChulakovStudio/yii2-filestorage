@@ -131,6 +131,7 @@ class FileStorage extends Component
      * @param UploadParams $params
      * @return BaseFile|null
      * @throws NotUploadFileException
+     * @throws \Exception
      */
     protected function saveFile(UploadInterface $file, UploadParams $params)
     {
@@ -140,10 +141,10 @@ class FileStorage extends Component
         $full = $this->getAbsolutePath($path);
 
         // Сохранение файла и создание модели с данными о файле
-        $file->saveAs($full . DIRECTORY_SEPARATOR .$name);
+        $file->saveAs($full . DIRECTORY_SEPARATOR . $name);
         if ($model = $this->createModel($file, $params)) {
             $model->setSystemFile($name, $path);
-            if ($model->save()) {
+            if ($this->service->save($model)) {
                 return $model;
             }
         }
