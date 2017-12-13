@@ -33,4 +33,25 @@ abstract class BaseFile extends ActiveRecord
             TimestampBehavior::className(),
         ];
     }
+
+    /**
+     * Установка системного пути до сохраненого файла
+     *
+     * @param string $name
+     * @param string|null $path
+     */
+    public function setSystemFile($name, $path = null)
+    {
+        $this->sys_file = implode('/', array_filter([$path, $name]));
+    }
+
+    /**
+     * Проверка файла на изображение
+     *
+     * @return bool
+     */
+    public function isImage()
+    {
+        return strpos($this->mime, 'image') === 0;
+    }
 }
