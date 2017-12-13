@@ -12,7 +12,6 @@ class UploadParams
 {
     public $group_code;
     public $object_id = null;
-    public $save = false;
 
     public function __construct($group = 'default')
     {
