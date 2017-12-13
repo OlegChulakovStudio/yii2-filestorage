@@ -19,6 +19,7 @@ use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\exceptions\NotUploadFileException;
+use chulakov\filestorage\exceptions\NotFoundFileException;
 
 class FileStorage extends Component
 {
@@ -258,9 +259,11 @@ class FileStorage extends Component
      */
     public function getUploadPath($model)
     {
-        return FileHelper::normalizePath(
-            Yii::getAlias($this->storagePath) . DIRECTORY_SEPARATOR . dirname($model->sys_file)
-        );
+        $params = $this->getParamsFromModel($model);
+        $path = FileHelper::normalizePath(implode(DIRECTORY_SEPARATOR, [
+            Yii::getAlias($this->storagePath), $this->getSavePath($params)
+        ]));
+        return $path;
     }
 
     /**
@@ -272,13 +275,8 @@ class FileStorage extends Component
      */
     public function getUploadUrl($model, $isAbsolute = false)
     {
-        $url = '/' . str_replace('\\', '/', dirname($model->sys_file));
-        if ($this->storageBaseUrl !== false) {
-            $url = Url::to($this->storageBaseUrl . $url, true);
-        } elseif ($isAbsolute) {
-            $url = Url::base(true) . $url;
-        }
-        return $url;
+        $path = $this->getSavePath($this->getParamsFromModel($model));
+        return $this->convertToUrl($path, $isAbsolute);
     }
 
     /**
@@ -286,10 +284,17 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @return string
+     * @throws NotFoundFileException
      */
     public function getFilePath($model)
     {
-        return $this->getUploadPath($model) . DIRECTORY_SEPARATOR . basename($model->sys_file);
+        if ($path = $this->checkSystemPath($model)) {
+            return $path;
+        }
+        if ($path = $this->checkMovedPath($model)) {
+            return $path;
+        }
+        throw new NotFoundFileException('Не удалось найти файл :'  . basename($model->sys_file));
     }
 
     /**
@@ -301,6 +306,87 @@ class FileStorage extends Component
      */
     public function getFileUrl($model, $isAbsolute = false)
     {
-        return $this->getUploadUrl($model, $isAbsolute) . '/' . basename($model->sys_file);
+        if ($this->checkSystemPath($model)) {
+            return $this->convertToUrl($model->sys_file, $isAbsolute);
+        }
+        $baseName = '/' . basename($model->sys_file);
+        if ($this->checkMovedPath($model)) {
+            return $this->getUploadUrl($model, $isAbsolute) . $baseName;
+        }
+        return $this->convertToUrl($baseName, $isAbsolute);
+    }
+
+    /**
+     * Проверка системного расположения файла
+     *
+     * @param BaseFile $model
+     * @return string|null
+     */
+    protected function checkSystemPath($model)
+    {
+        return $this->checkExistFile(implode(DIRECTORY_SEPARATOR, [
+            Yii::getAlias($this->storagePath), $model->sys_file
+        ]));
+    }
+
+    /**
+     * Проверка возможного перемещения файлов по новому шаблону
+     *
+     * @param BaseFile $model
+     * @return string|null
+     */
+    protected function checkMovedPath($model)
+    {
+        return $this->checkExistFile(implode(DIRECTORY_SEPARATOR, [
+            $this->getUploadPath($model), basename($model->sys_file)
+        ]));
+    }
+
+    /**
+     * Проверка существования файла
+     *
+     * @param string $path
+     * @return string|null
+     */
+    protected function checkExistFile($path)
+    {
+        $path = FileHelper::normalizePath($path);
+        if (is_file($path)) {
+            return $path;
+        }
+        return null;
+    }
+
+    /**
+     * Получение параметров пути из модели
+     *
+     * @param BaseFile $model
+     * @return UploadParams
+     */
+    protected function getParamsFromModel($model)
+    {
+        $params = new UploadParams($model->group_code);
+        if ($model->object_id) {
+            $params->object_id = $model->object_id;
+        }
+        return $params;
+    }
+
+    /**
+     * Добавление в URL адрес исходной точки
+     *
+     * @param string $path
+     * @param bool $isAbsolute
+     * @return string
+     */
+    protected function convertToUrl($path, $isAbsolute = false)
+    {
+        $url = '/' . trim(str_replace('\\', '/', $path), '/');
+        if ($this->storageBaseUrl !== false) {
+            $url = Url::to($this->storageBaseUrl . $url, true);
+        } elseif ($isAbsolute) {
+            $url = Url::base(true) . $url;
+        }
+        return $url;
     }
 }
