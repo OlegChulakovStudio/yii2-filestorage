@@ -23,12 +23,19 @@ class FileService
      */
     protected $repository;
 
+    /**
+     * Конструктор с внедрением зависимости
+     *
+     * @param FileRepository $repository
+     */
     public function __construct(FileRepository $repository)
     {
         $this->repository = $repository;
     }
 
     /**
+     * Создание и заполнение модели файла
+     *
      * @param UploadInterface $uploadedFile
      * @param UploadParams $params
      * @return File|null
@@ -40,6 +47,8 @@ class FileService
     }
 
     /**
+     * Создание и заполнение модели изображения
+     *
      * @param UploadInterface $uploadedFile
      * @param UploadParams $params
      * @return Image|null
@@ -51,7 +60,21 @@ class FileService
     }
 
     /**
-     * @param $class
+     * Сохранение модели через репохиторий
+     *
+     * @param BaseFile $model
+     * @return bool
+     * @throws \Exception
+     */
+    public function save($model)
+    {
+        return $this->repository->save($model);
+    }
+
+    /**
+     * Создание и заполнение файла с учетом его типа
+     *
+     * @param string $class
      * @param UploadInterface $file
      * @param UploadParams $params
      * @return mixed
@@ -73,15 +96,5 @@ class FileService
         $model->size = $file->getSize();
 
         return $model;
-    }
-
-    public function update()
-    {
-
-    }
-
-    public function delete()
-    {
-
     }
 }
