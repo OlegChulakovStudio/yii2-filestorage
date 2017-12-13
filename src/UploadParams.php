@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл класса UploadParams.php
+ * Файл класса UploadParams
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -10,16 +10,22 @@ namespace chulakov\filestorage;
 
 class UploadParams
 {
+    /**
+     * @var string Категория файла
+     */
     public $group_code;
-    public $object_id;
-    public $save;
+    /**
+     * @var integer Идентификатор родительской модели
+     */
+    public $object_id = null;
 
-    public function __construct(array $config = [])
+    /**
+     * Базовый конструктор параметров генерации пути
+     *
+     * @param string $group
+     */
+    public function __construct($group = 'default')
     {
-        list(
-            $this->group_code,
-            $this->object_id,
-            $this->save,
-            ) = $config;
+        $this->group_code = $group;
     }
 }
