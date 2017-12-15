@@ -21,6 +21,7 @@ use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 use chulakov\filestorage\exceptions\NotFoundFileException;
+use yii\rbac\Item;
 
 class FileStorage extends Component
 {
@@ -131,24 +132,25 @@ class FileStorage extends Component
     }
 
     /**
-     * @param $role
+     * Проверка прав доступа к файлу
+     *
+     * @param Item $role
+     * @param BaseFile $model
      * @return bool
      * @throws NoAccessException
      */
-    protected function canAccess($role, $model = null)
+    protected function canAccess($role = null, $model = null)
     {
         if (empty($role)) {
             return true;
         }
 
-        if ($model) {
-            if (\Yii::$app->user->can($role, $model)) {
-                return true;
-            }
-        } else {
-            if (\Yii::$app->user->can($role)) {
-                return true;
-            }
+        $params = [];
+        if (!is_null($model)) {
+            $params['file'] = $model;
+        }
+        if (\Yii::$app->user->can($role, $params)) {
+            return true;
         }
 
         throw new NoAccessException('Нет прав доступа не сохранение файла.');
@@ -312,13 +314,13 @@ class FileStorage extends Component
     /**
      * Возвращает полный путь к файлу в файловой системе
      *
-     * @param $model
-     * @param $role
-     * @return null|string
+     * @param BaseFile $model
+     * @param Item $role
+     * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    public function getFilePath($model, $role)
+    public function getFilePath($model, $role = null)
     {
         $this->canAccess($role, $model);
 
@@ -334,13 +336,13 @@ class FileStorage extends Component
     /**
      * Возвращает абсолютный или относительный URL-адрес к файлу
      *
-     * @param $model
-     * @param $role
+     * @param BaseFile $model
      * @param bool $isAbsolute
+     * @param Item $role
      * @return string
      * @throws NoAccessException
      */
-    public function getFileUrl($model, $role, $isAbsolute = false)
+    public function getFileUrl($model, $isAbsolute = false, $role = null)
     {
         $this->canAccess($role, $model);
 
