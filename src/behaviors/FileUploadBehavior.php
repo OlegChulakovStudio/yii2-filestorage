@@ -76,13 +76,7 @@ class FileUploadBehavior extends Behavior
         }
         $files = $this->getInstances();
         if (!empty($this->uploadOptions)) {
-            if (is_array($files)) {
-                foreach ($files as $file) {
-                    \Yii::configure($file, $this->uploadOptions);
-                }
-            } else {
-                \Yii::configure($files, $this->uploadOptions);
-            }
+            $this->configureInstances($files);
         }
         if ($this->isInstances($files)) {
             $this->owner->{$this->attribute} = $files;
@@ -113,6 +107,16 @@ class FileUploadBehavior extends Behavior
             $file = $repository::getInstanceByName($this->attribute);
         }
         return $file;
+    }
+
+    /**
+     * Конфигурация загруженного файла
+     *
+     * @param UploadInterface $file
+     */
+    protected function configureInstances($file)
+    {
+        \Yii::configure($file, $this->uploadOptions);
     }
 
     /**
