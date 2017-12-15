@@ -38,6 +38,10 @@ class FileUploadBehavior extends Behavior
      * @var string|FileStorage
      */
     public $storage;
+    /**
+     * @var array
+     */
+    public $uploadOptions;
 
     /**
      * @throws \yii\base\InvalidConfigException
@@ -67,6 +71,15 @@ class FileUploadBehavior extends Behavior
             return;
         }
         $files = $this->getInstances();
+        if (!empty($this->uploadOptions)) {
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    \Yii::configure($file, $this->uploadOptions);
+                }
+            } else {
+                \Yii::configure($files, $this->uploadOptions);
+            }
+        }
         if ($this->isInstances($files)) {
             $this->owner->{$this->attribute} = $files;
         }
