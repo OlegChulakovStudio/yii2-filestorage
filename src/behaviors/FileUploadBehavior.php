@@ -42,6 +42,10 @@ class FileUploadBehavior extends Behavior
      * @var array
      */
     public $uploadOptions;
+    /**
+     * @var string
+     */
+    public $accessRole;
 
     /**
      * @throws \yii\base\InvalidConfigException
@@ -117,6 +121,7 @@ class FileUploadBehavior extends Behavior
      * @return mixed
      * @throws NotUploadFileException
      * @throws \Exception
+     * @throws \chulakov\filestorage\exceptions\NoAccessException
      */
     public function upload()
     {
@@ -126,8 +131,9 @@ class FileUploadBehavior extends Behavior
             throw new NotUploadFileException('Нет файлов для сохранения.');
         }
         $params = new UploadParams($this->group);
+        $params->accessRole = $this->accessRole;
         if (method_exists($this->owner, 'getPrimaryKey')) {
-            $params = $this->owner->getPrimaryKey();
+            $params->object_id = $this->owner->getPrimaryKey();
         }
         return $this->storage->uploadFile($files, $params);
     }
