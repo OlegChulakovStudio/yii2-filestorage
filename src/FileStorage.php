@@ -98,14 +98,15 @@ class FileStorage extends Component
     }
 
     /**
-     * Загрузка файл
+     * Загрузка файла
      *
-     * @param UploadInterface|UploadInterface[] $files
+     * @param $files
      * @param UploadParams $params
-     * @return mixed
+     * @return array|BaseFile|null
+     * @throws NoAccessException
      * @throws NotUploadFileException
      * @throws \Exception
-     * @throws NoAccessException
+     * @throws \Throwable
      */
     public function uploadFile($files, UploadParams $params)
     {
@@ -139,11 +140,17 @@ class FileStorage extends Component
         if (empty($role)) {
             return true;
         }
-        if ($model && \Yii::$app->user->can($role, $model)) {
-            return true;
-        } elseif (\Yii::$app->user->can($role)) {
-            return true;
+
+        if ($model) {
+            if (\Yii::$app->user->can($role, $model)) {
+                return true;
+            }
+        } else {
+            if (\Yii::$app->user->can($role)) {
+                return true;
+            }
         }
+
         throw new NoAccessException('Нет прав доступа не сохранение файла.');
     }
 
