@@ -73,12 +73,19 @@ class RemoteUploadedFile implements UploadInterface
     /**
      * Инициализация массива моделей по имени атрибута
      *
-     * @param string $name
-     * @return mixed
+     * @param string $names
+     * @return array
      */
-    public static function getInstancesByName($name)
+    public static function getInstancesByName($names)
     {
-        // TODO: Implement getInstancesByName() method.
+        if (!is_array($names)) {
+            return [new static($names)];
+        }
+        $result = [];
+        foreach ($names as $item) {
+            $result[] = new static($item);
+        }
+        return $result;
     }
 
     /**
@@ -91,36 +98,36 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function saveAs($file, $deleteTempFile = true)
     {
-        $this->content = $this->getFileContent($this->link);
         $this->savedPath = $file;
-        return $this->putFileContent($file);
+        $this->getFileContent();
+        return $this->putFileContent();
     }
 
     /**
      * Получение бинарных данных файла по ссылке
      *
-     * @param $link
-     * @return bool|string
+     * @return string
      * @throws NotUploadFileException
      */
-    protected function getFileContent($link)
+    protected function getFileContent()
     {
-        $content = file_get_contents($link);
-        if (!$content) {
-            throw new NotUploadFileException('Ошибка чтения контента. Ссылка: ' . $link);
+        if (empty($this->content)) {
+            $this->content = file_get_contents($this->link);
+            if ($this->content === false) {
+                throw new NotUploadFileException('Ошибка чтения контента по ссылке: ' . $this->link);
+            }
         }
-        return $content;
+        return $this->content;
     }
 
     /**
      * Запись бинарных данных в файл
      *
-     * @param $path
      * @return bool
      */
-    protected function putFileContent($path)
+    protected function putFileContent()
     {
-        return file_put_contents($path, $this->content);
+        return file_put_contents($this->savedPath, $this->content);
     }
 
     /**
@@ -140,7 +147,7 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getExtension()
     {
-        $items = explode('.', basename($this->link));
+        $items = explode('.', $this->getBaseName());
         return array_pop($items);
     }
 
@@ -157,15 +164,7 @@ class RemoteUploadedFile implements UploadInterface
         if (function_exists('finfo_buffer')) {
             return finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $this->content);
         }
-
-        $filePath = \Yii::getAlias('@runtime') . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . uniqid() . '.' . $this->getType();
-        try {
-            $this->putFileContent($filePath);
-        } catch (NotUploadFileException $e) {
-        }
-        $type = mime_content_type($filePath);
-        unlink($filePath);
-        return $type;
+        return 'text/plain';
     }
 
     /**
@@ -178,9 +177,13 @@ class RemoteUploadedFile implements UploadInterface
         if ($this->savedPath) {
             return filesize($this->savedPath);
         }
-        if ($this->content) {
-            return mb_strlen($this->content);
+        try {
+            if ($content = $this->getFileContent()) {
+                return mb_strlen($this->content);
+            }
+            throw new NotUploadFileException('Ошибка чтения контента по ссылке: ' . $this->link);
+        } catch (NotUploadFileException $e) {
+            return 0;
         }
-        return 0;
     }
 }
