@@ -8,7 +8,8 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use Intervention\Image\ImageManager;
+use chulakov\filestorage\ImageComponent;
+use yii\di\Instance;
 
 /**
  * Class ImageUploadedFile
@@ -60,10 +61,6 @@ class ImageUploadedFile extends UploadedFile
      */
     public $encode;
     /**
-     * @var \Intervention\Image\Image
-     */
-    public $image;
-    /**
      * Путь к картинке с водяной меткой
      *
      * @var string
@@ -74,37 +71,30 @@ class ImageUploadedFile extends UploadedFile
      *
      * @var string
      */
-    public $watermarkPosition = WatermarkPosition::POSITION_CENTER;
+    public $watermarkPosition = ImageComponent::POSITION_CENTER;
     /**
      * Качество изображения в процентах
      *
      * @var integer
      */
     public $quality = 100;
+    /**
+     * @var ImageComponent
+     */
+    public $imageManager;
 
     /**
      * @inheritdoc
      */
     public function saveAs($file, $deleteTempFile = true)
     {
-        $imageManager = new ImageManager();
-        $this->image = $imageManager->make($this->tempName);
+        $this->imageManager->make($this->tempName);
 
-        $this->convert();
-        $this->resize();
-        $this->watermark();
+        $this->imageManager->resize($this->width, $this->height);
+        $this->imageManager->convert($this->encode);
+        $this->imageManager->watermark($this->watermarkPath, $this->watermarkPosition);
 
         $this->save($file, $deleteTempFile);
-    }
-
-    /**
-     * Нанесение водяной метки на изображение
-     */
-    protected function watermark()
-    {
-        if (!empty($this->watermarkPath)) {
-            $this->image->insert($this->watermarkPath, $this->watermarkPosition);
-        }
     }
 
     /**
@@ -114,7 +104,7 @@ class ImageUploadedFile extends UploadedFile
      */
     public function getExtension()
     {
-        if (!empty($this->encode)) {
+        if ($this->imageManager->hasImage() && !empty($this->encode)) {
             return $this->encode;
         }
         return strtolower(pathinfo($this->name, PATHINFO_EXTENSION));
@@ -130,65 +120,13 @@ class ImageUploadedFile extends UploadedFile
     protected function save($file, $deleteTempFile = true)
     {
         if ($this->error == UPLOAD_ERR_OK) {
-            $this->image->save($file, $this->quality);
+            $image = $this->imageManager->getImage();
+            $image->save($file, $this->quality);
             if ($deleteTempFile) {
                 unlink($this->tempName);
             }
             return true;
         }
         return false;
-    }
-
-    /**
-     * Изменить размер изображения
-     */
-    protected function resize()
-    {
-        $width = $this->image->getWidth();
-        $height = $this->image->getHeight();
-
-        if (!$this->isSizeEmpty()) {
-            if ($this->checkSizeForResize($width, $height)) {
-                $this->image->resize($this->width, $this->height, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-            } elseif (!empty($this->width) && ($this->width < $width)) {
-                $this->image->widen($this->width);
-            } elseif (!empty($this->height) && $this->height < $height) {
-                $this->image->heighten($this->height);
-            }
-        }
-    }
-
-    /**
-     * Проверка размера изображения
-     *
-     * @param $width
-     * @param $height
-     * @return bool
-     */
-    protected function checkSizeForResize($width, $height)
-    {
-        return ($this->width > $width) && ($this->height > $height);
-    }
-
-    /**
-     * Проверить на наличие параметров размера изображения
-     *
-     * @return bool
-     */
-    protected function isSizeEmpty()
-    {
-        return !empty($this->width) && !empty($this->height);
-    }
-
-    /**
-     * Изменение кодировки изображения
-     */
-    protected function convert()
-    {
-        if (!empty($this->encode)) {
-            $this->image->encode($this->encode);
-        }
     }
 }
