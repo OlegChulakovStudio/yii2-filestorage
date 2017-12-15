@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage;
 
+use chulakov\filestorage\exceptions\NoAccessException;
 use Yii;
 use yii\base\Component;
 use yii\base\Exception;
@@ -104,9 +105,12 @@ class FileStorage extends Component
      * @return mixed
      * @throws NotUploadFileException
      * @throws \Exception
+     * @throws NoAccessException
      */
     public function uploadFile($files, UploadParams $params)
     {
+        $this->canAccess($params->accessRole);
+
         if (!is_array($files)) {
             return $this->saveFile($files, $params);
         }
@@ -123,6 +127,24 @@ class FileStorage extends Component
             throw $e;
         }
         return $result;
+    }
+
+    /**
+     * @param $role
+     * @return bool
+     * @throws NoAccessException
+     */
+    protected function canAccess($role, $model = null)
+    {
+        if (empty($role)) {
+            return true;
+        }
+        if ($model && \Yii::$app->user->can($role, $model)) {
+            return true;
+        } elseif (\Yii::$app->user->can($role)) {
+            return true;
+        }
+        throw new NoAccessException('Нет прав доступа не сохранение файла.');
     }
 
     /**
@@ -239,6 +261,7 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @throws \Exception
+     * @throws \Throwable
      */
     public function removeFile($model)
     {
@@ -282,30 +305,38 @@ class FileStorage extends Component
     /**
      * Возвращает полный путь к файлу в файловой системе
      *
-     * @param BaseFile $model
-     * @return string
+     * @param $model
+     * @param $role
+     * @return null|string
+     * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    public function getFilePath($model)
+    public function getFilePath($model, $role)
     {
+        $this->canAccess($role, $model);
+
         if ($path = $this->checkSystemPath($model)) {
             return $path;
         }
         if ($path = $this->checkMovedPath($model)) {
             return $path;
         }
-        throw new NotFoundFileException('Не удалось найти файл :'  . basename($model->sys_file));
+        throw new NotFoundFileException('Не удалось найти файл :' . basename($model->sys_file));
     }
 
     /**
      * Возвращает абсолютный или относительный URL-адрес к файлу
      *
-     * @param BaseFile $model
-     * @param bool $isAbsolute возвращать абсолютный (полный) URL
+     * @param $model
+     * @param $role
+     * @param bool $isAbsolute
      * @return string
+     * @throws NoAccessException
      */
-    public function getFileUrl($model, $isAbsolute = false)
+    public function getFileUrl($model, $role, $isAbsolute = false)
     {
+        $this->canAccess($role, $model);
+
         if ($this->checkSystemPath($model)) {
             return $this->convertToUrl($model->sys_file, $isAbsolute);
         }
