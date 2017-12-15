@@ -18,7 +18,7 @@ class UploadParams
      * @var integer Идентификатор родительской модели
      */
     public $object_id = null;
-
+    public $accessRole = null;
     /**
      * Базовый конструктор параметров генерации пути
      *
