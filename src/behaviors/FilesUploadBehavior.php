@@ -8,6 +8,8 @@
 
 namespace chulakov\filestorage\behaviors;
 
+use chulakov\filestorage\uploaders\UploadInterface;
+
 class FilesUploadBehavior extends FileUploadBehavior
 {
     /**
@@ -34,5 +36,17 @@ class FilesUploadBehavior extends FileUploadBehavior
             $files = $repository::getInstancesByName($this->attribute);
         }
         return $files;
+    }
+
+    /**
+     * Конфигурация загруженных файлов
+     *
+     * @param UploadInterface[] $files
+     */
+    protected function configureInstances($files)
+    {
+        foreach ($files as $file) {
+            \Yii::configure($file, $this->uploadOptions);
+        }
     }
 }

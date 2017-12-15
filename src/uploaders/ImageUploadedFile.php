@@ -130,14 +130,11 @@ class ImageUploadedFile extends UploadedFile
     protected function save($file, $deleteTempFile = true)
     {
         if ($this->error == UPLOAD_ERR_OK) {
+            $this->image->save($file, $this->quality);
             if ($deleteTempFile) {
-                $this->image->save($file, $this->quality);
                 unlink($this->tempName);
-                return true;
-            } elseif (is_uploaded_file($this->tempName)) {
-                $this->image->save($this->tempName, $this->quality);
-                return copy($this->tempName, $file);
             }
+            return true;
         }
         return false;
     }

@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage;
 
+use chulakov\filestorage\exceptions\NoAccessException;
 use Yii;
 use yii\base\Component;
 use yii\base\Exception;
@@ -20,6 +21,7 @@ use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 use chulakov\filestorage\exceptions\NotFoundFileException;
+use yii\rbac\Item;
 
 class FileStorage extends Component
 {
@@ -97,16 +99,20 @@ class FileStorage extends Component
     }
 
     /**
-     * Загрузка файл
+     * Загрузка файла
      *
-     * @param UploadInterface|UploadInterface[] $files
+     * @param $files
      * @param UploadParams $params
-     * @return mixed
+     * @return array|BaseFile|null
+     * @throws NoAccessException
      * @throws NotUploadFileException
      * @throws \Exception
+     * @throws \Throwable
      */
     public function uploadFile($files, UploadParams $params)
     {
+        $this->canAccess($params->accessRole);
+
         if (!is_array($files)) {
             return $this->saveFile($files, $params);
         }
@@ -123,6 +129,31 @@ class FileStorage extends Component
             throw $e;
         }
         return $result;
+    }
+
+    /**
+     * Проверка прав доступа к файлу
+     *
+     * @param Item $role
+     * @param BaseFile $model
+     * @return bool
+     * @throws NoAccessException
+     */
+    protected function canAccess($role = null, $model = null)
+    {
+        if (empty($role)) {
+            return true;
+        }
+
+        $params = [];
+        if (!is_null($model)) {
+            $params['file'] = $model;
+        }
+        if (\Yii::$app->user->can($role, $params)) {
+            return true;
+        }
+
+        throw new NoAccessException('Нет прав доступа не сохранение файла.');
     }
 
     /**
@@ -239,6 +270,7 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @throws \Exception
+     * @throws \Throwable
      */
     public function removeFile($model)
     {
@@ -283,29 +315,37 @@ class FileStorage extends Component
      * Возвращает полный путь к файлу в файловой системе
      *
      * @param BaseFile $model
+     * @param Item $role
      * @return string
+     * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    public function getFilePath($model)
+    public function getFilePath($model, $role = null)
     {
+        $this->canAccess($role, $model);
+
         if ($path = $this->checkSystemPath($model)) {
             return $path;
         }
         if ($path = $this->checkMovedPath($model)) {
             return $path;
         }
-        throw new NotFoundFileException('Не удалось найти файл :'  . basename($model->sys_file));
+        throw new NotFoundFileException('Не удалось найти файл :' . basename($model->sys_file));
     }
 
     /**
      * Возвращает абсолютный или относительный URL-адрес к файлу
      *
      * @param BaseFile $model
-     * @param bool $isAbsolute возвращать абсолютный (полный) URL
+     * @param bool $isAbsolute
+     * @param Item $role
      * @return string
+     * @throws NoAccessException
      */
-    public function getFileUrl($model, $isAbsolute = false)
+    public function getFileUrl($model, $isAbsolute = false, $role = null)
     {
+        $this->canAccess($role, $model);
+
         if ($this->checkSystemPath($model)) {
             return $this->convertToUrl($model->sys_file, $isAbsolute);
         }

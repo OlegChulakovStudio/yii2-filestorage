@@ -42,6 +42,10 @@ class FileUploadBehavior extends Behavior
      * @var array
      */
     public $uploadOptions;
+    /**
+     * @var string
+     */
+    public $accessRole;
 
     /**
      * @throws \yii\base\InvalidConfigException
@@ -72,13 +76,7 @@ class FileUploadBehavior extends Behavior
         }
         $files = $this->getInstances();
         if (!empty($this->uploadOptions)) {
-            if (is_array($files)) {
-                foreach ($files as $file) {
-                    \Yii::configure($file, $this->uploadOptions);
-                }
-            } else {
-                \Yii::configure($files, $this->uploadOptions);
-            }
+            $this->configureInstances($files);
         }
         if ($this->isInstances($files)) {
             $this->owner->{$this->attribute} = $files;
@@ -112,11 +110,22 @@ class FileUploadBehavior extends Behavior
     }
 
     /**
+     * Конфигурация загруженного файла
+     *
+     * @param UploadInterface $file
+     */
+    protected function configureInstances($file)
+    {
+        \Yii::configure($file, $this->uploadOptions);
+    }
+
+    /**
      * Загрузка и сохранение файлов
      *
      * @return mixed
      * @throws NotUploadFileException
      * @throws \Exception
+     * @throws \chulakov\filestorage\exceptions\NoAccessException
      */
     public function upload()
     {
@@ -126,8 +135,9 @@ class FileUploadBehavior extends Behavior
             throw new NotUploadFileException('Нет файлов для сохранения.');
         }
         $params = new UploadParams($this->group);
+        $params->accessRole = $this->accessRole;
         if (method_exists($this->owner, 'getPrimaryKey')) {
-            $params = $this->owner->getPrimaryKey();
+            $params->object_id = $this->owner->getPrimaryKey();
         }
         return $this->storage->uploadFile($files, $params);
     }
