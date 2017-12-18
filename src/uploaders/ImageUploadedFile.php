@@ -27,6 +27,7 @@ use yii\di\Instance;
  * data-url — encode current image data in data URI scheme (RFC 2397)
  *
  * @package chulakov\filestorage\uploaders
+ * @property ImageComponent $imageManager
  */
 class ImageUploadedFile extends UploadedFile
 {
@@ -81,7 +82,11 @@ class ImageUploadedFile extends UploadedFile
     /**
      * @var ImageComponent
      */
-    public $imageManager;
+    public $imageComponent;
+    /**
+     * @var string Название компонента для работы с изображениями
+     */
+    public $imageClass;
 
     /**
      * @inheritdoc
@@ -95,6 +100,37 @@ class ImageUploadedFile extends UploadedFile
         $this->imageManager->watermark($this->watermarkPath, $this->watermarkPosition);
 
         $this->save($file, $deleteTempFile);
+    }
+
+    /**
+     * Геттер для работы с imageComponent
+     * Получить менеджер работы с изображениями
+     *
+     * @return ImageComponent
+     * @throws \Exception
+     * @throws \yii\base\InvalidConfigException
+     */
+    protected function getImageManager()
+    {
+        if (!empty($this->imageComponent)) {
+            return $this->imageComponent;
+        }
+        $this->imageComponent = $this->imageClass;
+        if (is_array($this->imageComponent) && empty($this->imageComponent['class'])) {
+            $this->imageComponent['class'] = $this->imageComponent;
+        }
+        $this->imageComponent = Instance::ensure($this->imageComponent);
+        return $this->imageComponent;
+    }
+
+    /**
+     * Сеттер для работы с imageComponent
+     *
+     * @param $value
+     */
+    protected function setImageManager($value)
+    {
+        $this->imageComponent = $value;
     }
 
     /**
