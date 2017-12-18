@@ -102,9 +102,11 @@ class ImageComponent extends Component
      * @param string $watermarkPath
      * @param string $position
      */
-    public function watermark($watermarkPath, $position)
+    public function watermark($watermarkPath, $position = self::POSITION_CENTER)
     {
-        $this->image->insert($watermarkPath, $position);
+        if (!empty($watermarkPath)) {
+            $this->image->insert($watermarkPath, $position);
+        }
     }
 
     /**
@@ -118,14 +120,16 @@ class ImageComponent extends Component
         $currentWidth = $this->getWidth();
         $currentHeight = $this->getHeight();
 
-        if ($this->checkSizeForResize($width, $height)) {
-            $this->image->resize($width, $height, function ($constraint) {
-                $constraint->aspectRatio();
-            });
-        } elseif ($currentWidth < $width) {
-            $this->image->widen($currentWidth);
-        } elseif ($currentHeight < $height) {
-            $this->image->heighten($currentHeight);
+        if (!empty($width) && !empty($height)) {
+            if ($this->checkSizeForResize($width, $height)) {
+                $this->image->resize($width, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+            } elseif (!empty($width) && $currentWidth < $width) {
+                $this->image->widen($currentWidth);
+            } elseif (!empty($height) && $currentHeight < $height) {
+                $this->image->heighten($currentHeight);
+            }
         }
     }
 
