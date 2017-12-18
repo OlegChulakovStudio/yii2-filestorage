@@ -9,12 +9,18 @@
 namespace chulakov\filestorage\uploaders;
 
 use chulakov\filestorage\exceptions\NotUploadFileException;
+use chulakov\filestorage\ImageComponent;
 use yii\base\Model;
 
-class RemoteUploadedFile implements UploadInterface
+/**
+ * Class RemoteUploadedFile
+ * @package chulakov\filestorage\uploaders
+ * @property ImageComponent $imageManager
+ */
+class RemoteUploadedFile extends ImageUploadedFile implements UploadInterface
 {
     /**
-     * @var string link on file
+     * @var string
      */
     protected $link;
     /**
@@ -28,11 +34,12 @@ class RemoteUploadedFile implements UploadInterface
 
     /**
      * RemoteUploadedFile constructor.
-     * @param $link
+     * @param string $path
      */
-    public function __construct($link)
+    public function __construct($path)
     {
-        $this->link = $link;
+        $this->tempName = $path;
+        parent::__construct();
     }
 
     /**
@@ -89,45 +96,15 @@ class RemoteUploadedFile implements UploadInterface
     }
 
     /**
-     * Сохранение файла по указанному пути
+     * Сохранение файла
      *
      * @param string $file
      * @param bool $deleteTempFile
-     * @return bool|mixed
-     * @throws NotUploadFileException
+     * @return bool|mixed|void
      */
     public function saveAs($file, $deleteTempFile = true)
     {
-        $this->savedPath = $file;
-        $this->getFileContent();
-        return $this->putFileContent();
-    }
-
-    /**
-     * Получение бинарных данных файла по ссылке
-     *
-     * @return string
-     * @throws NotUploadFileException
-     */
-    protected function getFileContent()
-    {
-        if (empty($this->content)) {
-            $this->content = file_get_contents($this->link);
-            if ($this->content === false) {
-                throw new NotUploadFileException('Ошибка чтения контента по ссылке: ' . $this->link);
-            }
-        }
-        return $this->content;
-    }
-
-    /**
-     * Запись бинарных данных в файл
-     *
-     * @return bool
-     */
-    protected function putFileContent()
-    {
-        return file_put_contents($this->savedPath, $this->content);
+        parent::saveAs($file, false);
     }
 
     /**
@@ -137,7 +114,7 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getBaseName()
     {
-        return basename($this->link);
+        return basename($this->tempName);
     }
 
     /**
@@ -159,7 +136,7 @@ class RemoteUploadedFile implements UploadInterface
     public function getType()
     {
         if ($this->savedPath) {
-            return mime_content_type($this->savedPath);
+            return $this->imageManager->getImage()->mime();
         }
         if (function_exists('finfo_buffer')) {
             return finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $this->content);
@@ -178,7 +155,7 @@ class RemoteUploadedFile implements UploadInterface
             return filesize($this->savedPath);
         }
         try {
-            if ($content = $this->getFileContent()) {
+            if ($content = $this->imageManager->getImage()->filesize()) {
                 return mb_strlen($this->content);
             }
             throw new NotUploadFileException('Ошибка чтения контента по ссылке: ' . $this->link);
