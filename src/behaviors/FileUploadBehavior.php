@@ -12,7 +12,7 @@ use yii\di\Instance;
 use yii\base\Model;
 use yii\base\Behavior;
 use chulakov\filestorage\FileStorage;
-use chulakov\filestorage\UploadParams;
+use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 
@@ -126,6 +126,7 @@ class FileUploadBehavior extends Behavior
      * @throws NotUploadFileException
      * @throws \Exception
      * @throws \chulakov\filestorage\exceptions\NoAccessException
+     * @throws \Throwable
      */
     public function upload()
     {
