@@ -17,7 +17,7 @@ use yii\base\Model;
  * @package chulakov\filestorage\uploaders
  * @property ImageComponent $imageManager
  */
-class RemoteUploadedFile extends ImageUploadedFile implements UploadInterface
+class RemoteImageUploadedFile extends ImageUploadedFile implements UploadInterface
 {
     /**
      * @var string
@@ -135,13 +135,10 @@ class RemoteUploadedFile extends ImageUploadedFile implements UploadInterface
      */
     public function getType()
     {
-        if ($this->savedPath) {
-            return $this->imageManager->getImage()->mime();
+        if ($this->savedPath && file_exists($this->savedPath)) {
+            return mime_content_type($this->savedPath);
         }
-        if (function_exists('finfo_buffer')) {
-            return finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $this->content);
-        }
-        return 'text/plain';
+        return $this->imageManager->getImage()->mime();
     }
 
     /**
@@ -151,15 +148,12 @@ class RemoteUploadedFile extends ImageUploadedFile implements UploadInterface
      */
     public function getSize()
     {
-        if ($this->savedPath) {
+        if ($this->savedPath && file_exists($this->savedPath)) {
             return filesize($this->savedPath);
         }
         try {
-            if ($content = $this->imageManager->getImage()->filesize()) {
-                return mb_strlen($this->content);
-            }
-            throw new NotUploadFileException('Ошибка чтения контента по ссылке: ' . $this->link);
-        } catch (NotUploadFileException $e) {
+            return $this->imageManager->getImage()->filesize();
+        } catch (\Exception $e) {
             return 0;
         }
     }
