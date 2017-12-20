@@ -8,7 +8,6 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use chulakov\filestorage\exceptions\NotUploadFileException;
 use chulakov\filestorage\ImageComponent;
 use yii\base\Model;
 

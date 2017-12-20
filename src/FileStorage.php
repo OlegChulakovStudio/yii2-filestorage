@@ -8,7 +8,6 @@
 
 namespace chulakov\filestorage;
 
-use chulakov\filestorage\exceptions\NoAccessException;
 use Yii;
 use yii\base\Component;
 use yii\base\Exception;
@@ -21,6 +20,8 @@ use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 use chulakov\filestorage\exceptions\NotFoundFileException;
+use chulakov\filestorage\exceptions\NoAccessException;
+use chulakov\filestorage\params\UploadParams;
 use yii\rbac\Item;
 
 class FileStorage extends Component
@@ -104,6 +105,7 @@ class FileStorage extends Component
      * @param $files
      * @param UploadParams $params
      * @return array|BaseFile|null
+     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotUploadFileException
      * @throws \Exception
@@ -162,6 +164,7 @@ class FileStorage extends Component
      * @param UploadInterface $file
      * @param UploadParams $params
      * @return BaseFile|null
+     * @throws \yii\base\InvalidParamException
      * @throws NotUploadFileException
      * @throws \Exception
      */
@@ -217,6 +220,7 @@ class FileStorage extends Component
      *
      * @param string $path
      * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws NotUploadFileException
      */
     protected function getAbsolutePath($path)
@@ -288,6 +292,7 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @return string
+     * @throws \yii\base\InvalidParamException
      */
     public function getUploadPath($model)
     {
@@ -304,6 +309,7 @@ class FileStorage extends Component
      * @param BaseFile $model
      * @param bool $isAbsolute возвращать абсолютный (полный) URL
      * @return string
+     * @throws \yii\base\InvalidParamException
      */
     public function getUploadUrl($model, $isAbsolute = false)
     {
@@ -317,6 +323,7 @@ class FileStorage extends Component
      * @param BaseFile $model
      * @param Item $role
      * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
@@ -340,6 +347,7 @@ class FileStorage extends Component
      * @param bool $isAbsolute
      * @param Item $role
      * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      */
     public function getFileUrl($model, $isAbsolute = false, $role = null)
@@ -361,6 +369,7 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @return string|null
+     * @throws \yii\base\InvalidParamException
      */
     protected function checkSystemPath($model)
     {
@@ -374,6 +383,7 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @return string|null
+     * @throws \yii\base\InvalidParamException
      */
     protected function checkMovedPath($model)
     {
@@ -418,6 +428,7 @@ class FileStorage extends Component
      * @param string $path
      * @param bool $isAbsolute
      * @return string
+     * @throws \yii\base\InvalidParamException
      */
     protected function convertToUrl($path, $isAbsolute = false)
     {

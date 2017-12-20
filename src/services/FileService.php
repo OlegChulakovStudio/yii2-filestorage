@@ -13,7 +13,7 @@ use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\models\repositories\FileRepository;
 use chulakov\filestorage\uploaders\UploadInterface;
-use chulakov\filestorage\UploadParams;
+use chulakov\filestorage\params\UploadParams;
 use yii\base\UnknownClassException;
 
 class FileService
