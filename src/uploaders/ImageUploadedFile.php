@@ -140,7 +140,7 @@ class ImageUploadedFile extends UploadedFile
      */
     public function getExtension()
     {
-        if ($this->imageManager->hasImage() && !empty($this->encode)) {
+        if (!empty($this->encode)) {
             return $this->encode;
         }
         return strtolower(pathinfo($this->name, PATHINFO_EXTENSION));
