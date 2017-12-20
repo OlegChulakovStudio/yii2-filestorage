@@ -6,7 +6,7 @@
  * @link http://chulakov.com/
  */
 
-namespace chulakov\filestorage;
+namespace chulakov\filestorage\params;
 
 class UploadParams
 {
