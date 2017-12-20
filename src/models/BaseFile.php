@@ -27,6 +27,14 @@ abstract class BaseFile extends ActiveRecord
     /**
      * @inheritdoc
      */
+    public static function tableName()
+    {
+        return 'file';
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function behaviors()
     {
         return [
