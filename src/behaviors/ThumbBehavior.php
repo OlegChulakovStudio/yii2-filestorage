@@ -86,7 +86,7 @@ class ThumbBehavior extends Behavior
      */
     protected function isImageModel($model)
     {
-        if(!in_array($model->ori_extension, $this->allowExtensions)) {
+        if (!in_array($model->ori_extension, $this->allowExtensions)) {
             throw new \Exception('Данный файл не является изображением.');
         }
 
@@ -167,6 +167,12 @@ class ThumbBehavior extends Behavior
         return $thumbPath . $filename;
     }
 
+    /**
+     * Получить путь к файлу по модели
+     *
+     * @param BaseFile $model
+     * @return mixed
+     */
     protected function getFilePath($model)
     {
         return \Yii::$app->{$this->storageComponent}->getFilePath($model);
@@ -175,7 +181,7 @@ class ThumbBehavior extends Behavior
     /**
      * Создание thumbnail
      *
-     * @param string $model модель файла
+     * @param BaseFile $model модель файла
      * @param ThumbParams $thumbParams
      * @return bool
      */
