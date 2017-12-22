@@ -44,7 +44,8 @@ class ThumbBehavior extends Behavior
         /** @var BaseFile $model */
         $model = $this->owner;
 
-        $this->isImageModel($model);
+        if(!$this->isImageModel($model))
+            return false;
 
         $ext = !empty($thumbParams->extension) ? $thumbParams->extension : $model->ori_extension;
         $thumbName = $this->generateFileCacheName(
@@ -86,11 +87,7 @@ class ThumbBehavior extends Behavior
      */
     protected function isImageModel($model)
     {
-        if (!in_array($model->ori_extension, $this->allowExtensions)) {
-            throw new \Exception('Данный файл не является изображением.');
-        }
-
-        return true;
+        return in_array($model->ori_extension, $this->allowExtensions);
     }
 
     /**
