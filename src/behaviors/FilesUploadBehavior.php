@@ -10,6 +10,10 @@ namespace chulakov\filestorage\behaviors;
 
 use chulakov\filestorage\uploaders\UploadInterface;
 
+/**
+ * Class FilesUploadBehavior
+ * @package chulakov\filestorage\behaviors
+ */
 class FilesUploadBehavior extends FileUploadBehavior
 {
     /**
@@ -45,8 +49,17 @@ class FilesUploadBehavior extends FileUploadBehavior
      */
     protected function configureInstances($files)
     {
-        foreach ($files as $file) {
-            \Yii::configure($file, $this->uploadOptions);
+        if (!empty($this->saveOptions['class'])) {
+
+            $className = $this->saveOptions['class'];
+            unset($this->saveOptions['class']);
+
+            foreach ($files as $file) {
+                if (!$file->saveManager && class_exists($className)) {
+                    $file->saveManager = new $className();
+                }
+                \Yii::configure($file->saveManager, $this->saveOptions);
+            }
         }
     }
 }

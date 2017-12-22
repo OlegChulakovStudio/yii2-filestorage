@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\behaviors;
 
+use chulakov\filestorage\savers\SaveInterface;
 use yii\di\Instance;
 use yii\base\Model;
 use yii\base\Behavior;
@@ -16,6 +17,10 @@ use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 
+/**
+ * Class FileUploadBehavior
+ * @package chulakov\filestorage\behaviors
+ */
 class FileUploadBehavior extends Behavior
 {
     /**
@@ -41,7 +46,7 @@ class FileUploadBehavior extends Behavior
     /**
      * @var array
      */
-    public $uploadOptions;
+    public $saveOptions;
     /**
      * @var string
      */
@@ -75,9 +80,7 @@ class FileUploadBehavior extends Behavior
             return;
         }
         $files = $this->getInstances();
-        if (!empty($this->uploadOptions)) {
-            $this->configureInstances($files);
-        }
+        $this->configureInstances($files);
         if ($this->isInstances($files)) {
             $this->owner->{$this->attribute} = $files;
         }
@@ -116,13 +119,22 @@ class FileUploadBehavior extends Behavior
      */
     protected function configureInstances($file)
     {
-        \Yii::configure($file, $this->uploadOptions);
+        if (!empty($this->saveOptions['class'])) {
+            $className = $this->saveOptions['class'];
+            unset($this->saveOptions['class']);
+
+            if (!$file->saveManager && class_exists($className)) {
+                $file->saveManager = new $className();
+            }
+            \Yii::configure($file->saveManager, $this->saveOptions);
+        }
     }
 
     /**
      * Загрузка и сохранение файлов
      *
      * @return mixed
+     * @throws \yii\base\InvalidParamException
      * @throws NotUploadFileException
      * @throws \Exception
      * @throws \chulakov\filestorage\exceptions\NoAccessException
