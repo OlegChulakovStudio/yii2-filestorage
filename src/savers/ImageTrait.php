@@ -113,8 +113,8 @@ trait ImageTrait
     protected function transformation()
     {
         $this->imageManager->resize($this->width, $this->height);
-        $this->imageManager->convert($this->encode);
         $this->imageManager->watermark($this->watermarkPath, $this->watermarkPosition);
+        $this->imageManager->convert($this->encode);
     }
 
     /**

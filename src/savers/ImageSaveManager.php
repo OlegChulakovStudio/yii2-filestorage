@@ -54,6 +54,7 @@ class ImageSaveManager extends FileSaveManager
 
     /**
      * Получить расширение файла
+     *
      * @return mixed
      */
     public function getExtension()

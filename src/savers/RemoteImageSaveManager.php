@@ -12,7 +12,7 @@ namespace chulakov\filestorage\savers;
  * Class RemoteImageSaveManager
  * @package chulakov\filestorage\savers
  */
-class RemoteImageSaveManager extends RemoteFileSaveManager implements SaveInterface
+class RemoteImageSaveManager extends RemoteFileSaveManager
 {
     use ImageTrait;
 
@@ -41,7 +41,7 @@ class RemoteImageSaveManager extends RemoteFileSaveManager implements SaveInterf
 
         $this->loadImage($this->content); // установка изображения
         $this->transformation(); // обработка изображения
-        $this->saveFile();
+        $this->saveFile(); // сохранение результирующего файла
 
         return $this->saved = true;
     }
@@ -52,11 +52,11 @@ class RemoteImageSaveManager extends RemoteFileSaveManager implements SaveInterf
      */
     public function getExtension()
     {
-        if ($this->isSaved()) {
+        if ($this->isSaved()) { // если сохранено
             $items = explode('.', basename($this->savedPath));
             return array_pop($items);
         }
-        if (!empty($this->encode)) {
+        if (!empty($this->encode)) {  // если указано перекодирование
             return $this->encode;
         }
         return false;
@@ -79,13 +79,13 @@ class RemoteImageSaveManager extends RemoteFileSaveManager implements SaveInterf
      */
     public function getSize()
     {
-        if ($this->isSaved()) {
+        if ($this->isSaved()) { //  если файл сохранени
             return filesize($this->savedPath);
         }
-        if ($this->imageComponent && $this->imageComponent->hasImage()) {
+        if ($this->imageComponent && $this->imageComponent->hasImage()) { // если компонент уже работает с данным объектом
             return $this->imageComponent->getImage()->filesize();
         }
-        if ($this->content && !empty($this->content)) {
+        if ($this->content && !empty($this->content)) { // если есть содержимое изображения
             return mb_strlen($this->content);
         }
         return 0;

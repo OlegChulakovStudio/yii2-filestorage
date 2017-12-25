@@ -120,6 +120,7 @@ class FileUploadBehavior extends Behavior
     protected function configureInstances($file)
     {
         if (!empty($this->saveOptions['class'])) {
+
             $className = $this->saveOptions['class'];
             unset($this->saveOptions['class']);
 
