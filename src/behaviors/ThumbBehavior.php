@@ -44,7 +44,7 @@ class ThumbBehavior extends Behavior
         /** @var BaseFile $model */
         $model = $this->owner;
 
-        if(!$this->isImageModel($model))
+        if (!$model->isImage())
             return false;
 
         $ext = !empty($thumbParams->extension) ? $thumbParams->extension : $model->ori_extension;
@@ -64,30 +64,6 @@ class ThumbBehavior extends Behavior
         $this->createThumb($model, $thumbParams);
 
         return $url;
-    }
-
-    protected $allowExtensions = [
-        'jpg',
-        'png',
-        'gif',
-        'tif',
-        'bmp',
-        'ico',
-        'psd',
-        'webp',
-        'data-url',
-    ];
-
-    /**
-     * Проверка на изображение
-     *
-     * @param $model
-     * @return bool
-     * @throws \Exception
-     */
-    protected function isImageModel($model)
-    {
-        return in_array($model->ori_extension, $this->allowExtensions);
     }
 
     /**
