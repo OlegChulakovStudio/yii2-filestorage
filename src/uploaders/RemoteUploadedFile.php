@@ -36,13 +36,6 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
      * @var string
      */
     protected $content;
-
-    /**
-     * Расширение файла
-     *
-     * @var string
-     */
-    protected $extension;
     /**
      * Размер файла
      *
@@ -69,6 +62,21 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
     public function __construct($link)
     {
         $this->link = $link;
+    }
+
+    /**
+     * Конфигурация компонента
+     *
+     * @param array $config
+     * @return mixed|void
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function configure($config)
+    {
+        foreach ($config as $key => $value) {
+            $this->{$key} = $value;
+        }
+        $this->initListener();
     }
 
     /**
@@ -126,23 +134,6 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
     }
 
     /**
-     * Получить контент файла
-     *
-     * @return bool|string
-     * @throws NotUploadFileException
-     */
-    protected function getFileContent()
-    {
-        if (empty($this->content)) {
-            $this->content = file_get_contents($this->link);
-            if ($this->content === false) {
-                throw new NotUploadFileException('Ошибка чтения контента по ссылке: ' . $this->link);
-            }
-        }
-        return $this->content;
-    }
-
-    /**
      * Сохранение файла
      *
      * @param string $file
@@ -152,9 +143,8 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
      */
     public function saveAs($file, $deleteFile = false)
     {
-        $this->getFileContent();
         if ($this->beforeSave($file, $deleteFile)) {
-            file_put_contents($file, $this->content);
+            file_put_contents($file, $this->getContent());
         }
     }
 
@@ -177,23 +167,51 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
     }
 
     /**
+     * Получить файл
+     *
+     * @return string
+     */
+    public function getFile()
+    {
+        return $this->link;
+    }
+
+    /**
+     * Получить файл
+     *
+     * @return string
+     * @throws NotUploadFileException
+     */
+    public function getContent()
+    {
+        if (empty($this->content)) {
+            $this->content = file_get_contents($this->link);
+            if ($this->content === false) {
+                throw new NotUploadFileException('Ошибка чтения контента по ссылке: ' . $this->link);
+            }
+        }
+        return $this->content;
+    }
+
+    /**
      * Получение информации об оригинальном именовании файла
      *
      * @return string
      */
     public function getBaseName()
     {
-        if (!empty($this->name)) {
-            return $this->name;
-        }
-        $item = explode('.', basename($this->link));
-        $name = array_shift($item);
-        return $name . '.' . $this->getExtension();
+        $pathInfo = pathinfo('_' . basename($this->getName()), PATHINFO_FILENAME);
+        return mb_substr($pathInfo, 1, mb_strlen($pathInfo, '8bit'), '8bit');
     }
 
-    public function setBaseName($name)
+    /**
+     * Получение имени файла после сохранения
+     *
+     * @return string
+     */
+    public function getSavedName()
     {
-        $this->name = $name;
+        return $this->getName();
     }
 
     /**
@@ -203,11 +221,30 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
      */
     public function getExtension()
     {
-        if (!empty($this->extension)) {
-            return $this->extension;
+        return strtolower(pathinfo(basename($this->getName()), PATHINFO_EXTENSION));
+    }
+
+    /**
+     * Получение полного имени файла
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        if ($this->name) {
+            return $this->name;
         }
-        $items = explode('.', basename($this->link));
-        return array_pop($items);
+        return basename($this->link);
+    }
+
+    /**
+     * Устанавка полного имени файла
+     *
+     * @param string $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
     }
 
     /**
@@ -229,6 +266,16 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
     }
 
     /**
+     * Установить mime тип файла
+     *
+     * @param string $mime
+     */
+    public function setType($mime)
+    {
+        $this->type = $mime;
+    }
+
+    /**
      * Получение размера файла
      *
      * @return integer
@@ -238,69 +285,14 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
         if (!empty($this->size)) {
             return $this->size;
         }
-        echo 'asd';
-        die();
-
-        return !empty($this->content) ? mb_strlen($this->content) : 0;
-    }
-
-    /**
-     * Получить файл
-     *
-     * @return string Path or content
-     */
-    public function getFile()
-    {
-        return $this->content;
-    }
-
-    /**
-     * Обновить путь сохранения
-     *
-     * @param string $path
-     * @return string
-     */
-    public function uploadPath($path)
-    {
-        /**
-         * Получить название файла с path без его расширения
-         */
-        $item = explode('.', mb_substr($path, mb_strrpos($path, '/') + 1));
-        $filename = array_shift($item);
-        /**
-         * Получить путь без названия файла
-         */
-        $path = mb_substr($path, 0, mb_strrpos($path, '/') + 1);
-        return $path . $filename . '.' . $this->getExtension();
-    }
-
-    /**
-     * Установить расширение файла
-     *
-     * @param string $extension
-     * @return mixed
-     */
-    public function setExtension($extension)
-    {
-        $this->extension = $extension;
-    }
-
-    /**
-     * Установить mime тип файла
-     *
-     * @param string $mime
-     * @return mixed
-     */
-    public function setType($mime)
-    {
-        $this->type = $mime;
+        return !empty($this->content)
+            ? mb_strlen($this->content) : 0;
     }
 
     /**
      * Установить размер файла
      *
      * @param integer $size
-     * @return mixed
      */
     public function setSize($size)
     {
