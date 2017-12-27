@@ -8,9 +8,8 @@
 
 namespace chulakov\filestorage\behaviors;
 
-use chulakov\filestorage\savers\SaveInterface;
-use yii\di\Instance;
 use yii\base\Model;
+use yii\di\Instance;
 use yii\base\Behavior;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\params\UploadParams;
@@ -119,15 +118,8 @@ class FileUploadBehavior extends Behavior
      */
     protected function configureInstances($file)
     {
-        if (!empty($this->saveOptions['class'])) {
-
-            $className = $this->saveOptions['class'];
-            unset($this->saveOptions['class']);
-
-            if (!$file->saveManager && class_exists($className)) {
-                $file->saveManager = new $className();
-            }
-            \Yii::configure($file->saveManager, $this->saveOptions);
+        if (!empty($this->saveOptions)) {
+            $file->configure($this->saveOptions);
         }
     }
 
