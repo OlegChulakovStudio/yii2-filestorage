@@ -68,9 +68,18 @@ interface UploadInterface
     public function saveAs($file, $deleteTempFile = true);
 
     /**
-     * @return string Path or content
+     *  Путь до файла
+     *
+     * @return string
      */
     public function getFile();
+
+    /**
+     * Контент файла
+     *
+     * @return string
+     */
+    public function getContent();
 
     /**
      * Получение информации об оригинальном именовании файла
@@ -80,19 +89,25 @@ interface UploadInterface
     public function getBaseName();
 
     /**
+     * Получение имени файла после сохранения
+     *
+     * @return string
+     */
+    public function getSavedName();
+
+    /**
+     * Установка полного имени файла
+     *
+     * @param string $name
+     */
+    public function setName($name);
+
+    /**
      * Получение расширения файла
      *
      * @return string
      */
     public function getExtension();
-
-    /**
-     * Установить расширение файла
-     *
-     * @param string $extension
-     * @return mixed
-     */
-    public function setExtension($extension);
 
     /**
      * Получение MIME типа файла
@@ -105,7 +120,6 @@ interface UploadInterface
      * Установить mime тип файла
      *
      * @param string $mime
-     * @return mixed
      */
     public function setType($mime);
 
@@ -120,15 +134,6 @@ interface UploadInterface
      * Установить размер файла
      *
      * @param integer $size
-     * @return mixed
      */
     public function setSize($size);
-
-    /**
-     * Обновление названия файла
-     *
-     * @param string path
-     * @return mixed
-     */
-    public function uploadPath($path);
 }
