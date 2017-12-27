@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл класса FileInterface
+ * Файл интерфейса FileInterface
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -10,8 +10,20 @@ namespace chulakov\filestorage\uploaders;
 
 use yii\base\Model;
 
+/**
+ * Interface UploadInterface
+ * @package chulakov\filestorage\uploaders
+ */
 interface UploadInterface
 {
+    /**
+     * Конфигурирование загрузчика
+     *
+     * @param array $config
+     * @return mixed
+     */
+    public function configure($config);
+
     /**
      * Инициализация одной модели
      *
@@ -56,6 +68,11 @@ interface UploadInterface
     public function saveAs($file, $deleteTempFile = true);
 
     /**
+     * @return string Path or content
+     */
+    public function getFile();
+
+    /**
      * Получение информации об оригинальном именовании файла
      *
      * @return string
@@ -70,6 +87,14 @@ interface UploadInterface
     public function getExtension();
 
     /**
+     * Установить расширение файла
+     *
+     * @param string $extension
+     * @return mixed
+     */
+    public function setExtension($extension);
+
+    /**
      * Получение MIME типа файла
      *
      * @return string
@@ -77,9 +102,33 @@ interface UploadInterface
     public function getType();
 
     /**
+     * Установить mime тип файла
+     *
+     * @param string $mime
+     * @return mixed
+     */
+    public function setType($mime);
+
+    /**
      * Получение размера файла
      *
      * @return integer
      */
     public function getSize();
+
+    /**
+     * Установить размер файла
+     *
+     * @param integer $size
+     * @return mixed
+     */
+    public function setSize($size);
+
+    /**
+     * Обновление названия файла
+     *
+     * @param string path
+     * @return mixed
+     */
+    public function uploadPath($path);
 }

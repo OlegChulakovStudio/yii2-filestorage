@@ -8,18 +8,22 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use chulakov\filestorage\exceptions\NotUploadFileException;
-use chulakov\filestorage\ImageComponent;
-use chulakov\filestorage\savers\SaveInterface;
 use yii\base\Model;
+use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\exceptions\NotUploadFileException;
 
 /**
  * Class RemoteUploadedFile
  * @package chulakov\filestorage\uploaders
  * @property ImageComponent $imageManager
  */
-class RemoteUploadedFile implements UploadInterface
+class RemoteUploadedFile implements UploadInterface, ObserverInterface
 {
+    /**
+     * Подключение реализации функционала Observer
+     */
+    use ObserverTrait;
+
     /**
      * Ссылка на файл
      *
@@ -32,10 +36,31 @@ class RemoteUploadedFile implements UploadInterface
      * @var string
      */
     protected $content;
+
     /**
-     * @var SaveInterface
+     * Расширение файла
+     *
+     * @var string
      */
-    public $saveManager;
+    protected $extension;
+    /**
+     * Размер файла
+     *
+     * @var integer
+     */
+    protected $size;
+    /**
+     * Mime тип файла
+     *
+     * @var string
+     */
+    protected $type;
+    /**
+     * Имя файла
+     *
+     * @var string
+     */
+    protected $name;
 
     /**
      * RemoteUploadedFile constructor.
@@ -121,14 +146,34 @@ class RemoteUploadedFile implements UploadInterface
      * Сохранение файла
      *
      * @param string $file
-     * @param bool $deleteTempFile
+     * @param bool $deleteFile
      * @return mixed|void
      * @throws NotUploadFileException
      */
-    public function saveAs($file, $deleteTempFile = true)
+    public function saveAs($file, $deleteFile = false)
     {
         $this->getFileContent();
-        $this->saveManager->save($file, $this->content, false);
+        if ($this->beforeSave($file, $deleteFile)) {
+            file_put_contents($file, $this->content);
+        }
+    }
+
+    /**
+     * Псевдособытие сохранения
+     *
+     * @param string $filePath
+     * @param bool $deleteFile
+     * @return bool
+     */
+    protected function beforeSave($filePath, $deleteFile = false)
+    {
+        $event = new Event($filePath, $deleteFile);
+
+        $event->needSave = true;
+        $event->sender = $this;
+
+        $this->trigger(Event::SAVE_EVENT, $event);
+        return $event->needSave;
     }
 
     /**
@@ -138,7 +183,17 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getBaseName()
     {
-        return basename($this->link);
+        if (!empty($this->name)) {
+            return $this->name;
+        }
+        $item = explode('.', basename($this->link));
+        $name = array_shift($item);
+        return $name . '.' . $this->getExtension();
+    }
+
+    public function setBaseName($name)
+    {
+        $this->name = $name;
     }
 
     /**
@@ -148,10 +203,10 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getExtension()
     {
-        if ($ext = $this->saveManager->getExtension()) {
-            return $ext;
+        if (!empty($this->extension)) {
+            return $this->extension;
         }
-        $items = explode('.', $this->getBaseName());
+        $items = explode('.', basename($this->link));
         return array_pop($items);
     }
 
@@ -162,8 +217,8 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getType()
     {
-        if ($mimeType = $this->saveManager->getType()) {
-            return $mimeType;
+        if (!empty($this->type)) {
+            return $this->type;
         }
         if (!empty($this->content) && function_exists('finfo_buffer')) {
             if ($mimeType = finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $this->content)) {
@@ -180,6 +235,75 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getSize()
     {
-        return $this->saveManager->getSize();
+        if (!empty($this->size)) {
+            return $this->size;
+        }
+        echo 'asd';
+        die();
+
+        return !empty($this->content) ? mb_strlen($this->content) : 0;
+    }
+
+    /**
+     * Получить файл
+     *
+     * @return string Path or content
+     */
+    public function getFile()
+    {
+        return $this->content;
+    }
+
+    /**
+     * Обновить путь сохранения
+     *
+     * @param string $path
+     * @return string
+     */
+    public function uploadPath($path)
+    {
+        /**
+         * Получить название файла с path без его расширения
+         */
+        $item = explode('.', mb_substr($path, mb_strrpos($path, '/') + 1));
+        $filename = array_shift($item);
+        /**
+         * Получить путь без названия файла
+         */
+        $path = mb_substr($path, 0, mb_strrpos($path, '/') + 1);
+        return $path . $filename . '.' . $this->getExtension();
+    }
+
+    /**
+     * Установить расширение файла
+     *
+     * @param string $extension
+     * @return mixed
+     */
+    public function setExtension($extension)
+    {
+        $this->extension = $extension;
+    }
+
+    /**
+     * Установить mime тип файла
+     *
+     * @param string $mime
+     * @return mixed
+     */
+    public function setType($mime)
+    {
+        $this->type = $mime;
+    }
+
+    /**
+     * Установить размер файла
+     *
+     * @param integer $size
+     * @return mixed
+     */
+    public function setSize($size)
+    {
+        $this->size = $size;
     }
 }
