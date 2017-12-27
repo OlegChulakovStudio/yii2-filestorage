@@ -8,51 +8,53 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use chulakov\filestorage\savers\SaveInterface;
-
 /**
  * Class UploadedFile
  * @package chulakov\filestorage\uploaders
  */
-class UploadedFile extends \yii\web\UploadedFile implements UploadInterface
+class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, ObserverInterface
 {
     /**
-     * Менеджер сохранения
-     *
-     * @var SaveInterface
+     * Подключение реализации функционала Observer
      */
-    public $saveManager;
+    use ObserverTrait;
 
     /**
      * @inheritdoc
      */
-    public function saveAs($file, $deleteTempFile = true)
+    public function saveAs($file, $deleteFile = true)
     {
-        $this->saveManager->save($file, $this->tempName, $deleteTempFile);
+        if ($this->beforeSave($file, $deleteFile)) {
+            parent::saveAs($file, $deleteFile);
+        }
     }
 
     /**
-     * Проверка, выполнялось ли сохранение или нет
+     * Псевдособытие сохранения
      *
+     * @param string $filePath
+     * @param bool $deleteFile
      * @return bool
      */
-    protected function isSaved()
+    protected function beforeSave($filePath, $deleteFile = true)
     {
-        return $this->saveManager && $this->saveManager->isSaved();
+        $event = new Event($filePath, $deleteFile);
+
+        $event->needSave = true;
+        $event->sender = $this;
+
+        $this->trigger(Event::SAVE_EVENT, $event);
+        return $event->needSave;
     }
 
     /**
-     * Получить расширение файла
+     * Получить ссылку на файл
      *
      * @return string
      */
-    public function getExtension()
+    public function getFile()
     {
-        $ext = $this->saveManager->getExtension();
-        if (empty($ext)) {
-            return strtolower(pathinfo($this->name, PATHINFO_EXTENSION));
-        }
-        return $ext;
+        return $this->tempName;
     }
 
     /**
@@ -62,7 +64,7 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface
      */
     public function getType()
     {
-        return $this->saveManager->getType() ?: $this->type;
+        return $this->type;
     }
 
     /**
@@ -72,6 +74,50 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface
      */
     public function getSize()
     {
-        return $this->saveManager->getSize() ?: $this->size;
+        return $this->size;
+    }
+
+    /**
+     * Установить расширение файла
+     *
+     * @param string $extension
+     * @return mixed
+     */
+    public function setExtension($extension)
+    {
+        $this->extension = $extension;
+    }
+
+    /**
+     * Установить mime тип файла
+     *
+     * @param string $mime
+     * @return mixed
+     */
+    public function setType($mime)
+    {
+        $this->type = $mime;
+    }
+
+    /**
+     * Установить размер файла
+     *
+     * @param integer $size
+     * @return mixed
+     */
+    public function setSize($size)
+    {
+        $this->size = $size;
+    }
+
+    /**
+     * Обновление названия файла
+     *
+     * @param string path
+     * @return mixed
+     */
+    public function uploadPath($path)
+    {
+        // TODO: Implement uploadPath() method.
     }
 }
