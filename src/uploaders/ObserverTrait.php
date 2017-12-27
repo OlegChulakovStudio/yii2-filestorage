@@ -22,7 +22,7 @@ trait ObserverTrait
      *
      * @var array
      */
-    public $listeners;
+    public $listeners = [];
     /**
      * Список событий
      *
@@ -31,45 +31,17 @@ trait ObserverTrait
     public $events = [];
 
     /**
-     * Конфигурирование загрузчика
-     *
-     * @param array $config
-     * @return mixed
-     * @throws \yii\base\InvalidConfigException
-     */
-    public function configure($config)
-    {
-        $this->listeners = $config;
-        $this->initListener();
-    }
-
-    /**
      * Инициализация слушателей
      *
      * @throws \yii\base\InvalidConfigException
      */
     public function initListener()
     {
-        if (!empty($this->listeners['class'])) {
-            $this->createListener($this->listeners);
-        } else {
-            foreach ($this->listeners as $listener) {
-                $this->createListener($listener);
-            }
+        foreach ($this->listeners as $listener) {
+            /** @var ListenerInterface $handler */
+            $handler = Instance::ensure($listener);
+            $handler->attach($this);
         }
-    }
-
-    /**
-     * Сохрание слушателя
-     *
-     * @param array $configure
-     * @throws \yii\base\InvalidConfigException
-     */
-    public function createListener($configure)
-    {
-        /** @var ListenerInterface $handler */
-        $handler = Instance::ensure($configure);
-        $handler->attach($this);
     }
 
     /**
@@ -77,7 +49,6 @@ trait ObserverTrait
      *
      * @param string $eventName
      * @param callable $handle
-     * @return mixed
      */
     public function on($eventName, $handle)
     {
