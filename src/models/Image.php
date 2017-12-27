@@ -20,6 +20,9 @@ use sem\helpers\ArrayHelper;
  */
 class Image extends BaseFile
 {
+    /**
+     * @inheritdoc
+     */
     public function behaviors()
     {
         return ArrayHelper::merge(parent::behaviors(),

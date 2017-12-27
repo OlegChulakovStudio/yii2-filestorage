@@ -8,6 +8,10 @@
 
 namespace chulakov\filestorage\params;
 
+/**
+ * Class ThumbParams
+ * @package chulakov\filestorage\params
+ */
 class ThumbParams
 {
     /**

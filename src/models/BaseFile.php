@@ -8,8 +8,8 @@
 
 namespace chulakov\filestorage\models;
 
-use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
+use yii\behaviors\TimestampBehavior;
 
 /**
  * Class File

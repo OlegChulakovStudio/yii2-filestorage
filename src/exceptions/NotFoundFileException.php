@@ -8,6 +8,12 @@
 
 namespace chulakov\filestorage\exceptions;
 
+/**
+ * Файл не найден
+ *
+ * Class NotFoundFileException
+ * @package chulakov\filestorage\exceptions
+ */
 class NotFoundFileException extends \Exception
 {
 }

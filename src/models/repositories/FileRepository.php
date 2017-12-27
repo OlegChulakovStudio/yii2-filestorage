@@ -13,6 +13,10 @@ use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\exceptions\NotFoundModelException;
 
+/**
+ * Class FileRepository
+ * @package chulakov\filestorage\models\repositories
+ */
 class FileRepository
 {
     /**

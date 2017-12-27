@@ -8,9 +8,9 @@
 
 namespace chulakov\filestorage;
 
+use yii\base\Component;
 use Intervention\Image\Image;
 use Intervention\Image\ImageManager;
-use yii\base\Component;
 
 /**
  * Class ImageComponent

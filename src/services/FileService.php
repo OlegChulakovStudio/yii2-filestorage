@@ -8,17 +8,23 @@
 
 namespace chulakov\filestorage\services;
 
+use yii\base\UnknownClassException;
 use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\models\repositories\FileRepository;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\params\UploadParams;
-use yii\base\UnknownClassException;
 
+/**
+ * Class FileService
+ * @package chulakov\filestorage\services
+ */
 class FileService
 {
     /**
+     * Загрузчик
+     *
      * @var FileRepository
      */
     protected $repository;
