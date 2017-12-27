@@ -182,7 +182,7 @@ class FileStorage extends Component
         // Сохранение файла и создание модели с данными о файле
         $file->saveAs($full . DIRECTORY_SEPARATOR . $name);
         if ($model = $this->createModel($file, $params)) {
-            $model->setSystemFile($name, $path);
+            $model->setSystemFile($file->getSavedName(), $path);
             if ($this->service->save($model)) {
                 return $model;
             }

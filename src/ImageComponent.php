@@ -55,12 +55,6 @@ class ImageComponent extends Component
      */
     const POSITION_BOTTOM_RIGHT = 'bottom-right';
     /**
-     * Путь к файлу
-     *
-     * @var string
-     */
-    protected $filePath;
-    /**
      * @var Image
      */
     protected $image;
@@ -68,12 +62,13 @@ class ImageComponent extends Component
     /**
      * Установить изображение в компонент
      *
-     * @param string $path
+     * @param string $file
+     * @return bool
      */
-    public function make($path)
+    public function make($file)
     {
-        $this->filePath = $path;
-        $this->image = (new ImageManager())->make($path);
+        $this->image = (new ImageManager())->make($file);
+        return $this->hasImage();
     }
 
     /**
@@ -94,6 +89,47 @@ class ImageComponent extends Component
     public function hasImage()
     {
         return !is_null($this->image);
+    }
+
+    /**
+     * Сохранение файла
+     *
+     * @param string $path
+     * @param integer $quality
+     */
+    public function save($path, $quality)
+    {
+        $this->image->save($path, $quality);
+    }
+
+    /**
+     * Получение информации о текущем типе файла
+     *
+     * @return string
+     */
+    public function getMimeType()
+    {
+        return $this->image->mime;
+    }
+
+    /**
+     * Получение расширения файла
+     *
+     * @return string
+     */
+    public function getExtension()
+    {
+        return $this->image->extension;
+    }
+
+    /**
+     * Получение размера изображения
+     *
+     * @return mixed
+     */
+    public function getFileSize()
+    {
+        return $this->image->filesize();
     }
 
     /**
@@ -139,7 +175,6 @@ class ImageComponent extends Component
     public function reset()
     {
         $this->image = null;
-        $this->filePath = null;
     }
 
     /**
