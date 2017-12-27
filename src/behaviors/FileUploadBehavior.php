@@ -39,13 +39,13 @@ class FileUploadBehavior extends Behavior
      */
     public $repository;
     /**
+     * @var array
+     */
+    public $repositoryOptions;
+    /**
      * @var string|FileStorage
      */
     public $storage;
-    /**
-     * @var array
-     */
-    public $saveOptions;
     /**
      * @var string
      */
@@ -118,8 +118,8 @@ class FileUploadBehavior extends Behavior
      */
     protected function configureInstances($file)
     {
-        if (!empty($this->saveOptions)) {
-            $file->configure($this->saveOptions);
+        if (!empty($this->repositoryOptions)) {
+            $file->configure($this->repositoryOptions);
         }
     }
 

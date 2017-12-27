@@ -49,9 +49,9 @@ class FilesUploadBehavior extends FileUploadBehavior
      */
     protected function configureInstances($files)
     {
-        if (!empty($this->saveOptions)) {
+        if (!empty($this->repositoryOptions)) {
             foreach ($files as $file) {
-                $file->configure($this->saveOptions);
+                $file->configure($this->repositoryOptions);
             }
         }
     }
