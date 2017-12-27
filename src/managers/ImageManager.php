@@ -33,41 +33,58 @@ class FileManager extends BaseObject implements FileInterface, ListenerInterface
      * Событие на сохранение
      *
      * @param Event $event
-     * @return mixed
      */
     public function handle(Event $event)
     {
-        if ($event->sender && $event->sender instanceof UploadInterface) {
-            $this->uploader = $event->sender;
-            if ($this->isImage()) {
-                $this->processing();
-
-                $this->uploader->setExtension($this->getExtension());
-                $this->uploader->setType($this->getType());
-
-                $savedPath = $this->uploader->uploadPath($event->savedPath);
-                if ($event->needSave && $this->saveImage($savedPath)) {
-                    $event->needSave = false;
-                }
-                if ($event->needDelete && $this->deleteFile($event->filePath)) {
-                    $event->needDelete = false;
-                }
-                //http://image.intervention.io/api/filesize
-                //Returns the size of the image file in bytes or false if image instance is not created from a file.
-                $this->uploader->setSize($this->getSize());
-            }
+        // Проверка корректного типа отправителя
+        if (!$this->validate($event->sender)) {
+            return;
         }
+
+        // Обработка изображения
+        $this->processing();
+        $savedPath = $this->uploader->uploadPath($event->savedPath);
+        if ($this->saveImage($savedPath)) {
+            $event->needSave = false;
+        }
+        if ($event->needDelete && $this->deleteFile($event->filePath)) {
+            $event->needDelete = false;
+        }
+        //http://image.intervention.io/api/filesize
+        //Returns the size of the image file in bytes or false if image instance is not created from a file.
+        $this->uploader->setExtension($this->getExtension());
+        $this->uploader->setType($this->getType());
+        $this->uploader->setSize($this->getSize());
     }
 
     /**
      * Присоединение к Observer
      *
      * @param ObserverInterface $observer
-     * @return mixed
      */
     public function attach(ObserverInterface $observer)
     {
         $observer->on(Event::SAVE_EVENT, [$this, 'handle']);
+    }
+
+    /**
+     * Валидация файла для обработки
+     *
+     * @param object $uploader
+     * @return bool
+     */
+    protected function validate($uploader)
+    {
+        // Проверка корректного типа отправителя
+        if (!($uploader instanceof UploadInterface)) {
+            return false;
+        }
+        // Проверка файла по типу изменяемого
+        $this->uploader = $uploader;
+        if (!$this->isImage()) {
+            return false;
+        }
+        return true;
     }
 
     /**
