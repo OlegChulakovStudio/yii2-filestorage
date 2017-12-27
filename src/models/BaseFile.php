@@ -54,6 +54,27 @@ abstract class BaseFile extends ActiveRecord
     }
 
     /**
+     * Получение информации об оригинальном именовании файла
+     *
+     * @return string
+     */
+    public function getBaseName()
+    {
+        $pathInfo = pathinfo('_' . basename($this->sys_file), PATHINFO_FILENAME);
+        return mb_substr($pathInfo, 1, mb_strlen($pathInfo, '8bit'), '8bit');
+    }
+
+    /**
+     * Расширение сохраненного файла
+     *
+     * @return string
+     */
+    public function getExtension()
+    {
+        return strtolower(pathinfo($this->sys_file, PATHINFO_EXTENSION));
+    }
+
+    /**
      * Проверка файла на изображение
      *
      * @return bool
