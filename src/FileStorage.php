@@ -9,6 +9,7 @@
 namespace chulakov\filestorage;
 
 use Yii;
+use yii\rbac\Item;
 use yii\base\Component;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
@@ -22,8 +23,11 @@ use chulakov\filestorage\exceptions\NotUploadFileException;
 use chulakov\filestorage\exceptions\NotFoundFileException;
 use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\params\UploadParams;
-use yii\rbac\Item;
 
+/**
+ * Class FileStorage
+ * @package chulakov\filestorage
+ */
 class FileStorage extends Component
 {
     /**
