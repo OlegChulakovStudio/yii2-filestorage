@@ -8,15 +8,20 @@
 
 namespace chulakov\filestorage\behaviors;
 
+use yii\base\Behavior;
+use yii\helpers\FileHelper;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\ThumbParams;
-use sem\helpers\FileHelper;
-use yii\base\Behavior;
 
+/***
+ * Class ThumbBehavior
+ * @package chulakov\filestorage\behaviors
+ */
 class ThumbBehavior extends Behavior
 {
     /**
      * Название компонента для работы сохранением файлов
+     *
      * @var string
      */
     protected $storageComponent = 'fileStorage';
@@ -67,9 +72,11 @@ class ThumbBehavior extends Behavior
     }
 
     /**
-     * @param $width
-     * @param $height
-     * @param $ext
+     * Генерирование названия файла кеша
+     *
+     * @param integer $width
+     * @param integer $height
+     * @param string $ext
      * @return string
      */
     protected function generateFileCacheName($width, $height, $ext)
@@ -124,7 +131,7 @@ class ThumbBehavior extends Behavior
      * Получить путь к кешу
      *
      * @param BaseFile $model
-     * @param $filename
+     * @param string $filename
      * @return string
      * @throws \yii\base\Exception
      */
