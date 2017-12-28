@@ -50,12 +50,6 @@ class ThumbParams
      * @var integer
      */
     public $watermarkPosition;
-    /**
-     * Куда сохранить изображение
-     *
-     * @var string
-     */
-    public $savedPath;
 
     /**
      * ThumbParams constructor.
