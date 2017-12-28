@@ -89,11 +89,18 @@ interface UploadInterface
     public function getBaseName();
 
     /**
-     * Получение имени файла после сохранения
+     * Получить оригинальное имя файла
+     *
+     * @return mixed
+     */
+    public function getSysName();
+
+    /**
+     * Получить имя файла с расширением
      *
      * @return string
      */
-    public function getSavedName();
+    public function getName();
 
     /**
      * Установка полного имени файла
@@ -108,6 +115,12 @@ interface UploadInterface
      * @return string
      */
     public function getExtension();
+
+    /**
+     * Установить расширение файла
+     * @param string $extension
+     */
+    public function setExtension($extension);
 
     /**
      * Получение MIME типа файла

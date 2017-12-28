@@ -20,6 +20,13 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     use ObserverTrait;
 
     /**
+     * Системное имя файла
+     *
+     * @var string
+     */
+    protected $sysName;
+
+    /**
      * Конфигурация компонента
      *
      * @param array $config
@@ -115,7 +122,7 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
      */
     public function setName($name)
     {
-         $this->name = $name;
+        $this->name = $name;
     }
 
     /**
@@ -156,5 +163,37 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     public function setSize($size)
     {
         $this->size = $size;
+    }
+
+    /**
+     *  Получить системное имя файла
+     *
+     * @return string
+     */
+    public function getSysName()
+    {
+        if (empty($this->sysName)) {
+            $this->sysName = uniqid();
+        }
+        return $this->sysName . '.' . $this->getExtension();
+    }
+
+    /**
+     * Получить имя файла с расширением
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Установить расширение файла
+     * @param string $extension
+     */
+    public function setExtension($extension)
+    {
+        $this->extension = $extension;
     }
 }
