@@ -10,7 +10,7 @@ namespace chulakov\filestorage\observer;
 
 /**
  * Interface ListenerInterface
- * @package chulakov\filestorage\managers
+ * @package chulakov\filestorage\observer
  */
 interface ListenerInterface
 {

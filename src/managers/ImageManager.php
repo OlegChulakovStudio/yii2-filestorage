@@ -250,8 +250,6 @@ class ImageManager extends BaseObject implements FileInterface, ListenerInterfac
     {
         $path = dirname($originalPath);
         $name = $this->uploader->getSysName();
-
-
         return implode(DIRECTORY_SEPARATOR, array_filter([$path, $name]));
     }
 

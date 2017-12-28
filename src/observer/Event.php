@@ -10,9 +10,9 @@ namespace chulakov\filestorage\observer;
 
 /**
  * Class Event
- * @package chulakov\filestorage\uploaders
+ * @package chulakov\filestorage\observer
  */
-class Event extends \yii\base\Event
+class Event
 {
     /**
      * Событие сохранения
@@ -48,6 +48,12 @@ class Event extends \yii\base\Event
      * @var string
      */
     public $savedPath;
+    /**
+     * Отправитель
+     *
+     * @var object
+     */
+    public $sender;
 
     /**
      * Event constructor.
@@ -59,6 +65,5 @@ class Event extends \yii\base\Event
     {
         $this->savedPath = $savedPath;
         $this->needDelete = $deleteFile;
-        parent::__construct($config);
     }
 }

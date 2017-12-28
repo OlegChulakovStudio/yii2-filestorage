@@ -9,8 +9,8 @@
 namespace chulakov\filestorage\observer;
 
 /**
- * Interface UploadObserver
- * @package chulakov\filestorage\uploaders
+ * Interface ObserverInterface
+ * @package chulakov\filestorage\observer
  */
 interface ObserverInterface
 {

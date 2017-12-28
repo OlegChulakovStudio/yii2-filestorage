@@ -12,7 +12,7 @@ use yii\di\Instance;
 
 /**
  * Trait ObserverTrait
- * @package chulakov\filestorage\uploaders
+ * @package chulakov\filestorage\observer
  */
 trait ObserverTrait
 {
