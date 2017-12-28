@@ -8,17 +8,31 @@
 
 namespace chulakov\filestorage\params;
 
+/**
+ * Class UploadParams
+ * @package chulakov\filestorage\params
+ */
 class UploadParams
 {
     /**
-     * @var string Категория файла
+     * Категория файла
+     *
+     * @var string
      */
     public $group_code;
     /**
-     * @var integer Идентификатор родительской модели
+     * Идентификатор родительской модели
+     *
+     * @var integer
      */
     public $object_id = null;
+    /**
+     * Роль доступа
+     *
+     * @var integer
+     */
     public $accessRole = null;
+
     /**
      * Базовый конструктор параметров генерации пути
      *

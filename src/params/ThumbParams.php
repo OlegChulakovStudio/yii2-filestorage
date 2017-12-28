@@ -8,6 +8,10 @@
 
 namespace chulakov\filestorage\params;
 
+/**
+ * Class ThumbParams
+ * @package chulakov\filestorage\params
+ */
 class ThumbParams
 {
     /**
@@ -46,12 +50,6 @@ class ThumbParams
      * @var integer
      */
     public $watermarkPosition;
-    /**
-     * Куда сохранить изображение
-     *
-     * @var string
-     */
-    public $savedPath;
 
     /**
      * ThumbParams constructor.

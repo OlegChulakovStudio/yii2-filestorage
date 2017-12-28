@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл класса FileInterface
+ * Файл интерфейса FileInterface
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -10,8 +10,20 @@ namespace chulakov\filestorage\uploaders;
 
 use yii\base\Model;
 
+/**
+ * Interface UploadInterface
+ * @package chulakov\filestorage\uploaders
+ */
 interface UploadInterface
 {
+    /**
+     * Конфигурирование загрузчика
+     *
+     * @param array $config
+     * @return mixed
+     */
+    public function configure($config);
+
     /**
      * Инициализация одной модели
      *
@@ -56,11 +68,46 @@ interface UploadInterface
     public function saveAs($file, $deleteTempFile = true);
 
     /**
+     *  Путь до файла
+     *
+     * @return string
+     */
+    public function getFile();
+
+    /**
+     * Контент файла
+     *
+     * @return string
+     */
+    public function getContent();
+
+    /**
      * Получение информации об оригинальном именовании файла
      *
      * @return string
      */
     public function getBaseName();
+
+    /**
+     * Получить оригинальное имя файла
+     *
+     * @return mixed
+     */
+    public function getSysName();
+
+    /**
+     * Получить имя файла с расширением
+     *
+     * @return string
+     */
+    public function getName();
+
+    /**
+     * Установка полного имени файла
+     *
+     * @param string $name
+     */
+    public function setName($name);
 
     /**
      * Получение расширения файла
@@ -70,6 +117,12 @@ interface UploadInterface
     public function getExtension();
 
     /**
+     * Установить расширение файла
+     * @param string $extension
+     */
+    public function setExtension($extension);
+
+    /**
      * Получение MIME типа файла
      *
      * @return string
@@ -77,9 +130,23 @@ interface UploadInterface
     public function getType();
 
     /**
+     * Установить mime тип файла
+     *
+     * @param string $mime
+     */
+    public function setType($mime);
+
+    /**
      * Получение размера файла
      *
      * @return integer
      */
     public function getSize();
+
+    /**
+     * Установить размер файла
+     *
+     * @param integer $size
+     */
+    public function setSize($size);
 }

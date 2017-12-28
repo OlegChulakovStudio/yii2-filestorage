@@ -8,6 +8,10 @@
 
 namespace chulakov\filestorage\models;
 
+/**
+ * Class File
+ * @package chulakov\filestorage\models
+ */
 class File extends BaseFile
 {
 }

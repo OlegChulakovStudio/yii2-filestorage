@@ -49,16 +49,9 @@ class FilesUploadBehavior extends FileUploadBehavior
      */
     protected function configureInstances($files)
     {
-        if (!empty($this->saveOptions['class'])) {
-
-            $className = $this->saveOptions['class'];
-            unset($this->saveOptions['class']);
-
+        if (!empty($this->repositoryOptions)) {
             foreach ($files as $file) {
-                if (!$file->saveManager && class_exists($className)) {
-                    $file->saveManager = new $className();
-                }
-                \Yii::configure($file->saveManager, $this->saveOptions);
+                $file->configure($this->repositoryOptions);
             }
         }
     }

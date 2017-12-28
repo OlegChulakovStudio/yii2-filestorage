@@ -8,18 +8,22 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use chulakov\filestorage\exceptions\NotUploadFileException;
-use chulakov\filestorage\ImageComponent;
-use chulakov\filestorage\savers\SaveInterface;
 use yii\base\Model;
+use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\exceptions\NotUploadFileException;
 
 /**
  * Class RemoteUploadedFile
  * @package chulakov\filestorage\uploaders
  * @property ImageComponent $imageManager
  */
-class RemoteUploadedFile implements UploadInterface
+class RemoteUploadedFile implements UploadInterface, ObserverInterface
 {
+    /**
+     * Подключение реализации функционала Observer
+     */
+    use ObserverTrait;
+
     /**
      * Ссылка на файл
      *
@@ -33,9 +37,35 @@ class RemoteUploadedFile implements UploadInterface
      */
     protected $content;
     /**
-     * @var SaveInterface
+     * Размер файла
+     *
+     * @var integer
      */
-    public $saveManager;
+    protected $size;
+    /**
+     * Mime тип файла
+     *
+     * @var string
+     */
+    protected $type;
+    /**
+     * Имя файла
+     *
+     * @var string
+     */
+    protected $name;
+    /**
+     * Оригинальное имя файла
+     *
+     * @var string
+     */
+    protected $sysName;
+    /**
+     * Расширение файла
+     *
+     * @var string
+     */
+    protected $extension;
 
     /**
      * RemoteUploadedFile constructor.
@@ -44,6 +74,21 @@ class RemoteUploadedFile implements UploadInterface
     public function __construct($link)
     {
         $this->link = $link;
+    }
+
+    /**
+     * Конфигурация компонента
+     *
+     * @param array $config
+     * @return mixed|void
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function configure($config)
+    {
+        foreach ($config as $key => $value) {
+            $this->{$key} = $value;
+        }
+        $this->initListener();
     }
 
     /**
@@ -101,12 +146,55 @@ class RemoteUploadedFile implements UploadInterface
     }
 
     /**
-     * Получить контент файла
+     * Сохранение файла
      *
-     * @return bool|string
+     * @param string $file
+     * @param bool $deleteFile
+     * @return mixed|void
      * @throws NotUploadFileException
      */
-    protected function getFileContent()
+    public function saveAs($file, $deleteFile = false)
+    {
+        if ($this->beforeSave($file, $deleteFile)) {
+            file_put_contents($file, $this->getContent());
+        }
+    }
+
+    /**
+     * Псевдособытие сохранения
+     *
+     * @param string $filePath
+     * @param bool $deleteFile
+     * @return bool
+     */
+    protected function beforeSave($filePath, $deleteFile = false)
+    {
+        $event = new Event($filePath, $deleteFile);
+
+        $event->needSave = true;
+        $event->sender = $this;
+
+        $this->trigger(Event::SAVE_EVENT, $event);
+        return $event->needSave;
+    }
+
+    /**
+     * Получить файл
+     *
+     * @return string
+     */
+    public function getFile()
+    {
+        return $this->link;
+    }
+
+    /**
+     * Получить файл
+     *
+     * @return string
+     * @throws NotUploadFileException
+     */
+    public function getContent()
     {
         if (empty($this->content)) {
             $this->content = file_get_contents($this->link);
@@ -118,27 +206,14 @@ class RemoteUploadedFile implements UploadInterface
     }
 
     /**
-     * Сохранение файла
-     *
-     * @param string $file
-     * @param bool $deleteTempFile
-     * @return mixed|void
-     * @throws NotUploadFileException
-     */
-    public function saveAs($file, $deleteTempFile = true)
-    {
-        $this->getFileContent();
-        $this->saveManager->save($file, $this->content, false);
-    }
-
-    /**
      * Получение информации об оригинальном именовании файла
      *
      * @return string
      */
     public function getBaseName()
     {
-        return basename($this->link);
+        $pathInfo = pathinfo('_' . basename($this->getName()), PATHINFO_FILENAME);
+        return mb_substr($pathInfo, 1, mb_strlen($pathInfo, '8bit'), '8bit');
     }
 
     /**
@@ -148,11 +223,43 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getExtension()
     {
-        if ($ext = $this->saveManager->getExtension()) {
-            return $ext;
+        if (empty($this->extension)) {
+            $this->extension = strtolower(pathinfo(basename($this->getName()), PATHINFO_EXTENSION));
         }
-        $items = explode('.', $this->getBaseName());
-        return array_pop($items);
+        return $this->extension;
+    }
+
+    /**
+     * Установить расширение файла
+     *
+     * @param string $extension
+     */
+    public function setExtension($extension)
+    {
+        $this->extension = $extension;
+    }
+
+    /**
+     * Получение полного имени файла
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        if (empty($this->name)) {
+            $this->name = $this->getFileNameFromLink() ?: basename($this->link);
+        }
+        return $this->name;
+    }
+
+    /**
+     * Устанавка полного имени файла
+     *
+     * @param string $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
     }
 
     /**
@@ -162,15 +269,28 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getType()
     {
-        if ($mimeType = $this->saveManager->getType()) {
-            return $mimeType;
+        if (!empty($this->type)) {
+            return $this->type;
         }
         if (!empty($this->content) && function_exists('finfo_buffer')) {
             if ($mimeType = finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $this->content)) {
                 return $mimeType;
             }
         }
+        if ($mimeType = $this->getMimeTypeFromLink()) {
+            return $mimeType;
+        }
         return 'text/plain';
+    }
+
+    /**
+     * Установить mime тип файла
+     *
+     * @param string $mime
+     */
+    public function setType($mime)
+    {
+        $this->type = $mime;
     }
 
     /**
@@ -180,6 +300,90 @@ class RemoteUploadedFile implements UploadInterface
      */
     public function getSize()
     {
-        return $this->saveManager->getSize();
+        if (!empty($this->size)) {
+            return $this->size;
+        }
+        if ($length = $this->getFileSizeFormLink()) {
+            return $this->size = $length;
+        }
+        if (!empty($this->content)) {
+            return $this->size = strlen($this->content);
+        }
+        return 0;
+    }
+
+    /**
+     * Установить размер файла
+     *
+     * @param integer $size
+     */
+    public function setSize($size)
+    {
+        $this->size = $size;
+    }
+
+    /**
+     *  Получить системное имя файла
+     *
+     * @return string
+     */
+    public function getSysName()
+    {
+        if (empty($this->sysName)) {
+            $this->sysName = uniqid();
+        }
+        return $this->sysName . '.' . $this->getExtension();
+    }
+
+    /**
+     * Получить mime тип по ссылке
+     *
+     * @return string|null
+     */
+    protected function getMimeTypeFromLink()
+    {
+        return $this->getHeaderContent('Content-Type');
+    }
+
+    /**
+     * Получить размер файла по ссылке
+     *
+     * @return string|null
+     */
+    protected function getFileSizeFormLink()
+    {
+        return $this->getHeaderContent('Content-Length');
+    }
+
+    /**
+     * Получить имя файла по ссылке
+     *
+     * @return string|null
+     */
+    protected function getFileNameFromLink()
+    {
+        $header = $this->getHeaderContent('Content-Disposition');
+        if (preg_match('/filename=\"([^\"]*)\";/sui', $header, $match)) {
+            return trim($match[1]);
+        }
+        return null;
+    }
+
+    /**
+     * Получить содержимое нужного заголовка
+     *
+     * @param string $name
+     * @return string|null
+     */
+    protected function getHeaderContent($name)
+    {
+        $headers = get_headers($this->link);
+        foreach ($headers as $header) {
+            if (strpos($header, $name) !== false) {
+                $items = explode(':', $header);
+                return strtolower(trim(array_pop($items)));
+            }
+        }
+        return null;
     }
 }

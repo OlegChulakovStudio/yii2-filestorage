@@ -8,8 +8,8 @@
 
 namespace chulakov\filestorage\models;
 
-use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
+use yii\behaviors\TimestampBehavior;
 
 /**
  * Class File
@@ -51,6 +51,27 @@ abstract class BaseFile extends ActiveRecord
     public function setSystemFile($name, $path = null)
     {
         $this->sys_file = implode('/', array_filter([$path, $name]));
+    }
+
+    /**
+     * Получение информации об оригинальном именовании файла
+     *
+     * @return string
+     */
+    public function getBaseName()
+    {
+        $pathInfo = pathinfo('_' . basename($this->sys_file), PATHINFO_FILENAME);
+        return mb_substr($pathInfo, 1, mb_strlen($pathInfo, '8bit'), '8bit');
+    }
+
+    /**
+     * Расширение сохраненного файла
+     *
+     * @return string
+     */
+    public function getExtension()
+    {
+        return strtolower(pathinfo($this->sys_file, PATHINFO_EXTENSION));
     }
 
     /**

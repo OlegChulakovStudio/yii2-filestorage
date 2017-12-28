@@ -8,24 +8,55 @@
 
 namespace chulakov\filestorage\behaviors;
 
+use yii\rbac\Item;
+use yii\base\Behavior;
+use yii\di\Instance;
+use yii\helpers\FileHelper;
+use chulakov\filestorage\FileStorage;
+use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\ThumbParams;
-use sem\helpers\FileHelper;
-use yii\base\Behavior;
 
+/***
+ * Class ThumbBehavior
+ * @package chulakov\filestorage\behaviors
+ */
 class ThumbBehavior extends Behavior
 {
     /**
+     * @var BaseFile
+     */
+    public $owner;
+    /**
      * Название компонента для работы сохранением файлов
-     * @var string
+     *
+     * @var string|FileStorage
      */
     protected $storageComponent = 'fileStorage';
     /**
      * Название компонента для работы с изображениями
      *
-     * @var string
+     * @var string|ImageComponent
      */
     protected $imageComponent = 'imageComponent';
+    /**
+     * Проверка прав на доступ к файлу
+     *
+     * @var string|Item|null
+     */
+    protected $accessRole = null;
+
+    /**
+     * Инициализация
+     *
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function init()
+    {
+        parent::init();
+        $this->storageComponent = Instance::ensure($this->storageComponent);
+        $this->imageComponent = Instance::ensure($this->imageComponent);
+    }
 
     /**
      * Формирование thumbnail изображения
@@ -34,178 +65,122 @@ class ThumbBehavior extends Behavior
      * Если нет, то оригинальное сообщение будет обрезано под нужное разрешение,
      * после закешировано, и после этого будет выдано url на изображение
      *
-     * @param ThumbParams $thumbParams
+     * @param ThumbParams $params
+     * @param bool $absolute
      * @return string
      *
-     * @throws \Exception
+     * @throws \yii\base\InvalidParamException
+     * @throws \chulakov\filestorage\exceptions\NoAccessException
+     * @throws \chulakov\filestorage\exceptions\NotFoundFileException
+     * @throws \yii\base\Exception
      */
-    public function thumb(ThumbParams $thumbParams)
+    public function thumb(ThumbParams $params, $absolute = false)
     {
         /** @var BaseFile $model */
         $model = $this->owner;
-
-        if(!$this->isImageModel($model))
-            return false;
-
-        $ext = !empty($thumbParams->extension) ? $thumbParams->extension : $model->ori_extension;
-        $thumbName = $this->generateFileCacheName(
-            $thumbParams->width,
-            $thumbParams->height,
-            $ext
-        );
-
-        $thumbParams->savedPath = $this->getFileCachePath($model, $thumbName);
-        $url = $this->getFileCacheUrl($model, $thumbName);
-
-        if (file_exists($this->getFileCachePath($model, $thumbName))) {
-            return $url;
+        if (!$model->isImage()) {
+            return '';
         }
-
-        $this->createThumb($model, $thumbParams);
-
-        return $url;
+        $savePath = $this->getFileThumbPath($params);
+        if (!file_exists($savePath)) {
+            $path = $this->getFilePath();
+            $this->createThumb($path, $savePath, $params);
+        }
+        return $this->getFileThumbUrl($params, $absolute);
     }
 
-    protected $allowExtensions = [
-        'jpg',
-        'png',
-        'gif',
-        'tif',
-        'bmp',
-        'ico',
-        'psd',
-        'webp',
-        'data-url',
-    ];
-
     /**
-     * Проверка на изображение
+     * Получение полного пути до файла с превью
      *
-     * @param $model
-     * @return bool
-     * @throws \Exception
-     */
-    protected function isImageModel($model)
-    {
-        return in_array($model->ori_extension, $this->allowExtensions);
-    }
-
-    /**
-     * @param $width
-     * @param $height
-     * @param $ext
+     * @param ThumbParams $params
      * @return string
+     * @throws \yii\base\InvalidParamException
+     * @throws \chulakov\filestorage\exceptions\NoAccessException
+     * @throws \chulakov\filestorage\exceptions\NotFoundFileException
+     * @throws \yii\base\Exception
      */
-    protected function generateFileCacheName($width, $height, $ext)
+    protected function getFileThumbPath($params)
     {
-        return $width . 'x' . $height . '.' . $ext;
+        $path = $this->generateThumbPath($this->getFilePath(), $params);
+        if (!is_dir(dirname($path))) {
+            FileHelper::createDirectory(dirname($path));
+        }
+        return $path;
     }
 
     /**
-     * Вырезать путь к файлу
+     * Получить URL ссылку на превью
      *
-     * in:
-     *      /path_to_file/thumb/filename.png
-     * out:
-     *      /path_to_file/thumb/
-     *
-     * @param string $path
-     * @param string $separator
+     * @param ThumbParams $params
+     * @param bool $absolute
      * @return string
+     * @throws \yii\base\InvalidParamException
+     * @throws \chulakov\filestorage\exceptions\NoAccessException
      */
-    protected function cutPath($path, $separator = '/')
+    protected function getFileThumbUrl($params, $absolute)
     {
-        return mb_substr($path, 0, mb_strrpos($path, $separator));
-    }
-
-    /**
-     * Получить ссылку на кешированное изображение
-     *
-     * @param BaseFile $model
-     * @param string $filename
-     * @return string
-     */
-    protected function getFileCacheUrl($model, $filename)
-    {
-        $originalFilePath = $this->cutPath(\Yii::$app->{$this->storageComponent}->getFileUrl($model));
-        $thumbPath = $originalFilePath . '/thumbs/' . $this->getFileName($model->sys_file) . '/';
-        return $thumbPath . $filename;
-    }
-
-    /**
-     * Получить название файла без расширения
-     *
-     * @param string $path
-     * @return mixed
-     */
-    protected function getFileName($path)
-    {
-        $items = explode('.', basename($path));
-        return array_shift($items);
+        return $this->generateThumbPath($this->getFileUrl($absolute), $params);
     }
 
     /**
      * Получить путь к кешу
      *
-     * @param BaseFile $model
-     * @param $filename
+     * @param string $basePath
+     * @param ThumbParams $params
      * @return string
-     * @throws \yii\base\Exception
      */
-    protected function getFileCachePath($model, $filename)
+    protected function generateThumbPath($basePath, $params)
     {
-        $prefix = '/thumbs/' . $this->getFileName($model->sys_file) . '/';
-        $thumbPath = $this->cutPath($this->getFilePath($model)) . $prefix;
-
-        if (!file_exists($thumbPath)) {
-            FileHelper::createDirectory($thumbPath);
-        }
-
-        return $thumbPath . $filename;
+        $name = $params->width . 'x' . $params->height . '.' . $this->owner->getExtension();
+        return implode(DIRECTORY_SEPARATOR, [
+            dirname($basePath), 'thumbs', $this->owner->getBaseName(), $name
+        ]);
     }
 
     /**
      * Получить путь к файлу по модели
      *
-     * @param BaseFile $model
      * @return mixed
+     * @throws \yii\base\InvalidParamException
+     * @throws \chulakov\filestorage\exceptions\NoAccessException
+     * @throws \chulakov\filestorage\exceptions\NotFoundFileException
      */
-    protected function getFilePath($model)
+    protected function getFilePath()
     {
-        return \Yii::$app->{$this->storageComponent}->getFilePath($model);
+        return $this->storageComponent->getFilePath($this->owner, $this->accessRole);
+    }
+
+    /**
+     * Получение URL до файла
+     *
+     * @param bool $absolute
+     * @return string
+     * @throws \yii\base\InvalidParamException
+     * @throws \chulakov\filestorage\exceptions\NoAccessException
+     */
+    protected function getFileUrl($absolute)
+    {
+        return $this->storageComponent->getFileUrl($this->owner, $absolute, $this->accessRole);
     }
 
     /**
      * Создание thumbnail
      *
-     * @param BaseFile $model модель файла
-     * @param ThumbParams $thumbParams
-     * @return bool
-     */
-    protected function createThumb($model, ThumbParams $thumbParams)
-    {
-        $path = $this->getFilePath($model);
-        return $this->createImage($path, $thumbParams);
-    }
-
-    /**
-     * Создание изображения
-     *
      * @param string $path
-     * @param ThumbParams $thumbParams
+     * @param string $savePath
+     * @param ThumbParams $params
      * @return bool
      */
-    protected function createImage($path, ThumbParams $thumbParams)
+    protected function createThumb($path, $savePath, ThumbParams $params)
     {
-        $imageManager = \Yii::$app->{$this->imageComponent};
+        $this->imageComponent->make($path);
 
-        $imageManager->make($path);
+        $this->imageComponent->resize($params->width, $params->height);
+        $this->imageComponent->convert($params->extension);
+        $this->imageComponent->watermark($params->watermarkPath, $params->watermarkPosition);
 
-        $imageManager->resize($thumbParams->width, $thumbParams->height);
-        $imageManager->convert($thumbParams->extension);
-        $imageManager->watermark($thumbParams->watermarkPath, $thumbParams->watermarkPosition);
+        $this->imageComponent->getImage()->save($savePath, $params->quality);
 
-        $imageManager->getImage()->save($thumbParams->savedPath, $thumbParams->quality);
         return true;
     }
 }
