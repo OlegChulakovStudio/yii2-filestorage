@@ -48,7 +48,6 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     {
         if ($this->beforeSave($file, $deleteFile)) {
             parent::saveAs($file, false);
-            $this->name = basename($file);
         }
         if ($deleteFile) {
             $this->deleteFile($this->tempName);
