@@ -97,7 +97,7 @@ class FileService
         $model->group_code = $params->group_code;
         $model->object_id = $params->object_id;
         $model->ori_extension = $file->getExtension();
-        $model->ori_name = $file->getBaseName();
+        $model->ori_name = $file->getName();
         $model->mime = $file->getType();
         $model->size = $file->getSize();
 
