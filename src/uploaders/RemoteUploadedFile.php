@@ -54,6 +54,18 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
      * @var string
      */
     protected $name;
+    /**
+     * Оригинальное имя файла
+     *
+     * @var string
+     */
+    protected $sysName;
+    /**
+     * Расширение файла
+     *
+     * @var string
+     */
+    protected $extension;
 
     /**
      * RemoteUploadedFile constructor.
@@ -205,23 +217,26 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
     }
 
     /**
-     * Получение имени файла после сохранения
-     *
-     * @return string
-     */
-    public function getSavedName()
-    {
-        return $this->getName();
-    }
-
-    /**
      * Получение расширения файла
      *
      * @return string
      */
     public function getExtension()
     {
-        return strtolower(pathinfo(basename($this->getName()), PATHINFO_EXTENSION));
+        if (empty($this->extension)) {
+            $this->extension = strtolower(pathinfo(basename($this->getName()), PATHINFO_EXTENSION));
+        }
+        return $this->extension;
+    }
+
+    /**
+     * Установить расширение файла
+     *
+     * @param string $extension
+     */
+    public function setExtension($extension)
+    {
+        $this->extension = $extension;
     }
 
     /**
@@ -231,10 +246,10 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
      */
     public function getName()
     {
-        if ($this->name) {
-            return $this->name;
+        if (empty($this->name)) {
+            $this->name = $this->getFileNameFromLink() ?: basename($this->link);
         }
-        return basename($this->link);
+        return $this->name;
     }
 
     /**
@@ -262,6 +277,9 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
                 return $mimeType;
             }
         }
+        if ($mimeType = $this->getMimeTypeFromLink()) {
+            return $mimeType;
+        }
         return 'text/plain';
     }
 
@@ -285,8 +303,13 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
         if (!empty($this->size)) {
             return $this->size;
         }
-        return !empty($this->content)
-            ? mb_strlen($this->content) : 0;
+        if ($length = $this->getFileSizeFormLink()) {
+            return $this->size = $length;
+        }
+        if (!empty($this->content)) {
+            return $this->size = strlen($this->content);
+        }
+        return 0;
     }
 
     /**
@@ -297,5 +320,70 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
     public function setSize($size)
     {
         $this->size = $size;
+    }
+
+    /**
+     *  Получить системное имя файла
+     *
+     * @return string
+     */
+    public function getSysName()
+    {
+        if (empty($this->sysName)) {
+            $this->sysName = uniqid();
+        }
+        return $this->sysName . '.' . $this->getExtension();
+    }
+
+    /**
+     * Получить mime тип по ссылке
+     *
+     * @return string|null
+     */
+    protected function getMimeTypeFromLink()
+    {
+        return $this->getHeaderContent('Content-Type');
+    }
+
+    /**
+     * Получить размер файла по ссылке
+     *
+     * @return string|null
+     */
+    protected function getFileSizeFormLink()
+    {
+        return $this->getHeaderContent('Content-Length');
+    }
+
+    /**
+     * Получить имя файла по ссылке
+     *
+     * @return string|null
+     */
+    protected function getFileNameFromLink()
+    {
+        $header = $this->getHeaderContent('Content-Disposition');
+        if (preg_match('/filename=\"([^\"]*)\";/sui', $header, $match)) {
+            return trim($match[1]);
+        }
+        return null;
+    }
+
+    /**
+     * Получить содержимое нужного заголовка
+     *
+     * @param string $name
+     * @return string|null
+     */
+    protected function getHeaderContent($name)
+    {
+        $headers = get_headers($this->link);
+        foreach ($headers as $header) {
+            if (strpos($header, $name) !== false) {
+                $items = explode(':', $header);
+                return strtolower(trim(array_pop($items)));
+            }
+        }
+        return null;
     }
 }
