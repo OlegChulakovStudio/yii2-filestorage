@@ -8,12 +8,12 @@
 
 namespace chulakov\filestorage\managers;
 
+use yii\di\Instance;
 use yii\base\BaseObject;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\uploaders\Event;
 use chulakov\filestorage\uploaders\ObserverInterface;
 use chulakov\filestorage\uploaders\UploadInterface;
-use yii\di\Instance;
 
 /**
  * Class SaveManager
@@ -79,7 +79,6 @@ class ImageManager extends BaseObject implements FileInterface, ListenerInterfac
      * @var ImageComponent
      */
     public $imageComponent;
-
     /**
      * @var UploadInterface
      */
@@ -109,16 +108,27 @@ class ImageManager extends BaseObject implements FileInterface, ListenerInterfac
         }
         // Обработка изображения
         $this->processing();
+        $this->updateFileInfo();
+        // Сохранение изображения
         $newPath = $this->updatePath($event->savedPath);
         if ($this->saveImage($newPath)) {
-            //http://image.intervention.io/api/filesize
-            //Returns the size of the image file in bytes or false if image instance is not created from a file.
-            $this->uploader->setName($newPath);
-            $this->uploader->setExtension($this->getExtension());
-            $this->uploader->setType($this->getType());
             $this->uploader->setSize($this->getSize());
             $event->needSave = false;
         }
+    }
+
+    /**
+     * Обновить информацию о файле
+     *
+     * @throws \Exception
+     */
+    protected function updateFileInfo()
+    {
+        $item = explode('.', $this->uploader->getName());
+        $this->uploader->setName(array_shift($item) . '.' . $this->getExtension());
+
+        $this->uploader->setExtension($this->getExtension());
+        $this->uploader->setType($this->getType());
     }
 
     /**
@@ -238,7 +248,9 @@ class ImageManager extends BaseObject implements FileInterface, ListenerInterfac
     protected function updatePath($originalPath)
     {
         $path = dirname($originalPath);
-        $name = pathinfo($originalPath, PATHINFO_FILENAME) . '.' . $this->getExtension();
+        $name = $this->uploader->getSysName();
+
+
         return implode(DIRECTORY_SEPARATOR, array_filter([$path, $name]));
     }
 
