@@ -65,7 +65,6 @@ class FileStorage extends Component
      * @var number|null
      */
     public $fileMode = 0775;
-
     /**
      * @var FileService
      */
@@ -176,13 +175,12 @@ class FileStorage extends Component
     {
         // Генерация всех необходимых частей для сохранения файла
         $path = $this->getSavePath($params);
-        $name = $this->getSaveName($file->getExtension());
         $full = $this->getAbsolutePath($path);
 
         // Сохранение файла и создание модели с данными о файле
-        $file->saveAs($full . DIRECTORY_SEPARATOR . $name);
+        $file->saveAs($full . DIRECTORY_SEPARATOR . $file->getSysName());
         if ($model = $this->createModel($file, $params)) {
-            $model->setSystemFile($file->getSavedName(), $path);
+            $model->setSystemFile($file->getSysName(), $path);
             if ($this->service->save($model)) {
                 return $model;
             }
@@ -206,17 +204,6 @@ class FileStorage extends Component
                 ]), '\\\/')
             ]))
         );
-    }
-
-    /**
-     * Формирование нового имени для сохраняемого файла
-     *
-     * @param string $ext Исходное расширение оригинального файла
-     * @return string
-     */
-    protected function getSaveName($ext)
-    {
-        return implode('.', array_filter([uniqid(), $ext]));
     }
 
     /**
