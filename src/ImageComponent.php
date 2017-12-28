@@ -96,10 +96,11 @@ class ImageComponent extends Component
      *
      * @param string $path
      * @param integer $quality
+     * @return Image
      */
     public function save($path, $quality)
     {
-        $this->image->save($path, $quality);
+        return $this->image->save($path, $quality);
     }
 
     /**
