@@ -9,8 +9,8 @@
 namespace chulakov\filestorage\services;
 
 use yii\base\UnknownClassException;
-use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\File;
+use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\models\repositories\FileRepository;
 use chulakov\filestorage\uploaders\UploadInterface;

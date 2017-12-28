@@ -8,11 +8,12 @@
 
 namespace chulakov\filestorage\managers;
 
+use chulakov\filestorage\observer\ListenerInterface;
 use yii\di\Instance;
 use yii\base\BaseObject;
 use chulakov\filestorage\ImageComponent;
-use chulakov\filestorage\uploaders\Event;
-use chulakov\filestorage\uploaders\ObserverInterface;
+use chulakov\filestorage\observer\Event;
+use chulakov\filestorage\observer\ObserverInterface;
 use chulakov\filestorage\uploaders\UploadInterface;
 
 /**

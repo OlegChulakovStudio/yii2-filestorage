@@ -8,9 +8,9 @@
 
 namespace chulakov\filestorage\models;
 
+use yii\helpers\ArrayHelper;
 use chulakov\filestorage\behaviors\ThumbBehavior;
 use chulakov\filestorage\params\ThumbParams;
-use sem\helpers\ArrayHelper;
 
 /**
  * Class Image

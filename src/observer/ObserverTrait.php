@@ -6,9 +6,8 @@
  * @link http://chulakov.com/
  */
 
-namespace chulakov\filestorage\uploaders;
+namespace chulakov\filestorage\observer;
 
-use chulakov\filestorage\managers\ListenerInterface;
 use yii\di\Instance;
 
 /**

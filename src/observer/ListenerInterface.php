@@ -6,9 +6,7 @@
  * @link http://chulakov.com/
  */
 
-namespace chulakov\filestorage\managers;
-
-use chulakov\filestorage\uploaders\ObserverInterface;
+namespace chulakov\filestorage\observer;
 
 /**
  * Interface ListenerInterface

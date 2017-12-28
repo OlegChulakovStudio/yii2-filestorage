@@ -6,7 +6,7 @@
  * @link http://chulakov.com/
  */
 
-namespace chulakov\filestorage\uploaders;
+namespace chulakov\filestorage\observer;
 
 /**
  * Interface UploadObserver
