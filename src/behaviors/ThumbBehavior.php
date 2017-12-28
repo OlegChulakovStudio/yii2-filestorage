@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\behaviors;
 
+use yii\rbac\Item;
 use yii\base\Behavior;
 use yii\di\Instance;
 use yii\helpers\FileHelper;
@@ -15,7 +16,6 @@ use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\ThumbParams;
-use yii\rbac\Item;
 
 /***
  * Class ThumbBehavior
@@ -69,6 +69,7 @@ class ThumbBehavior extends Behavior
      * @param bool $absolute
      * @return string
      *
+     * @throws \yii\base\InvalidParamException
      * @throws \chulakov\filestorage\exceptions\NoAccessException
      * @throws \chulakov\filestorage\exceptions\NotFoundFileException
      * @throws \yii\base\Exception
@@ -80,9 +81,10 @@ class ThumbBehavior extends Behavior
         if (!$model->isImage()) {
             return '';
         }
-        $path = $this->getFileThumbPath($params);
-        if (!file_exists($path)) {
-            $this->createThumb($path, $params);
+        $savePath = $this->getFileThumbPath($params);
+        if (!file_exists($savePath)) {
+            $path = $this->getFilePath();
+            $this->createThumb($path, $savePath, $params);
         }
         return $this->getFileThumbUrl($params, $absolute);
     }
@@ -92,6 +94,7 @@ class ThumbBehavior extends Behavior
      *
      * @param ThumbParams $params
      * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws \chulakov\filestorage\exceptions\NoAccessException
      * @throws \chulakov\filestorage\exceptions\NotFoundFileException
      * @throws \yii\base\Exception
@@ -111,6 +114,7 @@ class ThumbBehavior extends Behavior
      * @param ThumbParams $params
      * @param bool $absolute
      * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws \chulakov\filestorage\exceptions\NoAccessException
      */
     protected function getFileThumbUrl($params, $absolute)
@@ -137,6 +141,7 @@ class ThumbBehavior extends Behavior
      * Получить путь к файлу по модели
      *
      * @return mixed
+     * @throws \yii\base\InvalidParamException
      * @throws \chulakov\filestorage\exceptions\NoAccessException
      * @throws \chulakov\filestorage\exceptions\NotFoundFileException
      */
@@ -150,6 +155,7 @@ class ThumbBehavior extends Behavior
      *
      * @param bool $absolute
      * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws \chulakov\filestorage\exceptions\NoAccessException
      */
     protected function getFileUrl($absolute)
@@ -161,10 +167,11 @@ class ThumbBehavior extends Behavior
      * Создание thumbnail
      *
      * @param string $path
+     * @param string $savePath
      * @param ThumbParams $params
      * @return bool
      */
-    protected function createThumb($path, ThumbParams $params)
+    protected function createThumb($path, $savePath, ThumbParams $params)
     {
         $this->imageComponent->make($path);
 
@@ -172,7 +179,7 @@ class ThumbBehavior extends Behavior
         $this->imageComponent->convert($params->extension);
         $this->imageComponent->watermark($params->watermarkPath, $params->watermarkPosition);
 
-        $this->imageComponent->getImage()->save($params->savedPath, $params->quality);
+        $this->imageComponent->getImage()->save($savePath, $params->quality);
 
         return true;
     }
