@@ -96,6 +96,12 @@ interface UploadInterface
     public function getSysName();
 
     /**
+     * Установить системное имя
+     * @param string $sysName
+     */
+    public function setSysName($sysName);
+
+    /**
      * Получить имя файла с расширением
      *
      * @return string

@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\uploaders;
 
+use yii\base\BaseObject;
 use yii\base\Model;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
@@ -20,7 +21,7 @@ use chulakov\filestorage\exceptions\NotUploadFileException;
  * @package chulakov\filestorage\uploaders
  * @property ImageComponent $imageManager
  */
-class RemoteUploadedFile implements UploadInterface, ObserverInterface
+class RemoteUploadedFile extends BaseObject implements UploadInterface, ObserverInterface
 {
     /**
      * Подключение реализации функционала Observer
@@ -73,10 +74,12 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
     /**
      * RemoteUploadedFile constructor.
      * @param string $link
+     * @param array $config
      */
-    public function __construct($link)
+    public function __construct($link, $config = [])
     {
         $this->link = $link;
+        parent::__construct($config);
     }
 
     /**
@@ -250,7 +253,8 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
     public function getName()
     {
         if (empty($this->name)) {
-            $this->name = $this->getFileNameFromLink() ?: basename($this->link);
+            $name = $this->getFileSizeFormLink();
+            $this->name = !empty($name) ? $name : basename($this->link);
         }
         return $this->name;
     }
@@ -306,11 +310,11 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
         if (!empty($this->size)) {
             return $this->size;
         }
-        if ($length = $this->getFileSizeFormLink()) {
-            return $this->size = $length;
-        }
         if (!empty($this->content)) {
             return $this->size = strlen($this->content);
+        }
+        if ($length = $this->getFileSizeFormLink()) {
+            return $this->size = $length;
         }
         return 0;
     }
@@ -336,6 +340,16 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
             $this->sysName = uniqid();
         }
         return $this->sysName . '.' . $this->getExtension();
+    }
+
+    /**
+     * Установить системное имя
+     *
+     * @param string $sysName
+     */
+    public function setSysName($sysName)
+    {
+        $this->sysName = $sysName;
     }
 
     /**
@@ -380,11 +394,12 @@ class RemoteUploadedFile implements UploadInterface, ObserverInterface
      */
     protected function getHeaderContent($name)
     {
-        $headers = get_headers($this->link);
-        foreach ($headers as $header) {
-            if (strpos($header, $name) !== false) {
-                $items = explode(':', $header);
-                return strtolower(trim(array_pop($items)));
+        if ($headers = get_headers($this->link)) {
+            foreach ($headers as $header) {
+                if (strpos($header, $name) !== false) {
+                    $items = explode(':', $header);
+                    return strtolower(trim(array_pop($items)));
+                }
             }
         }
         return null;

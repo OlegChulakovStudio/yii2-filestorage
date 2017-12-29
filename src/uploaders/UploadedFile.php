@@ -182,6 +182,16 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     }
 
     /**
+     * Установить системное имя
+     *
+     * @param string $sysName
+     */
+    public function setSysName($sysName)
+    {
+        $this->sysName = $sysName;
+    }
+
+    /**
      * Получить имя файла с расширением
      *
      * @return string
