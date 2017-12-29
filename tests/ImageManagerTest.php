@@ -62,6 +62,11 @@ class ImageManagerTest extends TestCase
         $this->assertInstanceOf(ImageManager::className(), $imageManager);
     }
 
+    /**
+     * Получить список слушателей
+     *
+     * @return array
+     */
     protected function getListener()
     {
         return ['listeners' =>
@@ -109,6 +114,7 @@ class ImageManagerTest extends TestCase
         $this->assertEquals(filesize($path), $uploader->getSize());
         $this->assertEquals(basename($path), $uploader->getName());
         $this->assertEquals(mime_content_type($path), $uploader->getType());
+
         // удаление сгенерированного файла
         unlink($path);
     }
