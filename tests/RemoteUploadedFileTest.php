@@ -22,6 +22,11 @@ class RemoteUploadedFileTest extends TestCase
      * @var ImageModelTest
      */
     public static $imageModel;
+    /**
+     * Путь к изображению
+     *
+     * @var string
+     */
     public static $imagePath;
 
     /**
@@ -57,7 +62,7 @@ class RemoteUploadedFileTest extends TestCase
     }
 
     /**
-     * Обработка загруженного файла∆
+     * Обработка загруженного файла
      */
     public function testUploadFile()
     {
