@@ -23,32 +23,6 @@ class UploadedFileTest extends TestCase
     {
         parent::setUp();
         $this->mockApplication();
-        $this->generateFakeFiles();
-    }
-
-    /**
-     * Генераци я фейковых данных
-     *
-     * @return array
-     */
-    protected function generateFakeFileData()
-    {
-        return [
-            'name' => 'image.png',
-            'tmp_name' => '/path_to_file_tmp/phpsecurityfile',
-            'type' => 'image/png',
-            'size' => 12345,
-            'error' => 0,
-        ];
-    }
-
-    /**
-     * Установка фейковых файлов
-     */
-    protected function generateFakeFiles()
-    {
-        $_FILES['ImageModelTest[image]'] = $this->generateFakeFileData();
-        $_FILES['FileModelTest[files][]'] = $this->generateFakeFileData();
     }
 
     /**

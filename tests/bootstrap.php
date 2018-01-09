@@ -22,4 +22,5 @@ Yii::setAlias('@chulakov/filestorage/tests', dirname(__DIR__) . '/tests');
 Yii::setAlias('@tests/data', dirname(__DIR__) . '/tests/data');
 Yii::setAlias('@tests/runtime', dirname(__DIR__) . '/tests/runtime');
 
+require_once __DIR__ . '/loadfiles.php'; // загрука фейковых данных для тестирования
 require_once __DIR__ . '/TestCase.php';
