@@ -15,7 +15,7 @@
 ##Установка
 
 1) Чтобы установить компонент, нужно в `composer.json` добавить следующие строки: 
-```json
+```
 "require": {
     "chulakov/yii2-filestorage": "dev-master"
 },
@@ -74,14 +74,14 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 +---------------+------------------+------+-----+---------+----------------+
 ```
 
-3) Подключение отношения модели.
+3) Подключение поведения модели.
 
-Система сохранения работает с помощью отношений, они ответственны за доставку файла модели.
-Данные отношения прикрепляются к моделям, в дальнейшем обрабатывают файл и прикрепляют файл в указанный атрибут модели. 
+Система сохранения работает с помощью поведений, они ответственны за доставку файла модели.
+Данные поведения прикрепляются к моделям, в дальнейшем обрабатывают файл и прикрепляют файл в указанный атрибут модели. 
 
-####Имеется два отношения: 
-- `FileUploadBehavior` - отношение рассчитано на загрузку одного файла;
-- `FilesUploadBehavior` - отношение рассчитано на загрузку нескольких файлов. 
+####Имеется два поведения: 
+- `FileUploadBehavior` - поведение рассчитано на загрузку одного файла;
+- `FilesUploadBehavior` - поведение рассчитано на загрузку нескольких файлов. 
 
 Отношения подключаются так: 
 ```php
@@ -89,7 +89,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
     {
         return [
             [
-                'class' => FileUploadBehavior::className(), // отношение
+                'class' => FileUploadBehavior::className(), // поведение
                 'attribute' => 'image', // атрибут модели
                 'group' => 'photos', // сохраняемая группа
                 'storage' => 'fileStorage', // компонент хранения файлов 
@@ -100,7 +100,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 ```
 4) Подключение репозиториев.
 
-К каждому отношению нужно настроить способ получения файла, а именно - настроить репозиторий. 
+К каждому поведению нужно настроить способ получения файла, а именно - настроить репозиторий. 
 
 Всего имеется два репозитория для обычной и удаленной загрузки.
 
@@ -145,7 +145,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
     {
         return [
             [
-                'class' => FileUploadBehavior::className(), // подключаемое отношение
+                'class' => FileUploadBehavior::className(), // подключаемое поведение
                 'attribute' => 'image', // атрибут, в которое будет помещен файл
                 'group' => 'photos', // группа сохраняемого изображения
                 'storage' => 'fileStorage', // компонент хранения
@@ -169,6 +169,37 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
             ],
         ];
     }
+```
+7) Пример реализации контроллера с загрузкой файла.
+
+В примере реализации контроллера с загрузкой файла можно увидеть метод использования функционала поведения. 
+В результате чего будет получен и сохранен загружаемый файл.
+
+```php
+
+    /**
+     * Загрузка изображения
+     *
+     * @return string
+     * @throws \yii\base\InvalidParamException
+     * @throws NotUploadFileException
+     */
+    public function actionIndex()
+    {
+        $form = new FileForm(); // инициализация формы
+
+        $request = \Yii::$app->request;
+
+        if ($request->isPost) {
+            $form->load(\Yii::$app->request->post(), ''); // загрузка параментов
+            if ($form->validate() && $form->upload()) { // валидация и загрузка файлов
+                return json_encode(['success' => true]); // выдача сообщения о успешной загрузки
+            }
+        }
+
+        throw new NotUploadFileException('Файл не был загружен.');
+    }
+    
 ```
 
 ## Тестирование
