@@ -25,32 +25,6 @@ class ImageManagerTest extends TestCase
     {
         parent::setUp();
         $this->mockApplication();
-        $this->generateFakeFiles();
-    }
-
-    /**
-     * Генераци я фейковых данных
-     *
-     * @return array
-     */
-    protected function generateFakeFileData()
-    {
-        $path = \Yii::getAlias('@tests/data') . '/images/image.png';
-        return [
-            'name' => basename($path),
-            'tmp_name' => $path,
-            'type' => mime_content_type($path),
-            'size' => filesize($path),
-            'error' => 0,
-        ];
-    }
-
-    /**
-     * Установка фейковых файлов
-     */
-    protected function generateFakeFiles()
-    {
-        $_FILES['ImageModelTest[image]'] = $this->generateFakeFileData();
     }
 
     /**
@@ -95,7 +69,7 @@ class ImageManagerTest extends TestCase
         // путь к сохраняемому файлу
         $path = \Yii::getAlias('@tests/runtime') . '/images/image.jpg';
         /** @var UploadedFile $uploader */
-        $uploader = UploadedFile::getInstance(new ImageModelTest(), 'image');
+        $uploader = UploadedFile::getInstance(new ImageModelTest(), 'imageManager');
 
         // конфигурирование слушателей
         $uploader->configure($this->getListener());
