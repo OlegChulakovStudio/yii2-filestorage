@@ -11,12 +11,13 @@ namespace chulakov\filestorage;
 use yii\base\Component;
 use Intervention\Image\Image;
 use Intervention\Image\ImageManager;
+use chulakov\filestorage\params\ImageParams;
 
 /**
  * Class ImageComponent
  * @package chulakov\filestorage
  */
-class ImageComponent extends Component
+class ImageComponent extends Component implements ImageComponentInterface
 {
     /**
      * Позиционирование от левого верхнего края
@@ -63,11 +64,12 @@ class ImageComponent extends Component
      * Установить изображение в компонент
      *
      * @param string $file
+     * @param array $config
      * @return bool
      */
-    public function make($file)
+    public function make($file, $config = [])
     {
-        $this->image = (new ImageManager())->make($file);
+        $this->image = (new ImageManager($config))->make($file);
         return $this->hasImage();
     }
 
@@ -199,18 +201,6 @@ class ImageComponent extends Component
     }
 
     /**
-     * Проверка размера изображения
-     *
-     * @param $width
-     * @param $height
-     * @return bool
-     */
-    protected function checkSizeForResize($width, $height)
-    {
-        return ($this->getWidth() > $width) && ($this->getHeight() > $height);
-    }
-
-    /**
      * Изменение кодировки изображения
      *
      * Доступные разрешения для изображений
@@ -230,5 +220,39 @@ class ImageComponent extends Component
     public function convert($encode)
     {
         $this->image->encode($encode);
+    }
+
+    /**
+     * Проверка размера изображения
+     *
+     * @param $width
+     * @param $height
+     * @return bool
+     */
+    protected function checkSizeForResize($width, $height)
+    {
+        return ($this->getWidth() > $width) && ($this->getHeight() > $height);
+    }
+
+    /**
+     * Создание изображения
+     *
+     * @param string $path
+     * @param ImageParams $params
+     * @return bool
+     */
+    public function createImage($path, ImageParams $params)
+    {
+        if ($this->make($path)) {
+            $this->resize($params->width, $params->height);
+            if (!empty($params->watermarkPath)) {
+                $this->watermark($params->watermarkPath, $params->watermarkPosition);
+            }
+            if (!empty($params->extension)) {
+                $this->convert($params->extension);
+            }
+            return true;
+        }
+        return false;
     }
 }
