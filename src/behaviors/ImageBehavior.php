@@ -9,24 +9,33 @@
 namespace chulakov\filestorage\behaviors;
 
 use yii\rbac\Item;
-use yii\base\Behavior;
 use yii\di\Instance;
+use yii\base\Behavior;
 use yii\helpers\FileHelper;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\ThumbParams;
+use chulakov\filestorage\exceptions\NoAccessException;
+use chulakov\filestorage\exceptions\NotFoundFileException;
 
 /***
- * Class ThumbBehavior
+ * Class ImageBehavior
  * @package chulakov\filestorage\behaviors
  */
-class ThumbBehavior extends Behavior
+class ImageBehavior extends Behavior
 {
     /**
      * @var BaseFile
      */
     public $owner;
+    /**
+     * Название создаваемой группы для хранения
+     *
+     * @var string
+     */
+    protected $groupName = 'thumbs';
     /**
      * Название компонента для работы сохранением файлов
      *
@@ -70,16 +79,19 @@ class ThumbBehavior extends Behavior
      * @return string
      *
      * @throws \yii\base\InvalidParamException
-     * @throws \chulakov\filestorage\exceptions\NoAccessException
-     * @throws \chulakov\filestorage\exceptions\NotFoundFileException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
      * @throws \yii\base\Exception
      */
-    public function thumb(ThumbParams $params, $absolute = false)
+    public function thumb(ThumbParams $params = null, $absolute = false)
     {
         /** @var BaseFile $model */
         $model = $this->owner;
         if (!$model->isImage()) {
             return '';
+        }
+        if (!$params) {
+            $params = new ThumbParams();
         }
         $savePath = $this->getFileThumbPath($params);
         if (!file_exists($savePath)) {
@@ -89,14 +101,21 @@ class ThumbBehavior extends Behavior
         return $this->getFileThumbUrl($params, $absolute);
     }
 
+    public function events()
+    {
+        return [
+            Event::DELETE_EVENT => [$this, 'deleteFile']
+        ];
+    }
+
     /**
      * Получение полного пути до файла с превью
      *
      * @param ThumbParams $params
      * @return string
      * @throws \yii\base\InvalidParamException
-     * @throws \chulakov\filestorage\exceptions\NoAccessException
-     * @throws \chulakov\filestorage\exceptions\NotFoundFileException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
      * @throws \yii\base\Exception
      */
     protected function getFileThumbPath($params)
@@ -115,7 +134,7 @@ class ThumbBehavior extends Behavior
      * @param bool $absolute
      * @return string
      * @throws \yii\base\InvalidParamException
-     * @throws \chulakov\filestorage\exceptions\NoAccessException
+     * @throws NoAccessException
      */
     protected function getFileThumbUrl($params, $absolute)
     {
@@ -133,7 +152,7 @@ class ThumbBehavior extends Behavior
     {
         $name = $params->width . 'x' . $params->height . '.' . $this->owner->getExtension();
         return implode(DIRECTORY_SEPARATOR, [
-            dirname($basePath), 'thumbs', $this->owner->getBaseName(), $name
+            dirname($basePath), $this->groupName, $this->owner->getBaseName(), $name
         ]);
     }
 
@@ -142,8 +161,8 @@ class ThumbBehavior extends Behavior
      *
      * @return mixed
      * @throws \yii\base\InvalidParamException
-     * @throws \chulakov\filestorage\exceptions\NoAccessException
-     * @throws \chulakov\filestorage\exceptions\NotFoundFileException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
      */
     protected function getFilePath()
     {
@@ -156,7 +175,7 @@ class ThumbBehavior extends Behavior
      * @param bool $absolute
      * @return string
      * @throws \yii\base\InvalidParamException
-     * @throws \chulakov\filestorage\exceptions\NoAccessException
+     * @throws NoAccessException
      */
     protected function getFileUrl($absolute)
     {
@@ -173,14 +192,48 @@ class ThumbBehavior extends Behavior
      */
     protected function createThumb($path, $savePath, ThumbParams $params)
     {
-        $this->imageComponent->make($path);
-
-        $this->imageComponent->resize($params->width, $params->height);
-        $this->imageComponent->convert($params->extension);
-        $this->imageComponent->watermark($params->watermarkPath, $params->watermarkPosition);
-
-        $this->imageComponent->getImage()->save($savePath, $params->quality);
-
+        $savePath = $params->getSavePath($savePath);
+        $this->imageComponent->createImage($path, $params);
+        $this->imageComponent->save($savePath, $params->quality);
         return true;
+    }
+
+    /**
+     * Удалить все thumbnails текущего изображения
+     *
+     * @throws \yii\base\InvalidParamException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
+     * @throws \yii\base\ErrorException
+     */
+    public function removeAllThumbs()
+    {
+        list($name, $ext) = explode('.', basename($this->owner->sys_file));
+
+        $path = implode('/', [
+            dirname($this->getFilePath()),
+            $this->groupName,
+            $name
+        ]);
+
+        if (is_dir($path)) {
+            FileHelper::removeDirectory($path);
+        }
+    }
+
+    /**
+     * Удаление файла и модели
+     *
+     * @throws \yii\base\InvalidParamException
+     * @throws \Exception
+     * @throws NoAccessException
+     * @throws NotFoundFileException
+     * @throws \yii\base\ErrorException
+     * @throws \Throwable
+     */
+    public function deleteFile()
+    {
+        $this->removeAllThumbs();
+        $this->storageComponent->removeFile($this->owner);
     }
 }
