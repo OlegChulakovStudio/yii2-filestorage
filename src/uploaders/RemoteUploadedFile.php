@@ -8,8 +8,8 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use yii\base\BaseObject;
 use yii\base\Model;
+use yii\base\BaseObject;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\observer\ObserverTrait;
@@ -175,12 +175,16 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      */
     protected function beforeSave($filePath, $deleteFile = false)
     {
-        $event = new Event($filePath, $deleteFile);
+        $event = new Event();
+
+        $event->savedPath = $filePath;
+        $event->needDelete = $deleteFile;
 
         $event->needSave = true;
         $event->sender = $this;
 
         $this->trigger(Event::SAVE_EVENT, $event);
+        $this->trigger(Event::DELETE_EVENT, $event);
         return $event->needSave;
     }
 
