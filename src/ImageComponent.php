@@ -92,7 +92,7 @@ class ImageComponent extends Component
      *
      * @param string $path
      * @param ImageParams $params
-     * @return bool
+     * @return ImageContainer
      */
     public function createImage($path, ImageParams $params)
     {
@@ -104,9 +104,9 @@ class ImageComponent extends Component
             if (!empty($params->extension)) {
                 $image->convert($params->extension);
             }
-            return true;
+            return $image;
         }
-        return false;
+        return null;
     }
 
     /**
