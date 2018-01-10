@@ -8,19 +8,20 @@
 
 namespace chulakov\filestorage\managers;
 
-use chulakov\filestorage\observer\ListenerInterface;
+use chulakov\filestorage\params\ImageParams;
 use yii\di\Instance;
 use yii\base\BaseObject;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
-use chulakov\filestorage\observer\ObserverInterface;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\observer\ObserverInterface;
+use chulakov\filestorage\observer\ListenerInterface;
 
 /**
  * Class SaveManager
  * @package chulakov\filestorage\managers
  */
-class ImageManager extends BaseObject implements FileInterface, ListenerInterface
+class ImageManager extends BaseObject implements ListenerInterface
 {
     /**
      * Ширина
@@ -162,13 +163,22 @@ class ImageManager extends BaseObject implements FileInterface, ListenerInterfac
     protected function processing()
     {
         $manager = $this->getImageManager();
-        if ($manager->make($this->uploader->getFile())) {
-            $manager->resize($this->width, $this->height);
-            $manager->watermark($this->watermarkPath, $this->watermarkPosition);
-            $manager->convert($this->encode);
-            return true;
-        }
-        return false;
+        return $manager->createImage($this->uploader->getFile(), $this->getImageParams());
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function getImageParams()
+    {
+        $params = new ImageParams($this->width, $this->height);
+
+        $params->extension = $this->encode;
+        $params->quality = $this->quality;
+        $params->watermarkPath = $this->watermarkPath;
+        $params->watermarkPosition = $this->watermarkPosition;
+
+        return $params;
     }
 
     /**
