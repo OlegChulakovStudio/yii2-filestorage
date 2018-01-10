@@ -19,6 +19,10 @@ class Event
      */
     const SAVE_EVENT = 1;
     /**
+     * Событие удаления
+     */
+    const DELETE_EVENT = 2;
+    /**
      * Содержимое изображения
      *
      * @var string
@@ -54,16 +58,4 @@ class Event
      * @var object
      */
     public $sender;
-
-    /**
-     * Event constructor.
-     * @param string $savedPath
-     * @param bool $deleteFile
-     * @param array $config
-     */
-    public function __construct($savedPath, $deleteFile, array $config = [])
-    {
-        $this->savedPath = $savedPath;
-        $this->needDelete = $deleteFile;
-    }
 }
