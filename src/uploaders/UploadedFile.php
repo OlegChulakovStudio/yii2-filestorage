@@ -75,13 +75,16 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     /**
      * Псевдособытие сохранения
      *
-     * @param string $filePath
+     * @param $savedPath
      * @param bool $deleteFile
      * @return bool
      */
-    protected function beforeSave($filePath, $deleteFile = true)
+    protected function beforeSave($savedPath, $deleteFile = true)
     {
-        $event = new Event($filePath, $deleteFile);
+        $event = new Event();
+
+        $event->savedPath = $savedPath;
+        $event->needDelete = $deleteFile;
 
         $event->needSave = true;
         $event->sender = $this;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл трейта UploaderMockTrait.php
+ * Файл трейта UploaderMockTrait
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -91,7 +91,10 @@ trait UploaderMockTrait
      */
     protected function createEvent($path = 'dummy_path', $deleteFile = false)
     {
-        $event = new Event($path, $deleteFile);
+        $event = new Event();
+
+        $event->filePath = $path;
+        $event->needDelete = $deleteFile;
 
         $event->needSave = false;
         $event->sender = $this;
