@@ -12,53 +12,37 @@ namespace chulakov\filestorage\params;
  * Class ThumbParams
  * @package chulakov\filestorage\params
  */
-class ThumbParams
+class ThumbParams extends ImageParams
 {
+    public $group = 'thumbs';
     /**
-     *  Ширина
-     *
-     * @var integer
-     */
-    public $width;
-    /**
-     * Высота
-     *
-     * @var integer
-     */
-    public $height;
-    /**
-     * Расширение
+     * Шаблон сохранения thumbnails файлов
      *
      * @var string
      */
-    public $extension;
-    /**
-     * Качество
-     *
-     * @var int
-     */
-    public $quality = 100;
-    /**
-     * Путь к файлу с watermark
-     *
-     * @var string
-     */
-    public $watermarkPath;
-    /**
-     * Позиция watermark
-     *
-     * @var integer
-     */
-    public $watermarkPosition;
+    protected $pathPattern = '{root}/{group}/{basename}/{width}x{height}.{ext}';
 
     /**
-     * ThumbParams constructor.
-     * @param integer $width
-     * @param integer $height
+     * Получить путь файла относительно параметров
+     *
+     * @param string $path
+     * @return string
      */
-    public function __construct($width, $height)
+    public function getSavePath($path)
     {
-        $this->width = $width;
-        $this->height = $height;
+        $basename = basename($path);
+        $path = dirname($path);
+
+        list($name, $ext) = explode('.', $basename);
+        $ext = !empty($this->extension) ? $this->extension : $ext;
+
+        return  strtr($this->pathPattern, [
+            '{root}' => $path,
+            '{group}' => $this->group,
+            '{basename}' => $name,
+            '{width}' => $this->width,
+            '{height}' => $this->height,
+            '{ext}' => $ext,
+        ]);
     }
 }
