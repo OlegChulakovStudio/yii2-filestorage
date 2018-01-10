@@ -9,14 +9,16 @@
 namespace chulakov\filestorage\models;
 
 use yii\helpers\ArrayHelper;
-use chulakov\filestorage\behaviors\ThumbBehavior;
+use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\params\ThumbParams;
+use chulakov\filestorage\behaviors\ImageBehavior;
 
 /**
  * Class Image
  * @package chulakov\filestorage\models
  *
  * @method string thumb(ThumbParams $thumbParams)
+ * @method bool removeAllThumbs()
  */
 class Image extends BaseFile
 {
@@ -28,8 +30,17 @@ class Image extends BaseFile
         return ArrayHelper::merge(parent::behaviors(),
             [
                 [
-                    'class' => ThumbBehavior::className()
+                    'class' => ImageBehavior::className()
                 ]
             ]);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        $this->trigger(Event::DELETE_EVENT);
     }
 }
