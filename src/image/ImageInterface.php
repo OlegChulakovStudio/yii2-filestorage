@@ -1,37 +1,51 @@
 <?php
 /**
- * Файл интерфейса ImageComponentInterface
+ * Файл класса ImageInterface
  *
  * @copyright Copyright (c) 2018, Oleg Chulakov Studio
  * @link http://chulakov.com/
  */
 
-namespace chulakov\filestorage;
+namespace chulakov\filestorage\image;
 
-use Intervention\Image\Facades\Image;
+use chulakov\filestorage\ImageComponent;
 
-/**
- * Interface ImageInterface
- * @package chulakov\filestorage
- */
-interface ImageComponentInterface
+interface ImageInterface
 {
     /**
-     * Установить изображение в компонент
+     * Получить ширину
      *
-     * @param string $file
-     * @return bool
+     * @return int
      */
-    public function make($file);
+    public function getWidth();
 
     /**
-     * Сохранение файла
+     * Получить высоту
      *
-     * @param string $path
-     * @param integer $quality
-     * @return Image
+     * @return int
      */
-    public function save($path, $quality);
+    public function getHeight();
+
+    /**
+     * Получение информации о текущем типе файла
+     *
+     * @return string
+     */
+    public function getMimeType();
+
+    /**
+     * Получение расширения файла
+     *
+     * @return string
+     */
+    public function getExtension();
+
+    /**
+     * Получение размера изображения
+     *
+     * @return mixed
+     */
+    public function getFileSize();
 
     /**
      * Нанесение водяной метки на изображение
@@ -39,7 +53,7 @@ interface ImageComponentInterface
      * @param string $watermarkPath
      * @param string $position
      */
-    public function watermark($watermarkPath, $position);
+    public function watermark($watermarkPath, $position = ImageComponent::POSITION_CENTER);
 
     /**
      * Изменить размер изображения
@@ -48,11 +62,6 @@ interface ImageComponentInterface
      * @param integer $height
      */
     public function resize($width, $height);
-
-    /**
-     * Ресет компонента
-     */
-    public function reset();
 
     /**
      * Изменение кодировки изображения
@@ -72,4 +81,13 @@ interface ImageComponentInterface
      * @param $encode
      */
     public function convert($encode);
+
+    /**
+     * Сохранение файла
+     *
+     * @param string $path
+     * @param integer $quality
+     * @return boolean
+     */
+    public function save($path, $quality);
 }
