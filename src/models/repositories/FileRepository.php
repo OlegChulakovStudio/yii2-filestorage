@@ -68,4 +68,21 @@ class FileRepository
         }
         return true;
     }
+
+    /**
+     * Удаление модели в базе данных
+     *
+     * @param BaseFile $file
+     * @return bool
+     * @throws Exception
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
+     */
+    public function delete(BaseFile $file)
+    {
+        if (!$file->delete()) {
+            throw  new Exception('Модель ' . get_class($file) . ' не удалена.');
+        }
+        return true;
+    }
 }
