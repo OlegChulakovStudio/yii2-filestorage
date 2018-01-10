@@ -50,13 +50,26 @@ class ImageParams
      * @var integer
      */
     public $watermarkPosition;
+    /**
+     * Категория файлов
+     *
+     * @var string
+     */
+    public $category = 'images';
+    /**
+     * Шаблон сохранения thumbnails файлов
+     *
+     * @var string
+     */
+    public $pathPattern = '{root}/{name}';
 
     /**
-     * ThumbParams constructor.
+     * Конструктор параметров
+     *
      * @param integer $width
      * @param integer $height
      */
-    public function __construct($width = 195, $height = 195)
+    public function __construct($width, $height)
     {
         $this->width = $width;
         $this->height = $height;
@@ -70,7 +83,21 @@ class ImageParams
      */
     public function getSavePath($path)
     {
-        return $path;
+        $name = basename($path);
+        $path = dirname($path);
+
+        list($basename, $ext) = explode('.', $name);
+        $ext = !empty($this->extension) ? $this->extension : $ext;
+
+        return  strtr($this->pathPattern, [
+            '{root}' => $path,
+            '{name}' => $name,
+            '{basename}' => $basename,
+            '{ext}' => $ext,
+            '{category}' => $this->category,
+            '{width}' => $this->width,
+            '{height}' => $this->height,
+        ]);
     }
 
     /**
