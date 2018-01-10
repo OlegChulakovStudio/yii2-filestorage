@@ -8,8 +8,10 @@
 
 namespace chulakov\filestorage\models;
 
+use yii\rbac\Item;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
+use chulakov\filestorage\behaviors\StorageBehavior;
 
 /**
  * Class File
@@ -21,6 +23,11 @@ use yii\behaviors\TimestampBehavior;
  * @property $size
  * @property $group_code
  * @property $object_id
+ *
+ * @method string getUrl(bool $isAbsolute, Item $role) Возвращает абсолютный или относительный URL-адрес к файлу
+ * @method string getPath(Item $role) Возвращает полный путь к файлу в файловой системе
+ * @method string getUploadUrl(bool $isAbsolute) Возвращает URL-адрес до директории нахождения файлов определенного типа
+ * @method string getUploadPath() Возвращает абсолютный путь к директории хранения файлов определенного типа
  */
 abstract class BaseFile extends ActiveRecord
 {
@@ -39,6 +46,22 @@ abstract class BaseFile extends ActiveRecord
     {
         return [
             TimestampBehavior::className(),
+            StorageBehavior::className(),
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function rules()
+    {
+        return [
+            [['group_code', 'ori_name', 'ori_extension', 'sys_file', 'mime'], 'required'],
+            [['created_at', 'updated_at', 'size'], 'integer'],
+            [['group_code', 'ori_extension'], 'string', 'max' => 16],
+            [['object_id'], 'string', 'max' => 11],
+            [['ori_name', 'sys_file', 'mime'], 'string', 'max' => 255],
+            [['sys_file'], 'unique'],
         ];
     }
 
