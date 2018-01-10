@@ -13,8 +13,8 @@ use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\models\repositories\FileRepository;
-use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\params\UploadParams;
+use chulakov\filestorage\uploaders\UploadInterface;
 
 /**
  * Class FileService
@@ -75,6 +75,44 @@ class FileService
     public function save($model)
     {
         return $this->repository->save($model);
+    }
+
+    /**
+     * Получить изображение по его Id
+     *
+     * @param $id
+     * @return File|\yii\db\ActiveRecord
+     * @throws \chulakov\filestorage\exceptions\NotFoundModelException
+     */
+    public function getImage($id)
+    {
+        return $this->repository->getImage($id);
+    }
+
+    /**
+     * Получить файл по его Id
+     *
+     * @param $id
+     * @return File|\yii\db\ActiveRecord
+     * @throws \chulakov\filestorage\exceptions\NotFoundModelException
+     */
+    public function getFile($id)
+    {
+        return $this->repository->getFile($id);
+    }
+
+    /**
+     * Удаление файла
+     *
+     * @param BaseFile $model
+     * @return bool
+     * @throws \Exception
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
+     */
+    public function delete($model)
+    {
+        return $this->repository->delete($model);
     }
 
     /**
