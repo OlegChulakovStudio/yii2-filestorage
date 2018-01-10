@@ -108,34 +108,29 @@ class FileStorage extends Component
      * @param UploadInterface|UploadInterface[] $files
      * @param UploadParams $params
      * @return array|BaseFile|null
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotUploadFileException
-     * @throws \Exception
-     * @throws \Throwable
      */
     public function uploadFile($files, UploadParams $params)
     {
         $this->canAccess($params->accessRole);
 
-        if (!is_array($files)) {
-            return $this->saveFile($files, $params);
-        }
-
         /** @var BaseFile[] $result */
         $result = [];
+        if ($single = !is_array($files)) {
+            $files = [$files];
+        }
         try {
             /** @var array $files */
             foreach ($files as $file) {
                 $result[] = $this->saveFile($file, $params);
             }
         } catch (\Exception $e) {
-            foreach ($result as $model) {
-                $model->delete();
-            }
-            throw $e;
+            $this->clearFiles($files, $e);
+            $this->clearModel($result);
+            throw new NotUploadFileException('Не удалось сохранить файл', 0, $e);
         }
-        return $result;
+        return $single ? array_shift($result) : $result;
     }
 
     /**
@@ -275,6 +270,42 @@ class FileStorage extends Component
         $full = Yii::getAlias($this->storagePath) . '/' . $model->sys_file;
         if (is_file($full)) {
             unlink($full);
+        }
+    }
+
+    /**
+     * Зачистка моделей
+     *
+     * @param BaseFile[] $models
+     */
+    protected function clearModel($models)
+    {
+        foreach ($models as $model) {
+            try {
+                $model->delete();
+            } catch (\Exception $e) {
+                Yii::error($e);
+            } catch (\Throwable $t) {
+                Yii::error($t);
+            }
+        }
+    }
+
+    /**
+     * Зачистка файлов
+     *
+     * @param UploadInterface[] $files
+     * @param \Exception $e
+     */
+    protected function clearFiles($files, \Exception $e)
+    {
+        foreach ($files as $file) {
+            try {
+                // todo: обработать событие удаление для всех $files
+                // $file->triggerClearEvent($e);
+            } catch (\Exception $e) {
+                Yii::error($e);
+            }
         }
     }
 
