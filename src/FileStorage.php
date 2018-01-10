@@ -14,8 +14,8 @@ use yii\base\Component;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\base\UnknownClassException;
-use yii\helpers\FileHelper;
 use yii\helpers\Url;
+use yii\helpers\FileHelper;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\services\FileService;
@@ -105,7 +105,7 @@ class FileStorage extends Component
     /**
      * Загрузка файла
      *
-     * @param $files
+     * @param UploadInterface|UploadInterface[] $files
      * @param UploadParams $params
      * @return array|BaseFile|null
      * @throws \yii\base\InvalidParamException
@@ -122,14 +122,16 @@ class FileStorage extends Component
             return $this->saveFile($files, $params);
         }
 
+        /** @var BaseFile[] $result */
         $result = [];
         try {
+            /** @var array $files */
             foreach ($files as $file) {
                 $result[] = $this->saveFile($file, $params);
             }
         } catch (\Exception $e) {
-            foreach ($result as $item) {
-                $this->removeFile($item);
+            foreach ($result as $model) {
+                $model->delete();
             }
             throw $e;
         }
@@ -149,7 +151,6 @@ class FileStorage extends Component
         if (empty($role)) {
             return true;
         }
-
         $params = [];
         if (!is_null($model)) {
             $params['file'] = $model;
@@ -253,7 +254,9 @@ class FileStorage extends Component
     protected function createModel(UploadInterface $file, UploadParams $params)
     {
         try {
-            // todo: добавить выбор модели для создания
+            if (strpos($file->getType(), 'image') !== false) {
+                return $this->service->createImage($file, $params);
+            }
             return $this->service->createFile($file, $params);
         } catch (UnknownClassException $e) {
             return null;
@@ -269,10 +272,7 @@ class FileStorage extends Component
      */
     public function removeFile($model)
     {
-        if (!$model->isNewRecord) {
-            $model->delete();
-        }
-        $full = Yii::getAlias($this->storagePath) . $model->sys_file;
+        $full = Yii::getAlias($this->storagePath) . '/' . $model->sys_file;
         if (is_file($full)) {
             unlink($full);
         }
@@ -421,7 +421,7 @@ class FileStorage extends Component
      * @return string
      * @throws \yii\base\InvalidParamException
      */
-    protected function convertToUrl($path, $isAbsolute = false)
+    public function convertToUrl($path, $isAbsolute = false)
     {
         $url = '/' . trim(str_replace('\\', '/', $path), '/');
         if ($this->storageBaseUrl !== false) {
