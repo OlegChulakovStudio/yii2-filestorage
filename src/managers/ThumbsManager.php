@@ -30,6 +30,8 @@ class ThumbsManager extends AbstractImageManager
     public $height = 144;
 
     /**
+     * Класс параметров
+     *
      * @var string
      */
     public $imageParamsClass = 'chulakov\filestorage\params\ThumbParams';

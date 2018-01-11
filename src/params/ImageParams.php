@@ -61,7 +61,7 @@ class ImageParams
      *
      * @var string
      */
-    public $pathPattern = '{root}/{name}';
+    public $pathPattern = '{root}/{basename}.{ext}';
 
     /**
      * Конструктор параметров
@@ -89,14 +89,14 @@ class ImageParams
         list($basename, $ext) = explode('.', $name);
         $ext = !empty($this->extension) ? $this->extension : $ext;
 
-        return  strtr($this->pathPattern, [
+        return strtr($this->pathPattern, [
             '{root}' => $path,
             '{name}' => $name,
             '{basename}' => $basename,
-            '{ext}' => $ext,
             '{category}' => $this->category,
             '{width}' => $this->width,
             '{height}' => $this->height,
+            '{ext}' => $ext,
         ]);
     }
 

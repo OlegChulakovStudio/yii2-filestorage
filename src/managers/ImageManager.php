@@ -42,8 +42,8 @@ class ImageManager extends AbstractImageManager
     protected function updateFileInfo()
     {
         $item = explode('.', $this->uploader->getName());
-        $this->uploader->setName(array_shift($item) . '.' . $this->getExtension());
         $this->uploader->setExtension($this->getExtension());
+        $this->uploader->setName(array_shift($item) . '.' . $this->getExtension());
         $this->uploader->setType($this->getType());
     }
 }
