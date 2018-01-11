@@ -130,8 +130,10 @@ class ImageContainer implements ImageInterface
         if (!is_dir($dir)) {
             FileHelper::createDirectory($dir);
         }
-        $this->saved = true;
-        return !!$this->image->save($path, $quality);
+        if ($this->saved = !!$this->image->save($path, $quality)) {
+            return true;
+        }
+        return false;
     }
 
     /**

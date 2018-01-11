@@ -10,6 +10,7 @@ namespace chulakov\filestorage\managers;
 
 use yii\di\Instance;
 use yii\base\BaseObject;
+use yii\helpers\FileHelper;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\params\ImageParams;
@@ -155,33 +156,6 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     }
 
     /**
-     * Получить mime тип файла по его расширению
-     *
-     * @param string $extension
-     * @return mixed|null
-     */
-    protected function getMimeTypeByExtension($extension)
-    {
-        $all = [
-            'png' => 'image/png',
-            'jpe' => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'jpg' => 'image/jpeg',
-            'gif' => 'image/gif',
-            'bmp' => 'image/bmp',
-            'ico' => 'image/vnd.microsoft.icon',
-            'tiff' => 'image/tiff',
-            'tif' => 'image/tiff',
-            'svg' => 'image/svg+xml',
-            'svgz' => 'image/svg+xml'
-        ];
-        if (!empty($all[$extension])) {
-            return $all[$extension];
-        }
-        return null;
-    }
-
-    /**
      * Получение MIME типа файла
      *
      * @return string
@@ -189,11 +163,13 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     public function getType()
     {
-        if ($mime = $this->getMimeTypeByExtension($this->getExtension())) {
-            return $mime;
-        }
-        if ($this->image && $mime = $this->image->getMimeType()) {
-            return $mime;
+        if ($this->image) {
+            if ($mime = $this->image->getMimeType()) {
+                return $mime;
+            }
+            if ($this->encode && $mime = FileHelper::getMimeTypeByExtension('.' . $this->encode)) {
+                return $mime;
+            }
         }
         return $this->uploader->getType();
     }
@@ -206,11 +182,13 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     public function getExtension()
     {
+        if ($this->image && $this->image->isSaved()) {
+            if ($ext = $this->image->getExtension()) {
+                return $ext;
+            }
+        }
         if ($this->encode) {
             return $this->encode;
-        }
-        if ($this->image && $this->image->isSaved()) {
-            return $this->image->getExtension();
         }
         return $this->uploader->getExtension();
     }
@@ -228,7 +206,6 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
         }
         return $this->uploader->getSize();
     }
-
 
     /**
      * Обработка файла
@@ -254,13 +231,14 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     public function getImageParams()
     {
-        $ext = !empty($this->encode) ? $this->encode : $this->getExtension();
-
-        $this->params = new $this->imageParamsClass($this->width, $this->height);
-        $this->params->extension = $ext;
-        $this->params->quality = $this->quality;
-        $this->params->watermarkPath = $this->watermarkPath;
-        $this->params->watermarkPosition = $this->watermarkPosition;
+        if (is_null($this->params)) {
+            $ext = !empty($this->encode) ? $this->encode : $this->getExtension();
+            $this->params = new $this->imageParamsClass($this->width, $this->height);
+            $this->params->extension = $ext;
+            $this->params->quality = $this->quality;
+            $this->params->watermarkPath = $this->watermarkPath;
+            $this->params->watermarkPosition = $this->watermarkPosition;
+        }
         return $this->params;
     }
 

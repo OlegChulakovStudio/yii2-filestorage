@@ -9,7 +9,6 @@
 namespace chulakov\filestorage\models;
 
 use yii\helpers\ArrayHelper;
-use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\params\ThumbParams;
 use chulakov\filestorage\behaviors\ImageBehavior;
 
@@ -27,11 +26,8 @@ class Image extends BaseFile
      */
     public function behaviors()
     {
-        return ArrayHelper::merge(parent::behaviors(),
-            [
-                [
-                    'class' => ImageBehavior::className()
-                ]
-            ]);
+        return ArrayHelper::merge(parent::behaviors(), [
+            ImageBehavior::className(),
+        ]);
     }
 }

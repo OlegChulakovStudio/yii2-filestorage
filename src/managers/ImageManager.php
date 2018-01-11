@@ -29,6 +29,7 @@ class ImageManager extends AbstractImageManager
             $this->updateFileInfo();
             if ($this->saveImage($this->updatePath($event->savedPath))) {
                 $this->uploader->setSize($this->getSize());
+                $this->uploader->setType($this->getType());
                 $event->needSave = false;
             }
         }
@@ -44,6 +45,5 @@ class ImageManager extends AbstractImageManager
         $item = explode('.', $this->uploader->getName());
         $this->uploader->setExtension($this->getExtension());
         $this->uploader->setName(array_shift($item) . '.' . $this->getExtension());
-        $this->uploader->setType($this->getType());
     }
 }
