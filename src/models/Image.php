@@ -34,13 +34,4 @@ class Image extends BaseFile
                 ]
             ]);
     }
-
-    /**
-     * @inheritdoc
-     */
-    public function afterDelete()
-    {
-        parent::afterDelete();
-        $this->trigger(Event::DELETE_EVENT);
-    }
 }
