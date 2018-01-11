@@ -9,6 +9,7 @@
 namespace chulakov\filestorage\image;
 
 use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\params\ImageMakeParams;
 use Intervention\Image\Constraint;
 use Intervention\Image\Image;
 use yii\helpers\FileHelper;
@@ -149,12 +150,104 @@ class ImageContainer implements ImageInterface
     /**
      * Проверка размера изображения
      *
-     * @param $width
-     * @param $height
+     * @param integer $width
+     * @param integer $height
      * @return bool
      */
     protected function checkSizeForResize($width, $height)
     {
         return ($this->getWidth() > $width) && ($this->getHeight() > $height);
+    }
+
+    /**
+     * Вписывание изображения в область путем пропорционального масштабирования без обрезки
+     *
+     * @param ImageMakeParams $params
+     * @return bool
+     */
+    public function contain(ImageMakeParams $params)
+    {
+        if ($this->image) {
+            $this->image->resize(
+                $params->width,
+                $params->height,
+                function (Constraint $constraint) use ($params) {
+                    if ($params->upsize) {
+                        $constraint->upsize();
+                    }
+                    $constraint->aspectRatio();
+                }
+            )->save($params->savePath, $params->quality);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Масштабирование по ширине без обрезки краев
+     *
+     * @param ImageMakeParams $params
+     * @return bool
+     */
+    public function widen(ImageMakeParams $params)
+    {
+        if ($this->image) {
+            $this->image->widen(
+                $params->width,
+                function (Constraint $constraint) use ($params) {
+                    if ($params->upsize) {
+                        $constraint->upsize();
+                    }
+                }
+            )->save($params->savePath, $params->quality);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Масштабирование по высоте без обрезки краев
+     *
+     * @param ImageMakeParams $params
+     * @return bool
+     */
+    public function heighten(ImageMakeParams $params)
+    {
+        if ($this->image) {
+            $this->image->heighten(
+                $params->height,
+                function (Constraint $constraint) use ($params) {
+                    if ($params->upsize) {
+                        $constraint->upsize();
+                    }
+                }
+            )->save($params->savePath, $params->quality);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Заполнение обаласти частью изображения с обрезкой исходного,
+     * отталкиваясь от точки позиционировани
+     *
+     * @param ImageMakeParams $params
+     * @return bool
+     */
+    public function cover(ImageMakeParams $params)
+    {
+        if ($this->image) {
+            $this->image->fit(
+                $params->width,
+                $params->height,
+                function (Constraint $constraint) use ($params) {
+                    if ($params->upsize) {
+                        $constraint->upsize();
+                    }
+                }
+            )->save($params->savePath, $params->quality);
+            return true;
+        }
+        return false;
     }
 }
