@@ -11,6 +11,7 @@ namespace chulakov\filestorage\image;
 use chulakov\filestorage\ImageComponent;
 use Intervention\Image\Constraint;
 use Intervention\Image\Image;
+use yii\helpers\FileHelper;
 
 class ImageContainer implements ImageInterface
 {
@@ -18,6 +19,12 @@ class ImageContainer implements ImageInterface
      * @var Image
      */
     protected $image;
+    /**
+     * Сохранено ли изображение
+     *
+     * @var bool
+     */
+    protected $saved = false;
 
     /**
      * Конструктор контейнера обработки изображения
@@ -27,6 +34,11 @@ class ImageContainer implements ImageInterface
     public function __construct(Image $image)
     {
         $this->image = $image;
+    }
+
+    public function isSaved()
+    {
+        return $this->saved;
     }
 
     /**
@@ -110,9 +122,15 @@ class ImageContainer implements ImageInterface
 
     /**
      * @inheritdoc
+     * @throws \yii\base\Exception
      */
     public function save($path, $quality)
     {
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            FileHelper::createDirectory($dir);
+        }
+        $this->saved = true;
         return !!$this->image->save($path, $quality);
     }
 
