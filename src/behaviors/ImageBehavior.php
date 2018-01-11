@@ -11,10 +11,10 @@ namespace chulakov\filestorage\behaviors;
 use yii\rbac\Item;
 use yii\di\Instance;
 use yii\base\Behavior;
+use yii\db\ActiveRecord;
 use yii\helpers\FileHelper;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
-use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\ThumbParams;
 use chulakov\filestorage\exceptions\NoAccessException;
@@ -93,18 +93,21 @@ class ImageBehavior extends Behavior
         if (!$params) {
             $params = new ThumbParams();
         }
-        $savePath = $this->getFileThumbPath($params);
-        if (!file_exists($savePath)) {
-            $path = $this->getFilePath();
-            $this->createThumb($path, $savePath, $params);
+        $path = $this->getFilePath();
+        $thumbPath = $params->getSavePath($path);
+        if (!file_exists($thumbPath)) {
+            $this->createThumb($path, $thumbPath, $params);
         }
-        return $this->getFileThumbUrl($params, $absolute);
+        return $this->getFileThumbUrl($params);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function events()
     {
         return [
-            Event::DELETE_EVENT => [$this, 'deleteFile']
+            ActiveRecord::EVENT_AFTER_DELETE => [$this, 'deleteFile']
         ];
     }
 
@@ -136,7 +139,7 @@ class ImageBehavior extends Behavior
      * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      */
-    protected function getFileThumbUrl($params, $absolute)
+    protected function getFileThumbUrl($params, $absolute = false)
     {
         return $this->generateThumbPath($this->getFileUrl($absolute), $params);
     }
@@ -150,7 +153,7 @@ class ImageBehavior extends Behavior
      */
     protected function generateThumbPath($basePath, $params)
     {
-        $name = $params->width . 'x' . $params->height . '.' . $this->owner->getExtension();
+        $name = $params->width . 'x' . $params->height . '.' . $params->extension;
         return implode(DIRECTORY_SEPARATOR, [
             dirname($basePath), $this->groupName, $this->owner->getBaseName(), $name
         ]);
@@ -189,12 +192,12 @@ class ImageBehavior extends Behavior
      * @param string $savePath
      * @param ThumbParams $params
      * @return bool
+     * @throws \yii\base\Exception
      */
     protected function createThumb($path, $savePath, ThumbParams $params)
     {
-        $savePath = $params->getSavePath($savePath);
-        $this->imageComponent->createImage($path, $params);
-        $this->imageComponent->save($savePath, $params->quality);
+        $image = $this->imageComponent->createImage($path, $params);
+        $image->save($savePath, $params->quality);
         return true;
     }
 
