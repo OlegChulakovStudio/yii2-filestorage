@@ -8,16 +8,20 @@
 
 namespace chulakov\filestorage\managers;
 
-use chulakov\filestorage\image\ImageContainer;
+use yii\di\Instance;
+use yii\base\BaseObject;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
+use chulakov\filestorage\params\ImageParams;
+use chulakov\filestorage\image\ImageContainer;
+use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\observer\ListenerInterface;
 use chulakov\filestorage\observer\ObserverInterface;
-use chulakov\filestorage\params\ImageParams;
-use chulakov\filestorage\uploaders\UploadInterface;
-use yii\base\BaseObject;
-use yii\di\Instance;
 
+/**
+ * Class AbstractImageManager
+ * @package chulakov\filestorage\managers
+ */
 abstract class AbstractImageManager extends BaseObject implements ListenerInterface
 {
     /**
@@ -151,6 +155,33 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     }
 
     /**
+     * Получить mime тип файла по его расширению
+     *
+     * @param string $extension
+     * @return mixed|null
+     */
+    protected function getMimeTypeByExtension($extension)
+    {
+        $all = [
+            'png' => 'image/png',
+            'jpe' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'jpg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'bmp' => 'image/bmp',
+            'ico' => 'image/vnd.microsoft.icon',
+            'tiff' => 'image/tiff',
+            'tif' => 'image/tiff',
+            'svg' => 'image/svg+xml',
+            'svgz' => 'image/svg+xml'
+        ];
+        if (!empty($all[$extension])) {
+            return $all[$extension];
+        }
+        return null;
+    }
+
+    /**
      * Получение MIME типа файла
      *
      * @return string
@@ -158,8 +189,11 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     public function getType()
     {
-        if ($this->image) {
-            return $this->image->getMimeType();
+        if ($mime = $this->getMimeTypeByExtension($this->getExtension())) {
+            return $mime;
+        }
+        if ($this->image && $mime = $this->image->getMimeType()) {
+            return $mime;
         }
         return $this->uploader->getType();
     }
@@ -172,7 +206,10 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     public function getExtension()
     {
-        if ($this->image) {
+        if ($this->encode) {
+            return $this->encode;
+        }
+        if ($this->image && $this->image->isSaved()) {
             return $this->image->getExtension();
         }
         return $this->uploader->getExtension();
@@ -186,7 +223,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     public function getSize()
     {
-        if ($this->image) {
+        if ($this->image && $this->image->isSaved()) {
             return $this->image->getFileSize();
         }
         return $this->uploader->getSize();
@@ -213,16 +250,17 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      * Получение параметров обработки изображения
      *
      * @return ImageParams
+     * @throws \Exception
      */
     public function getImageParams()
     {
-        if (is_null($this->params)) {
-            $this->params = new $this->imageParamsClass($this->width, $this->height);
-            $this->params->extension = $this->encode;
-            $this->params->quality = $this->quality;
-            $this->params->watermarkPath = $this->watermarkPath;
-            $this->params->watermarkPosition = $this->watermarkPosition;
-        }
+        $ext = !empty($this->encode) ? $this->encode : $this->getExtension();
+
+        $this->params = new $this->imageParamsClass($this->width, $this->height);
+        $this->params->extension = $ext;
+        $this->params->quality = $this->quality;
+        $this->params->watermarkPath = $this->watermarkPath;
+        $this->params->watermarkPosition = $this->watermarkPosition;
         return $this->params;
     }
 
@@ -235,7 +273,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     protected function saveImage($savedPath)
     {
-        return $this->image->save($this->updatePath($savedPath), $this->quality);
+        return $this->image->save($savedPath, $this->quality);
     }
 
     /**
@@ -243,6 +281,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      *
      * @param $savedPath
      * @return string
+     * @throws \Exception
      */
     protected function updatePath($savedPath)
     {
