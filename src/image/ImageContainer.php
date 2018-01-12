@@ -8,12 +8,16 @@
 
 namespace chulakov\filestorage\image;
 
-use chulakov\filestorage\ImageComponent;
-use chulakov\filestorage\params\ImageMakeParams;
-use Intervention\Image\Constraint;
-use Intervention\Image\Image;
 use yii\helpers\FileHelper;
+use Intervention\Image\Image;
+use Intervention\Image\Constraint;
+use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\params\ImageParams;
 
+/**
+ * Class ImageContainer
+ * @package chulakov\filestorage\image
+ */
 class ImageContainer implements ImageInterface
 {
     /**
@@ -162,22 +166,20 @@ class ImageContainer implements ImageInterface
     /**
      * Вписывание изображения в область путем пропорционального масштабирования без обрезки
      *
-     * @param ImageMakeParams $params
+     * @param string $savePath
+     * @param ImageParams $params
      * @return bool
      */
-    public function contain(ImageMakeParams $params)
+    public function contain($savePath, ImageParams $params)
     {
         if ($this->image) {
             $this->image->resize(
                 $params->width,
                 $params->height,
-                function (Constraint $constraint) use ($params) {
-                    if ($params->upsize) {
-                        $constraint->upsize();
-                    }
+                function (Constraint $constraint) {
                     $constraint->aspectRatio();
                 }
-            )->save($params->savePath, $params->quality);
+            )->save($savePath, $params->quality);
             return true;
         }
         return false;
@@ -186,20 +188,15 @@ class ImageContainer implements ImageInterface
     /**
      * Масштабирование по ширине без обрезки краев
      *
-     * @param ImageMakeParams $params
+     * @param string $savePath
+     * @param ImageParams $params
      * @return bool
      */
-    public function widen(ImageMakeParams $params)
+    public function widen($savePath, ImageParams $params)
     {
         if ($this->image) {
-            $this->image->widen(
-                $params->width,
-                function (Constraint $constraint) use ($params) {
-                    if ($params->upsize) {
-                        $constraint->upsize();
-                    }
-                }
-            )->save($params->savePath, $params->quality);
+            $this->image->widen($params->width)
+                ->save($savePath, $params->quality);
             return true;
         }
         return false;
@@ -208,20 +205,15 @@ class ImageContainer implements ImageInterface
     /**
      * Масштабирование по высоте без обрезки краев
      *
-     * @param ImageMakeParams $params
+     * @param string $savePath
+     * @param ImageParams $params
      * @return bool
      */
-    public function heighten(ImageMakeParams $params)
+    public function heighten($savePath, ImageParams $params)
     {
         if ($this->image) {
-            $this->image->heighten(
-                $params->height,
-                function (Constraint $constraint) use ($params) {
-                    if ($params->upsize) {
-                        $constraint->upsize();
-                    }
-                }
-            )->save($params->savePath, $params->quality);
+            $this->image->heighten($params->height)
+                ->save($savePath, $params->quality);
             return true;
         }
         return false;
@@ -231,21 +223,15 @@ class ImageContainer implements ImageInterface
      * Заполнение обаласти частью изображения с обрезкой исходного,
      * отталкиваясь от точки позиционировани
      *
-     * @param ImageMakeParams $params
+     * @param string $savePath
+     * @param ImageParams $params
      * @return bool
      */
-    public function cover(ImageMakeParams $params)
+    public function cover($savePath, ImageParams $params)
     {
         if ($this->image) {
-            $this->image->fit(
-                $params->width,
-                $params->height,
-                function (Constraint $constraint) use ($params) {
-                    if ($params->upsize) {
-                        $constraint->upsize();
-                    }
-                }
-            )->save($params->savePath, $params->quality);
+            $this->image->fit($params->width, $params->height)
+                ->save($savePath, $params->quality);
             return true;
         }
         return false;
