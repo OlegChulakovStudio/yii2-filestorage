@@ -8,6 +8,8 @@
 
 namespace chulakov\filestorage\params;
 
+use chulakov\filestorage\ImageComponent;
+
 /**
  * Class ImageParams
  * @package chulakov\filestorage\params
@@ -50,6 +52,12 @@ class ImageParams
      * @var integer
      */
     public $watermarkPosition;
+    /**
+     * Позицыя при cover
+     *
+     * @var string
+     */
+    public $coverPosition = ImageComponent::POSITION_CENTER;
     /**
      * Категория файлов
      *
@@ -105,7 +113,7 @@ class ImageParams
      *
      * @param array $config
      */
-    public function configure($config = [])
+    public function configure($config)
     {
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
