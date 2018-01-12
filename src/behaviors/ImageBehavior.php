@@ -17,7 +17,6 @@ use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\ThumbParams;
-use chulakov\filestorage\params\ImageMakeParams;
 use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\exceptions\NotFoundFileException;
 
@@ -75,8 +74,10 @@ class ImageBehavior extends Behavior
      * Если нет, то оригинальное сообщение будет обрезано под нужное разрешение,
      * после закешировано, и после этого будет выдано url на изображение
      *
-     * @param ThumbParams|null $thumbParams
-     * @param ImageMakeParams|null $makeParams
+     * @param integer $w Width
+     * @param integer $h Height
+     * @param integer $q Quality
+     * @param string $p Position
      * @return string
      *
      * @throws \yii\base\InvalidParamException
@@ -84,21 +85,16 @@ class ImageBehavior extends Behavior
      * @throws NotFoundFileException
      * @throws \yii\base\Exception
      */
-    public function thumb(ThumbParams $thumbParams = null, ImageMakeParams $makeParams = null)
+    public function thumb($w = 0, $h = 0, $q = 0, $p = null)
     {
         /** @var BaseFile $model */
         $model = $this->owner;
         if (!$model->isImage()) {
             return '';
         }
-        if (!$thumbParams) {
-            $thumbParams = new ThumbParams();
-        }
         $path = $this->getFilePath();
+        $thumbParams = $this->getThumbParams($w, $h, $q, $p);
         $thumbPath = $thumbParams->getSavePath($path);
-        if ($makeParams) {
-            $this->processing($thumbPath, $makeParams);
-        }
         if (!file_exists($thumbPath)) {
             $this->createThumb($path, $thumbPath, $thumbParams);
         }
@@ -108,34 +104,43 @@ class ImageBehavior extends Behavior
     /**
      * Автоматическая обработка изображения в зависимости от наличия параметров
      *
-     * @param string $thumbPath
-     * @param ImageMakeParams $params
-     * @return bool
+     * @param integer $w Width
+     * @param integer $h Height
+     * @param integer $q Quality
+     * @param string $p Position
+     * @return ThumbParams
+     *
      * @throws \yii\base\InvalidParamException
-     * @throws NoAccessException
+     * @throws \chulakov\filestorage\exceptions\NoAccessException
      * @throws NotFoundFileException
      */
-    protected function processing($thumbPath, ImageMakeParams $params)
+    protected function getThumbParams($w = 0, $h = 0, $q = 0, $p = null)
     {
-        $params->savePath = $thumbPath;
+        $thumbParams = new ThumbParams();
 
-        if (empty($params->height)) {
-            return $this->widen($params);
-        } elseif (empty($params->width)) {
-            return $this->heighten($params);
-        } elseif (!empty($params->width) && !empty($params->height) && !empty($params->position)) {
-            return $this->contain($params);
-        } elseif (!empty($params->width) && !empty($params->height)) {
-            return $this->cover($params);
+        list($width, $height) = getimagesize($this->getFilePath());
+
+        if (!empty($w) && empty($h)) {
+            $thumbParams->width = $w;
+            $thumbParams->height = round($height / ($width / $w));
         }
-        return false;
+        if (!empty($h) && empty($w)) {
+            $thumbParams->height = $h;
+            $thumbParams->width = round($width / ($height / $h));
+        }
+        if (!empty($q)) {
+            $thumbParams->quality = $q;
+        }
+        if (!empty($p)) {
+            $thumbParams->coverPosition = $p;
+        }
+        return $thumbParams;
     }
 
     /**
      * @inheritdoc
      */
-    public
-    function events()
+    public function events()
     {
         return [
             ActiveRecord::EVENT_AFTER_DELETE => [$this, 'deleteFile']
@@ -151,8 +156,7 @@ class ImageBehavior extends Behavior
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    protected
-    function getFileThumbPath($params)
+    protected function getFileThumbPath($params)
     {
         return $params->getSavePath($this->getFilePath());
     }
@@ -166,8 +170,7 @@ class ImageBehavior extends Behavior
      * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      */
-    protected
-    function getFileThumbUrl($params, $absolute = false)
+    protected function getFileThumbUrl($params, $absolute = false)
     {
         return $params->getSavePath($this->getFileUrl($absolute));
     }
@@ -180,8 +183,7 @@ class ImageBehavior extends Behavior
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    protected
-    function getFilePath()
+    protected function getFilePath()
     {
         return $this->storageComponent->getFilePath($this->owner, $this->accessRole);
     }
@@ -194,8 +196,7 @@ class ImageBehavior extends Behavior
      * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      */
-    protected
-    function getFileUrl($absolute)
+    protected function getFileUrl($absolute)
     {
         return $this->storageComponent->getFileUrl($this->owner, $absolute, $this->accessRole);
     }
@@ -209,8 +210,7 @@ class ImageBehavior extends Behavior
      * @return bool
      * @throws \yii\base\Exception
      */
-    protected
-    function createThumb($path, $savePath, ThumbParams $params)
+    protected function createThumb($path, $savePath, ThumbParams $params)
     {
         $image = $this->imageComponent->createImage($path, $params);
         $image->save($savePath, $params->quality);
@@ -220,62 +220,93 @@ class ImageBehavior extends Behavior
     /**
      * Масштабирование по ширине без обрезки краев
      *
-     * @param ImageMakeParams $params
+     * @param integer $width
+     * @param integer $quality
      * @return mixed
      * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    public
-    function widen($params)
+    public function widen($width, $quality = 80)
     {
-        return $this->imageComponent->make($this->getFilePath())->widen($params);
+        list($path, $params) = $this->getImageData($width, 0, $quality);
+        return $this->imageComponent->make($this->getFilePath())->widen($path, $params);
     }
 
     /**
      * Масштабирование по высоте без обрезки краев
      *
-     * @param ImageMakeParams $params
+     * @param integer $height
+     * @param integer $quality
      * @return mixed
-     * @throws NoAccessException
      * @throws \yii\base\InvalidParamException
+     * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    public
-    function heighten($params)
+    public function heighten($height, $quality = 80)
     {
-        return $this->imageComponent->make($this->getFilePath())->heighten($params);
+        list($path, $params) = $this->getImageData(0, $height, $quality);
+        return $this->imageComponent->make($this->getFilePath())->heighten($path, $params);
     }
 
     /**
      * Вписывание изображения в область путем пропорционального масштабирования без обрезки
      *
-     * @param ImageMakeParams $params
+     * @param integer $width
+     * @param integer $height
+     * @param integer $quality
      * @return bool
-     * @throws NoAccessException
+     *
      * @throws \yii\base\InvalidParamException
-     * @throws \chulakov\filestorage\exceptions\NotFoundFileException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
      */
-    public
-    function contain(ImageMakeParams $params)
+    public function contain($width = 0, $height = 0, $quality = 80)
     {
-        return $this->imageComponent->make($this->getFilePath())->contain($params);
+        list($path, $params) = $this->getImageData($width, $height, $quality);
+        return $this->imageComponent->make($this->getFilePath())->contain($path, $params);
     }
 
     /**
      * Заполнение обаласти частью изображения с обрезкой исходного,
      * отталкиваясь от точки позиционировани
      *
-     * @param ImageMakeParams $params
+     * @param integer $width
+     * @param integer $height
+     * @param integer $quality
+     * @param string|null $position
      * @return mixed
+     *
+     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
-     * @throws \yii\base\InvalidParamException
      */
-    public
-    function cover(ImageMakeParams $params)
+    public function cover($width = 0, $height = 0, $quality = 0, $position = null)
     {
-        return $this->imageComponent->make($this->getFilePath())->cover($params);
+        list($path, $params) = $this->getImageData($width, $height, $quality, $position);
+        return $this->imageComponent->make($this->getFilePath())->contain($path, $params);
+    }
+
+    /**
+     * Получить путь к изображению по его параметрам
+     *
+     * @param int $width
+     * @param int $height
+     * @param int $quality
+     * @param null $position
+     * @return array
+     *
+     * @throws \yii\base\InvalidParamException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
+     */
+    protected function getImageData($width = 0, $height = 0, $quality = 80, $position = null)
+    {
+        $params = $this->getThumbParams($width, $height, $quality, $position);
+        return [
+            $params->getSavePath($this->getFilePath()),
+            $params
+        ];
     }
 
     /**
@@ -286,10 +317,9 @@ class ImageBehavior extends Behavior
      * @throws NotFoundFileException
      * @throws \yii\base\ErrorException
      */
-    public
-    function removeAllThumbs()
+    public function removeAllThumbs()
     {
-        list($name, $ext) = explode('.', basename($this->owner->sys_file));
+        list($name) = explode('.', basename($this->owner->sys_file));
 
         $path = implode('/', [
             dirname($this->getFilePath()),
@@ -312,8 +342,7 @@ class ImageBehavior extends Behavior
      * @throws \yii\base\ErrorException
      * @throws \Throwable
      */
-    public
-    function deleteFile()
+    public function deleteFile()
     {
         $this->removeAllThumbs();
         $this->storageComponent->removeFile($this->owner);
