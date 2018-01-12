@@ -14,7 +14,7 @@ use chulakov\filestorage\ImageComponent;
  * Class ImageParams
  * @package chulakov\filestorage\params
  */
-class ImageParams
+class ImageParams extends PathParams
 {
     /**
      *  Ширина
@@ -63,13 +63,7 @@ class ImageParams
      *
      * @var string
      */
-    public $category = 'images';
-    /**
-     * Шаблон сохранения thumbnails файлов
-     *
-     * @var string
-     */
-    public $pathPattern = '{root}/{basename}.{ext}';
+    public $group = 'images';
 
     /**
      * Конструктор параметров

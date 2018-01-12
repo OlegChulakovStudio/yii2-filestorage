@@ -17,13 +17,20 @@ class ThumbParams extends ImageParams
     /**
      * @var string Категория превью
      */
-    public $category = 'thumbs';
+    public $group = 'thumbs';
     /**
      * Шаблон сохранения thumbnails файлов
      *
      * @var string
      */
     public $pathPattern = '{root}/{category}/{basename}/{width}x{height}.{ext}';
+    /**
+     * Шаблон удаления файлов.
+     * Испольует glob для поиска всех файлов.
+     *
+     * @var string
+     */
+    public $deletePattern = '{root}/{category}/{basename}/*';
 
     /**
      * Конструктор параметров
