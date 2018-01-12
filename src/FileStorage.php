@@ -18,6 +18,7 @@ use yii\helpers\Url;
 use yii\helpers\FileHelper;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\services\PathService;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 use chulakov\filestorage\exceptions\NotFoundFileException;
@@ -69,6 +70,10 @@ class FileStorage extends Component
      * @var FileService
      */
     protected $service;
+    /**
+     * @var PathService
+     */
+    protected $pathService;
 
     /**
      * Конструктор с зависимостью от сервиса
@@ -100,6 +105,7 @@ class FileStorage extends Component
         if (!$this->storageDir) {
             throw new InvalidConfigException("Параметр 'storageDir' должен быть указан");
         }
+        $this->pathService = new PathService($this->storagePath, $this->storageDir);
     }
 
     /**
