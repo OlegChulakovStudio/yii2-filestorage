@@ -11,6 +11,7 @@ namespace chulakov\filestorage\behaviors;
 use yii\rbac\Item;
 use yii\di\Instance;
 use yii\base\Behavior;
+use yii\db\ActiveRecord;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\models\BaseFile;
 
@@ -38,6 +39,16 @@ class StorageBehavior extends Behavior
     {
         parent::init();
         $this->storageComponent = Instance::ensure($this->storageComponent);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function events()
+    {
+        return [
+            ActiveRecord::EVENT_AFTER_DELETE => [$this, 'deleteFile']
+        ];
     }
 
     /**
@@ -89,5 +100,16 @@ class StorageBehavior extends Behavior
     public function getUploadPath()
     {
         return $this->storageComponent->getUploadPath($this->owner);
+    }
+
+    /**
+     * Удаление файла
+     *
+     * @throws \Exception
+     * @throws \Throwable
+     */
+    public function deleteFile()
+    {
+        $this->storageComponent->removeFile($this->owner);
     }
 }
