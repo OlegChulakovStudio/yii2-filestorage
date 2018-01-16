@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл класса PathParams.php
+ * Файл класса PathParams
  *
  * @copyright Copyright (c) 2018, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -8,7 +8,12 @@
 
 namespace chulakov\filestorage\params;
 
+use yii\helpers\ArrayHelper;
 
+/**
+ * Class PathParams
+ * @package chulakov\filestorage\params
+ */
 class PathParams
 {
     /**
@@ -37,7 +42,41 @@ class PathParams
     public function config()
     {
         return [
-            'group' => $this->group,
+            '{group}' => $this->group,
         ];
+    }
+
+    /**
+     * Получить путь файла относительно параметров
+     *
+     * @param string $path
+     * @return array
+     */
+    public function getConfigWithPath($path)
+    {
+        $name = basename($path);
+        $path = dirname($path);
+
+        list($basename, $ext) = explode('.', $name);
+        $ext = !empty($this->extension) ? $this->extension : $ext;
+
+        return ArrayHelper::merge([
+            '{root}' => $path,
+            '{name}' => $name,
+            '{basename}' => $basename,
+            '{ext}' => $ext,
+        ], $this->config());
+    }
+
+    /**
+     * Конфигурирование
+     *
+     * @param array $config
+     */
+    public function configure($config)
+    {
+        foreach ($config as $key => $value) {
+            $this->{$key} = $value;
+        }
     }
 }

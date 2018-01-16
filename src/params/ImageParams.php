@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\params;
 
+use yii\helpers\ArrayHelper;
 use chulakov\filestorage\ImageComponent;
 
 /**
@@ -78,39 +79,16 @@ class ImageParams extends PathParams
     }
 
     /**
-     * Получить путь файла относительно параметров
+     * Выдача скомпанованных параметров
      *
-     * @param string $path
-     * @return string
+     * @return array
      */
-    public function getSavePath($path)
+    public function config()
     {
-        $name = basename($path);
-        $path = dirname($path);
-
-        list($basename, $ext) = explode('.', $name);
-        $ext = !empty($this->extension) ? $this->extension : $ext;
-
-        return strtr($this->pathPattern, [
-            '{root}' => $path,
-            '{name}' => $name,
-            '{basename}' => $basename,
-            '{category}' => $this->category,
+        return ArrayHelper::merge(parent::config(), [
+            '{group}' => $this->group,
             '{width}' => $this->width,
             '{height}' => $this->height,
-            '{ext}' => $ext,
         ]);
-    }
-
-    /**
-     * Конфигурирование
-     *
-     * @param array $config
-     */
-    public function configure($config)
-    {
-        foreach ($config as $key => $value) {
-            $this->{$key} = $value;
-        }
     }
 }
