@@ -25,9 +25,9 @@ use chulakov\filestorage\behaviors\StorageBehavior;
  * @property $object_id
  *
  * @method string getUrl(bool $isAbsolute, Item $role) Возвращает абсолютный или относительный URL-адрес к файлу
- * @method string getPath(Item $role) Возвращает полный путь к файлу в файловой системе
- * @method string getUploadUrl(bool $isAbsolute) Возвращает URL-адрес до директории нахождения файлов определенного типа
- * @method string getUploadPath() Возвращает абсолютный путь к директории хранения файлов определенного типа
+ * @method string getPath(Item $role)                  Возвращает полный путь к файлу в файловой системе
+ * @method string getUploadUrl(bool $isAbsolute)       Возвращает URL-адрес до директории нахождения файлов определенного типа
+ * @method string getUploadPath()                      Возвращает абсолютный путь к директории хранения файлов определенного типа
  */
 abstract class BaseFile extends ActiveRecord
 {
