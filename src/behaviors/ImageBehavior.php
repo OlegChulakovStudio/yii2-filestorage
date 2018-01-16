@@ -16,6 +16,7 @@ use yii\helpers\FileHelper;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\params\PathParams;
 use chulakov\filestorage\params\ThumbParams;
 use chulakov\filestorage\params\ImageParams;
 use chulakov\filestorage\exceptions\NoAccessException;
@@ -70,6 +71,16 @@ class ImageBehavior extends Behavior
     }
 
     /**
+     * Конструктор класса ImageBehavior
+     *
+     * @param array $config
+     */
+    public function __construct(array $config = [])
+    {
+        parent::__construct($config);
+    }
+
+    /**
      * Формирование thumbnail изображения
      *
      * Если thumbnail закеширован, то сразу же будет выдан url на него
@@ -96,7 +107,7 @@ class ImageBehavior extends Behavior
         }
         $path = $this->getFilePath();
         $thumbParams = $this->buildThumbParams($w, $h, $q, $p);
-        $thumbPath = $thumbParams->getSavePath($path);
+        $thumbPath = $this->storageComponent->getSavePathFromParams($path, $thumbParams);
         if (!file_exists($thumbPath)) {
             $this->createThumb($path, $thumbPath, $thumbParams);
         }
@@ -104,7 +115,7 @@ class ImageBehavior extends Behavior
     }
 
     /**
-     * Автоматическая обработка изображения в зависимости от наличия параметров
+     *Генерация параметров для thumbnails
      *
      * @param integer $w Width
      * @param integer $h Height
@@ -119,11 +130,30 @@ class ImageBehavior extends Behavior
         return $this->buildParams($this->thumbParamsClass, $w, $h, $q, $p);
     }
 
+    /**
+     * Генерация параметров для изображения
+     *
+     * @param int $w Width
+     * @param int $h Height
+     * @param int $q Quality
+     * @param string|null $p Position
+     * @return mixed
+     */
     protected function buildImageParams($w = 0, $h = 0, $q = 0, $p = null)
     {
         return $this->buildParams($this->imageParamsClass, $w, $h, $q, $p);
     }
 
+    /**
+     * Автоматическая обработка изображения в зависимости от наличия параметров
+     *
+     * @param string $class
+     * @param integer $w Width
+     * @param integer $h Height
+     * @param integer $q Quality
+     * @param string|null $p Position
+     * @return PathParams|ImageParams|ThumbParams
+     */
     protected function buildParams($class, $w, $h, $q, $p)
     {
         $params = new $class($w, $h);
@@ -157,7 +187,7 @@ class ImageBehavior extends Behavior
      */
     protected function getFileThumbPath($params)
     {
-        return $params->getSavePath($this->getFilePath());
+        return $this->storageComponent->getSavePathFromParams($this->getFilePath(), $params);
     }
 
     /**
@@ -168,10 +198,11 @@ class ImageBehavior extends Behavior
      * @return string
      * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
+     * @throws NotFoundFileException
      */
     protected function getFileThumbUrl($params, $absolute = false)
     {
-        return $params->getSavePath($this->getFileUrl($absolute));
+        return $this->storageComponent->getSavePathFromParams($this->getFilePath(), $params);
     }
 
     /**
@@ -318,7 +349,10 @@ class ImageBehavior extends Behavior
      */
     public function removeAllThumbs()
     {
-        $path = dirname($this->buildThumbParams()->getSavePath($this->getFilePath()));
+        $path = dirname($this->storageComponent->getSavePathFromParams(
+            $this->getFilePath(),
+            $this->buildThumbParams()
+        ));
         if (is_dir($path)) {
             FileHelper::removeDirectory($path);
         }

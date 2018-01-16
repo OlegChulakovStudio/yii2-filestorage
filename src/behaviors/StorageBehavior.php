@@ -34,6 +34,7 @@ class StorageBehavior extends Behavior
 
     /**
      * @inheritdoc
+     * @throws \yii\base\InvalidConfigException
      */
     public function init()
     {

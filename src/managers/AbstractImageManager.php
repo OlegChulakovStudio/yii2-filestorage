@@ -11,6 +11,7 @@ namespace chulakov\filestorage\managers;
 use yii\di\Instance;
 use yii\base\BaseObject;
 use yii\helpers\FileHelper;
+use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\params\ImageParams;
@@ -91,7 +92,12 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      * @var string
      */
     public $imageParamsClass = 'chulakov\filestorage\params\ImageParams';
-
+    /**
+     * Компонент работы с файлами
+     *
+     * @var FileStorage
+     */
+    public $storageComponent = 'chulakov\filestorage\FileStorage';
     /**
      * @var UploadInterface
      */
@@ -121,6 +127,17 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     public function attach(ObserverInterface $observer)
     {
         $observer->on(Event::SAVE_EVENT, [$this, 'handle']);
+    }
+
+    /**
+     * @inheritdoc
+     *
+     * @throws \yii\base\InvalidConfigException
+     */
+    public function init()
+    {
+        parent::init();
+        $this->storageComponent = Instance::ensure($this->storageComponent);
     }
 
     /**
@@ -256,14 +273,13 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
 
     /**
      * Обновление пути сохранения файла
-     *
-     * @param $savedPath
+     * @param string $savedPath
      * @return string
      * @throws \Exception
      */
     protected function updatePath($savedPath)
     {
-        return $this->getImageParams()->getSavePath($savedPath);
+        return $this->storageComponent->getSavePathFromParams($savedPath, $this->getImageParams());
     }
 
     /**

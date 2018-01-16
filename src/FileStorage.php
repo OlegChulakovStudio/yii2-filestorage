@@ -11,19 +11,17 @@ namespace chulakov\filestorage;
 use Yii;
 use yii\rbac\Item;
 use yii\base\Component;
-use yii\base\Exception;
-use yii\base\InvalidConfigException;
 use yii\base\UnknownClassException;
-use yii\helpers\Url;
-use yii\helpers\FileHelper;
+use yii\base\InvalidConfigException;
 use chulakov\filestorage\models\BaseFile;
-use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\params\ImageParams;
+use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\services\PathService;
 use chulakov\filestorage\services\FileService;
-use chulakov\filestorage\exceptions\NotUploadFileException;
-use chulakov\filestorage\exceptions\NotFoundFileException;
+use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\exceptions\NoAccessException;
-use chulakov\filestorage\params\UploadParams;
+use chulakov\filestorage\exceptions\NotFoundFileException;
+use chulakov\filestorage\exceptions\NotUploadFileException;
 
 /**
  * Class FileStorage
@@ -61,12 +59,6 @@ class FileStorage extends Component
      */
     public $storagePattern = '{group}/{id}';
     /**
-     * Если заданы права, то после создания файла они будут принудительно назначены
-     *
-     * @var number|null
-     */
-    public $fileMode = 0775;
-    /**
      * @var FileService
      */
     protected $service;
@@ -90,6 +82,7 @@ class FileStorage extends Component
     /**
      * При инициализации проверяем необходимые конфигурационные переменные
      *
+     * @throws \yii\base\InvalidParamException
      * @throws InvalidConfigException
      */
     public function init()
@@ -105,7 +98,9 @@ class FileStorage extends Component
         if (!$this->storageDir) {
             throw new InvalidConfigException("Параметр 'storageDir' должен быть указан");
         }
-        $this->pathService = new PathService($this->storagePath, $this->storageDir);
+        $this->storagePath = Yii::getAlias($this->storagePath);
+        // инициализирование сервиса для работы с path
+        $this->pathService = new PathService($this->storagePath, $this->storageDir, $this->storageBaseUrl);
     }
 
     /**
@@ -159,7 +154,6 @@ class FileStorage extends Component
         if (\Yii::$app->user->can($role, $params)) {
             return true;
         }
-
         throw new NoAccessException('Нет прав доступа не сохранение файла.');
     }
 
@@ -198,13 +192,25 @@ class FileStorage extends Component
      */
     protected function getSavePath(UploadParams $params)
     {
-        return str_replace(['\\', '\/'], DIRECTORY_SEPARATOR,
-            implode('/', array_filter([
-                $this->storageDir, trim(strtr($this->storagePattern, [
-                    '{id}' => $params->object_id,
-                    '{group}' => $params->group_code,
-                ]), '\\\/')
-            ]))
+        return $this->pathService->parsePattern(
+            $this->storagePattern, [
+            '{id}' => $params->object_id,
+            '{group}' => $params->group_code
+        ]);
+    }
+
+    /**
+     * Обновить сохраняемый путь через параметры
+     *
+     * @param string $pathUpdate
+     * @param ImageParams $params
+     * @return string
+     */
+    public function getSavePathFromParams($pathUpdate, ImageParams $params)
+    {
+        return $this->pathService->parsePattern(
+            $params->pathPattern,
+            $params->getConfigWithPath($pathUpdate)
         );
     }
 
@@ -218,31 +224,7 @@ class FileStorage extends Component
      */
     protected function getAbsolutePath($path)
     {
-        $full = FileHelper::normalizePath(
-            Yii::getAlias($this->storagePath) . '/' . $path
-        );
-        if (!$this->checkPath($full)) {
-            throw new NotUploadFileException('Нет доступа к каталогу для сохранения файла.');
-        }
-        return $full;
-    }
-
-    /**
-     * Проверка наличия директории с попыткой создать новую, если это возможно
-     *
-     * @param string $full
-     * @return boolean
-     */
-    protected function checkPath($full)
-    {
-        if (!is_dir($full)) {
-            try {
-                return FileHelper::createDirectory($full, $this->fileMode);
-            } catch (Exception $e) {
-                return false;
-            }
-        }
-        return true;
+        return $this->pathService->getAbsolutePath($path);
     }
 
     /**
@@ -273,10 +255,8 @@ class FileStorage extends Component
      */
     public function removeFile($model)
     {
-        $full = Yii::getAlias($this->storagePath) . '/' . $model->sys_file;
-        if (is_file($full)) {
-            unlink($full);
-        }
+        $path = $this->storagePath . '/' . $model->sys_file;
+        $this->pathService->removeFile($path);
     }
 
     /**
@@ -325,10 +305,7 @@ class FileStorage extends Component
     public function getUploadPath($model)
     {
         $params = $this->getParamsFromModel($model);
-        $path = FileHelper::normalizePath(implode(DIRECTORY_SEPARATOR, [
-            Yii::getAlias($this->storagePath), $this->getSavePath($params)
-        ]));
-        return $path;
+        return $this->pathService->getUploadPath($this->getSavePath($params), $params);
     }
 
     /**
@@ -358,14 +335,9 @@ class FileStorage extends Component
     public function getFilePath($model, $role = null)
     {
         $this->canAccess($role, $model);
-
-        if ($path = $this->checkSystemPath($model)) {
-            return $path;
-        }
-        if ($path = $this->checkMovedPath($model)) {
-            return $path;
-        }
-        throw new NotFoundFileException('Не удалось найти файл :' . basename($model->sys_file));
+        return $this->pathService->findPath(
+            $model->sys_file, $this->getUploadPath($model)
+        );
     }
 
     /**
@@ -382,57 +354,9 @@ class FileStorage extends Component
     {
         $this->canAccess($role, $model);
 
-        if ($this->checkSystemPath($model)) {
-            return $this->convertToUrl($model->sys_file, $isAbsolute);
-        }
-        $baseName = '/' . basename($model->sys_file);
-        if ($this->checkMovedPath($model)) {
-            return $this->getUploadUrl($model, $isAbsolute) . $baseName;
-        }
-        return $this->convertToUrl($baseName, $isAbsolute);
-    }
-
-    /**
-     * Проверка системного расположения файла
-     *
-     * @param BaseFile $model
-     * @return string|null
-     * @throws \yii\base\InvalidParamException
-     */
-    protected function checkSystemPath($model)
-    {
-        return $this->checkExistFile(implode(DIRECTORY_SEPARATOR, [
-            Yii::getAlias($this->storagePath), $model->sys_file
-        ]));
-    }
-
-    /**
-     * Проверка возможного перемещения файлов по новому шаблону
-     *
-     * @param BaseFile $model
-     * @return string|null
-     * @throws \yii\base\InvalidParamException
-     */
-    protected function checkMovedPath($model)
-    {
-        return $this->checkExistFile(implode(DIRECTORY_SEPARATOR, [
-            $this->getUploadPath($model), basename($model->sys_file)
-        ]));
-    }
-
-    /**
-     * Проверка существования файла
-     *
-     * @param string $path
-     * @return string|null
-     */
-    protected function checkExistFile($path)
-    {
-        $path = FileHelper::normalizePath($path);
-        if (is_file($path)) {
-            return $path;
-        }
-        return null;
+        return $this->pathService->findUrl(
+            $model->sys_file, $this->getUploadUrl($model, $isAbsolute), $isAbsolute
+        );
     }
 
     /**
@@ -460,12 +384,6 @@ class FileStorage extends Component
      */
     public function convertToUrl($path, $isAbsolute = false)
     {
-        $url = '/' . trim(str_replace('\\', '/', $path), '/');
-        if ($this->storageBaseUrl !== false) {
-            $url = Url::to($this->storageBaseUrl . $url, true);
-        } elseif ($isAbsolute) {
-            $url = Url::base(true) . $url;
-        }
-        return $url;
+        return $this->pathService->convertToUrl($path, $isAbsolute);
     }
 }
