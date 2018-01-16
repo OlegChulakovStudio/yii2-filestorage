@@ -12,9 +12,9 @@ use yii\base\UnknownClassException;
 use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
-use chulakov\filestorage\models\repositories\FileRepository;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\models\repositories\FileRepository;
 
 /**
  * Class FileService
