@@ -8,8 +8,6 @@
 
 namespace chulakov\filestorage\services;
 
-use Yii;
-use Exception;
 use yii\helpers\Url;
 use yii\helpers\FileHelper;
 use chulakov\filestorage\params\PathParams;
@@ -53,19 +51,29 @@ class PathService
      * @param string $storageDir
      * @param string $storageBaseUrl
      */
-    public function __construct($path, $storageDir = '', $storageBaseUrl = '')
+    public function __construct($path, $storageDir, $storageBaseUrl)
     {
         $this->storagePath = $path;
-        if (!empty($storageDir)) {
-            $this->storageDir = $storageDir;
-        }
-        if (!empty($storageBaseUrl)) {
-            $this->storageBaseUrl = $storageBaseUrl;
-        }
+        $this->storageDir = $storageDir;
+        $this->storageBaseUrl = $storageBaseUrl;
     }
 
     /**
-     * Сгенерировать путь
+     * Формирование относительного пути для сохранения файла
+     *
+     * @param PathParams $params
+     * @param array $options
+     * @return string
+     */
+    public function savedPath(PathParams $params, $options = [])
+    {
+        return $this->parsePattern($params->pathPattern, array_merge(
+            array_filter($params->config()), $options
+        ));
+    }
+
+    /**
+     * Обновить path по паттерну
      *
      * @param string $path
      * @param PathParams $params
@@ -73,9 +81,8 @@ class PathService
      */
     public function makePath($path, PathParams $params)
     {
-        $path = $this->getPath($path);
-        return $this->updatePath(
-            $path, $params->pathPattern, $params->config()
+        return $this->parsePattern($params->pathPattern,
+            $this->parseConfig($path, $params)
         );
     }
 
@@ -86,65 +93,39 @@ class PathService
      * @param PathParams $params
      * @return array
      */
-    public function getDeleteFiles($path, PathParams $params)
+    public function searchAllFiles($path, PathParams $params)
     {
-        $path = $this->getPath($path);
-        $patternPath = $this->parsePattern(
-            $params->deletePattern, $params->getConfigWithPath($path)
+        $patternPath = $this->parsePattern($params->searchPattern,
+            $this->parseConfig($path, $params)
         );
         return glob($patternPath, GLOB_BRACE & GLOB_ERR);
     }
 
     /**
-     * Получить составной путь
-     *
-     * @param string $path
-     * @param bool $absolute
-     * @return string
-     */
-    public function getPath($path, $absolute = true)
-    {
-        $arguments = [$this->storageDir, $path];
-        if ($absolute) {
-            array_unshift($arguments, $this->storagePath);
-        }
-        return implode(DIRECTORY_SEPARATOR, $arguments);
-    }
-
-    /**
-     * Обновить path по паттерну
+     * Формирование параметров для парсинга из полного пути файла
      *
      * @param string $path
      * @param PathParams $params
-     * @param bool $absolute
-     * @return string
+     * @return array
      */
-    public function updatePath($path, PathParams $params, $absolute = true)
+    public function parseConfig($path, PathParams $params)
     {
-        $pattern = $params->pathPattern;
-
         $name = basename($path);
         $root = dirname($path);
+        list($basename, $ext) = explode('.', $name, 2);
 
-        list($basename, $ext) = explode('.', $name);
-
-        $pathPattern = $this->parsePattern($pattern, array_merge(
-            $params->getConfigWithPath($path),
-            [
-                '{name}' => $name,
-                '{basename}' => $basename,
-                '{ext}' => $ext,
-            ]
-        ));
-
-        if ($absolute) {
-            return implode(DIRECTORY_SEPARATOR, [$root, $pathPattern]);
-        }
-        return $pathPattern;
+        $config = array_filter($params->config());
+        $options = array_filter($params->options());
+        return array_merge([
+            '{root}' => $root,
+            '{name}' => $name,
+            '{basename}' => $basename,
+            '{ext}' => $ext,
+        ], $config, $options);
     }
 
     /**
-     * Подстановка данных в  паттерн
+     * Подстановка данных в паттерн
      *
      * @param string $pattern
      * @param array $config
@@ -152,18 +133,27 @@ class PathService
      */
     public function parsePattern($pattern, $config)
     {
-        return trim(strtr($pattern, $config));
+        $path = trim(strtr($pattern, $config));
+        $path = str_replace(['\\', '\/'], DIRECTORY_SEPARATOR, $path);
+        return rtrim($path, DIRECTORY_SEPARATOR);
     }
 
     /**
-     * Получить сохраняемый путь через параметры
+     * Проверка наличия директории с попыткой создать новую, если это возможно
      *
-     * @param PathParams $params
-     * @return string
+     * @param string $full
+     * @return boolean
+     * @throws \yii\base\Exception
      */
-    public function getSavePathFromParams(PathParams $params)
+    protected function checkPath($full)
     {
-        return $this->getPath($this->parsePattern($params->pathPattern, $params->config()));
+        if (is_file($full)) {
+            $full = dirname($full);
+        }
+        if (is_dir($full)) {
+            return true;
+        }
+        return FileHelper::createDirectory($full, $this->fileMode);
     }
 
     /**
@@ -174,11 +164,22 @@ class PathService
      */
     protected function checkExistFile($path)
     {
-        $path = FileHelper::normalizePath($path);
         if (is_file($path)) {
             return $path;
         }
         return null;
+    }
+
+    /**
+     * Проверка системного расположения файла
+     *
+     * @param string $file
+     * @return string
+     * @throws \yii\base\InvalidParamException
+     */
+    protected function checkSystemPath($file)
+    {
+        return $this->checkExistFile($this->getAbsolutePath($file));
     }
 
     /**
@@ -190,23 +191,8 @@ class PathService
      */
     protected function checkMovedPath($file, $uploadPath)
     {
-        return $this->checkExistFile(implode(DIRECTORY_SEPARATOR, [
+        return $this->checkSystemPath(implode(DIRECTORY_SEPARATOR, [
             $uploadPath, basename($file)
-        ]));
-    }
-
-    /**
-     * Проверка системного расположения файла
-     *
-     * @param string $file
-     * @return string
-     *
-     * @throws \yii\base\InvalidParamException
-     */
-    protected function checkSystemPath($file)
-    {
-        return $this->checkExistFile(implode(DIRECTORY_SEPARATOR, [
-            Yii::getAlias($this->storagePath), $file
         ]));
     }
 
@@ -216,7 +202,6 @@ class PathService
      * @param string $file
      * @param string $uploadPath
      * @return null|string
-     *
      * @throws \yii\base\InvalidParamException
      * @throws NotFoundFileException
      */
@@ -238,19 +223,11 @@ class PathService
      * @param $uploadPath
      * @param bool $isAbsolute
      * @return string
-     *
-     * @throws \yii\base\InvalidParamException
+     * @throws NotFoundFileException
      */
     public function findUrl($file, $uploadPath, $isAbsolute = false)
     {
-        if ($this->checkSystemPath($file)) {
-            return $this->convertToUrl($file, $isAbsolute);
-        }
-        $baseName = '/' . basename($file);
-        if ($this->checkMovedPath($file, $uploadPath)) {
-            return $uploadPath . $baseName;
-        }
-        return $this->convertToUrl($baseName, $isAbsolute);
+        return $this->convertToUrl($this->findPath($file, $uploadPath), $isAbsolute);
     }
 
     /**
@@ -258,36 +235,17 @@ class PathService
      *
      * @param string $path
      * @return string
-     *
      * @throws \yii\base\InvalidParamException
      */
     public function getAbsolutePath($path)
     {
         return FileHelper::normalizePath(
             implode(DIRECTORY_SEPARATOR, [
-                Yii::getAlias($this->storagePath),
+                $this->storagePath,
                 $this->storageDir,
                 $path,
             ])
         );
-    }
-
-    /**
-     * Проверка наличия директории с попыткой создать новую, если это возможно
-     *
-     * @param string $full
-     * @return boolean
-     */
-    protected function checkPath($full)
-    {
-        if (!is_dir($full)) {
-            try {
-                return FileHelper::createDirectory($full, $this->fileMode);
-            } catch (Exception $e) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -308,7 +266,6 @@ class PathService
      * @param string $path
      * @param bool $isAbsolute
      * @return string
-     *
      * @throws \yii\base\InvalidParamException
      */
     public function convertToUrl($path, $isAbsolute = false)
@@ -320,21 +277,5 @@ class PathService
             $url = Url::base(true) . $url;
         }
         return $url;
-    }
-
-    /**
-     * Возвращает абсолютный путь к директории хранения файлов определенного типа
-     *
-     * @param string $path
-     * @return string
-     *
-     * @throws \yii\base\InvalidParamException
-     */
-    public function getUploadPath($path)
-    {
-        $filePath = FileHelper::normalizePath(implode(DIRECTORY_SEPARATOR, [
-            Yii::getAlias($this->storagePath), $path
-        ]));
-        return $filePath;
     }
 }
