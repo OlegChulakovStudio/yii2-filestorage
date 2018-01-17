@@ -48,4 +48,19 @@ class ThumbsManager extends AbstractImageManager
             $this->saveImage($this->updatePath($event->savedPath));
         }
     }
+
+    /**
+     * Обновление пути
+     *
+     * @param string $savedPath
+     * @return string
+     * @throws \Exception
+     */
+    protected function updatePath($savedPath)
+    {
+        $params = $this->getImageParams();
+        $params->addOption('type', 'thumb');
+
+        return $this->storageComponent->makePath($savedPath, $params);
+    }
 }
