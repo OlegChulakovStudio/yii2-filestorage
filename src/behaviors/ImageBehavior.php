@@ -12,7 +12,6 @@ use yii\rbac\Item;
 use yii\di\Instance;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
-use yii\helpers\FileHelper;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
@@ -33,18 +32,23 @@ class ImageBehavior extends Behavior
      */
     public $owner;
     /**
-     * Название создаваемой группы для хранения
+     * Класс параметрической модели обработки превью
      *
      * @var string
      */
     public $thumbParamsClass = ThumbParams::class;
+    /**
+     * Класс параметрической модели обработки изображений
+     *
+     * @var string
+     */
     public $imageParamsClass = ImageParams::class;
     /**
      * Название компонента для работы сохранением файлов
      *
      * @var string|FileStorage
      */
-    public $storageComponent = 'fileStorage';
+    public $fileStorage = 'fileStorage';
     /**
      * Название компонента для работы с изображениями
      *
@@ -66,18 +70,8 @@ class ImageBehavior extends Behavior
     public function init()
     {
         parent::init();
-        $this->storageComponent = Instance::ensure($this->storageComponent);
+        $this->fileStorage = Instance::ensure($this->fileStorage);
         $this->imageComponent = Instance::ensure($this->imageComponent);
-    }
-
-    /**
-     * Конструктор класса ImageBehavior
-     *
-     * @param array $config
-     */
-    public function __construct(array $config = [])
-    {
-        parent::__construct($config);
     }
 
     /**
@@ -92,8 +86,6 @@ class ImageBehavior extends Behavior
      * @param integer $q Quality
      * @param string $p Position
      * @return string
-     *
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      * @throws \yii\base\Exception
@@ -107,23 +99,21 @@ class ImageBehavior extends Behavior
         }
         $path = $this->getFilePath();
         $thumbParams = $this->buildThumbParams($w, $h, $q, $p);
-        $thumbPath = $this->storageComponent->getSavePathFromParams($path, $thumbParams);
+        $thumbPath = $this->makePath($path, $thumbParams);
         if (!file_exists($thumbPath)) {
             $this->createThumb($path, $thumbPath, $thumbParams);
         }
-        return $this->getFileThumbUrl($thumbParams);
+        return $this->convertToUrl($thumbPath);
     }
 
     /**
-     *Генерация параметров для thumbnails
+     * Генерация параметров для thumbnails
      *
      * @param integer $w Width
      * @param integer $h Height
      * @param integer $q Quality
      * @param string $p Position
      * @return ThumbParams
-     *
-     * @throws \yii\base\InvalidParamException
      */
     protected function buildThumbParams($w = 0, $h = 0, $q = 0, $p = null)
     {
@@ -181,41 +171,47 @@ class ImageBehavior extends Behavior
      *
      * @param ThumbParams $params
      * @return string
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
     protected function getFileThumbPath($params)
     {
-        return $this->storageComponent->getSavePathFromParams($this->getFilePath(), $params);
+        return $this->fileStorage->makePath($this->getFilePath(), $params);
     }
 
     /**
-     * Получить URL ссылку на превью
+     * URL до превью
      *
-     * @param ThumbParams $params
-     * @param bool $absolute
+     * @param string $path
      * @return string
-     * @throws \yii\base\InvalidParamException
-     * @throws NoAccessException
-     * @throws NotFoundFileException
      */
-    protected function getFileThumbUrl($params, $absolute = false)
+    protected function convertToUrl($path)
     {
-        return $this->storageComponent->getSavePathFromParams($this->getFilePath(), $params);
+        return $this->fileStorage->convertToUrl($path);
+    }
+
+    /**
+     * Парсинг пути для сохранения
+     *
+     * @param string $path
+     * @param ImageParams $params
+     * @return string
+     */
+    protected function makePath($path, $params)
+    {
+        return $this->fileStorage->makePath($path, $params);
     }
 
     /**
      * Получить путь к файлу по модели
      *
-     * @return mixed
-     * @throws \yii\base\InvalidParamException
+     * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
     protected function getFilePath()
     {
-        return $this->storageComponent->getFilePath($this->owner, $this->accessRole);
+        return $this->fileStorage->getFilePath($this->owner, $this->accessRole);
     }
 
     /**
@@ -223,12 +219,12 @@ class ImageBehavior extends Behavior
      *
      * @param bool $absolute
      * @return string
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
+     * @throws NotFoundFileException
      */
-    protected function getFileUrl($absolute)
+    protected function getFileUrl($absolute = false)
     {
-        return $this->storageComponent->getFileUrl($this->owner, $absolute, $this->accessRole);
+        return $this->fileStorage->getFileUrl($this->owner, $absolute, $this->accessRole);
     }
 
     /**
@@ -242,9 +238,8 @@ class ImageBehavior extends Behavior
      */
     protected function createThumb($path, $savePath, ThumbParams $params)
     {
-        $image = $this->imageComponent->createImage($path, $params);
-        $image->save($savePath, $params->quality);
-        return true;
+        return $this->imageComponent->createImage($path, $params)
+            ->save($savePath, $params->quality);
     }
 
     /**
@@ -253,14 +248,16 @@ class ImageBehavior extends Behavior
      * @param integer $width
      * @param integer $quality
      * @return mixed
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
     public function widen($width, $quality = 80)
     {
-        list($path, $params) = $this->getImageData($width, 0, $quality);
-        return $this->imageComponent->make($this->getFilePath())->widen($path, $params);
+        list($path, $saveTo, $params) = $this->getImageData(__FUNCTION__, $width, 0, $quality);
+        if (!is_file($saveTo)) {
+            $this->imageComponent->make($path)->widen($saveTo, $params);
+        }
+        return $this->convertToUrl($saveTo);
     }
 
     /**
@@ -269,14 +266,16 @@ class ImageBehavior extends Behavior
      * @param integer $height
      * @param integer $quality
      * @return mixed
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
     public function heighten($height, $quality = 80)
     {
-        list($path, $params) = $this->getImageData(0, $height, $quality);
-        return $this->imageComponent->make($this->getFilePath())->heighten($path, $params);
+        list($path, $saveTo, $params) = $this->getImageData(__FUNCTION__, 0, $height, $quality);
+        if (!is_file($saveTo)) {
+            $this->imageComponent->make($path)->heighten($saveTo, $params);
+        }
+        return $this->convertToUrl($saveTo);
     }
 
     /**
@@ -286,15 +285,16 @@ class ImageBehavior extends Behavior
      * @param integer $height
      * @param integer $quality
      * @return bool
-     *
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
     public function contain($width = 0, $height = 0, $quality = 80)
     {
-        list($path, $params) = $this->getImageData($width, $height, $quality);
-        return $this->imageComponent->make($this->getFilePath())->contain($path, $params);
+        list($path, $saveTo, $params) = $this->getImageData(__FUNCTION__, $width, $height, $quality);
+        if (!is_file($saveTo)) {
+            $this->imageComponent->make($path)->contain($saveTo, $params);
+        }
+        return $this->convertToUrl($saveTo);
     }
 
     /**
@@ -306,71 +306,68 @@ class ImageBehavior extends Behavior
      * @param integer $quality
      * @param string|null $position
      * @return mixed
-     *
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
     public function cover($width = 0, $height = 0, $quality = 0, $position = null)
     {
-        list($path, $params) = $this->getImageData($width, $height, $quality, $position);
-        return $this->imageComponent->make($this->getFilePath())->contain($path, $params);
+        list($path, $saveTo, $params) = $this->getImageData(__FUNCTION__, $width, $height, $quality, $position);
+        if (!is_file($saveTo)) {
+            $this->imageComponent->make($path)->contain($saveTo, $params);
+        }
+        return $this->convertToUrl($saveTo);
     }
 
     /**
      * Получить путь к изображению по его параметрам
      *
+     * @param string $type
      * @param int $width
      * @param int $height
      * @param int $quality
      * @param null $position
      * @return array
-     *
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    protected function getImageData($width = 0, $height = 0, $quality = 80, $position = null)
+    protected function getImageData($type, $width = 0, $height = 0, $quality = 80, $position = null)
     {
+        $path = $this->getFilePath();
         $params = $this->buildImageParams($width, $height, $quality, $position);
-        return [
-            $params->getSavePath($this->getFilePath()),
-            $params
-        ];
+        $params->addOptions('type', $type);
+        $saveTo = $this->makePath($path, $params);
+        return [$path, $saveTo, $params];
     }
 
     /**
      * Удалить все thumbnails текущего изображения
      *
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
-     * @throws \yii\base\ErrorException
      */
     public function removeAllThumbs()
     {
-        $path = dirname($this->storageComponent->getSavePathFromParams(
-            $this->getFilePath(),
-            $this->buildThumbParams()
-        ));
-        if (is_dir($path)) {
-            FileHelper::removeDirectory($path);
+        $files = $this->fileStorage->searchAllFiles(
+            $this->getFilePath(), $this->buildThumbParams()
+        );
+        foreach ($files as $file) {
+            unlink($file);
         }
     }
 
     /**
      * Удалить все дубли текущего изображения
      *
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
-     * @throws \yii\base\ErrorException
      */
     public function removeAllImages()
     {
-        $path = dirname($this->buildImageParams()->getSavePath($this->getFilePath()));
-        if (is_dir($path)) {
-            FileHelper::removeDirectory($path);
+        $files = $this->fileStorage->searchAllFiles(
+            $this->getFilePath(), $this->buildImageParams()
+        );
+        foreach ($files as $file) {
+            unlink($file);
         }
     }
 

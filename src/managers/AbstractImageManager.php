@@ -121,6 +121,13 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     abstract public function handle(Event $event);
 
     /**
+     * Обработка события удаления
+     *
+     * @param Event $event
+     */
+    public function handleDelete(Event $event) {}
+
+    /**
      * Присоединение к Observer
      *
      * @param ObserverInterface $observer
@@ -128,6 +135,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     public function attach(ObserverInterface $observer)
     {
         $observer->on(Event::SAVE_EVENT, [$this, 'handle']);
+        $observer->on(Event::DELETE_EVENT, [$this, 'handleDelete']);
     }
 
     /**
@@ -274,14 +282,16 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
 
     /**
      * Обновление пути сохранения файла
+     *
      * @param string $savedPath
      * @return string
      * @throws \Exception
      */
     protected function updatePath($savedPath)
     {
-        $pathPattern = $this->storageComponent->getSavePathFromParams($savedPath, $this->getImageParams());
-        return $this->storageComponent->getAbsolutePath($pathPattern);
+        return $this->storageComponent->getAbsolutePath(
+            $this->storageComponent->makePath($savedPath, $this->getImageParams())
+        );
     }
 
     /**
