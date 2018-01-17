@@ -26,7 +26,7 @@ class ImageManager extends AbstractImageManager
     {
         // Проверка корректного типа отправителя
         if ($this->validate($event->sender)) {
-            $this->updateFileInfo();
+            $this->updateFileInfo($event->savedPath);
             if ($this->saveImage($this->updatePath($event->savedPath))) {
                 $this->uploader->setSize($this->getSize());
                 $this->uploader->setType($this->getType());
@@ -38,12 +38,18 @@ class ImageManager extends AbstractImageManager
     /**
      * Обновить информацию о файле
      *
+     * @param string $filePath
      * @throws \Exception
      */
-    protected function updateFileInfo()
+    protected function updateFileInfo($filePath)
     {
-        $item = explode('.', $this->uploader->getName());
+        $updateName = $this->storageComponent->updatePath($filePath, $this->getImageParams(), false);
+
+        list($name) = explode('.', $this->uploader->getName());
+        list($sysName) = explode('.', $updateName);
+
         $this->uploader->setExtension($this->getExtension());
-        $this->uploader->setName(array_shift($item) . '.' . $this->getExtension());
+        $this->uploader->setName($name . '.' . $this->getExtension());
+        $this->uploader->setSysName($sysName);
     }
 }

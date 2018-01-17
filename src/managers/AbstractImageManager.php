@@ -279,7 +279,8 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     protected function updatePath($savedPath)
     {
-        return $this->storageComponent->getSavePathFromParams($savedPath, $this->getImageParams());
+        $pathPattern = $this->storageComponent->getSavePathFromParams($savedPath, $this->getImageParams());
+        return $this->storageComponent->getAbsolutePath($pathPattern);
     }
 
     /**

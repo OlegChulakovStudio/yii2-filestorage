@@ -14,7 +14,6 @@ use yii\helpers\Url;
 use yii\helpers\FileHelper;
 use chulakov\filestorage\params\PathParams;
 use chulakov\filestorage\exceptions\NotFoundFileException;
-use chulakov\filestorage\exceptions\NotUploadFileException;
 
 /**
  * Class PathService
