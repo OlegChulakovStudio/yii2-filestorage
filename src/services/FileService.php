@@ -45,6 +45,7 @@ class FileService
      * @param UploadInterface $uploadedFile
      * @param UploadParams $params
      * @return File|null
+     *
      * @throws UnknownClassException
      */
     public function createFile(UploadInterface $uploadedFile, UploadParams $params)
@@ -58,6 +59,7 @@ class FileService
      * @param UploadInterface $uploadedFile
      * @param UploadParams $params
      * @return Image|null
+     *
      * @throws UnknownClassException
      */
     public function createImage(UploadInterface $uploadedFile, UploadParams $params)
@@ -82,6 +84,7 @@ class FileService
      *
      * @param $id
      * @return File|\yii\db\ActiveRecord
+     *
      * @throws \chulakov\filestorage\exceptions\NotFoundModelException
      */
     public function getImage($id)
@@ -94,6 +97,7 @@ class FileService
      *
      * @param $id
      * @return File|\yii\db\ActiveRecord
+     *
      * @throws \chulakov\filestorage\exceptions\NotFoundModelException
      */
     public function getFile($id)
@@ -106,6 +110,7 @@ class FileService
      *
      * @param BaseFile $model
      * @return bool
+     *
      * @throws \Exception
      * @throws \Throwable
      * @throws \yii\db\StaleObjectException
@@ -122,6 +127,7 @@ class FileService
      * @param UploadInterface $file
      * @param UploadParams $params
      * @return mixed
+     *
      * @throws UnknownClassException
      */
     protected function createUpload($class, UploadInterface $file, UploadParams $params)

@@ -23,14 +23,14 @@ class ThumbParams extends ImageParams
      *
      * @var string
      */
-    public $pathPattern = '{root}/{group}/{basename}/{width}x{height}.{ext}';
+    public $pathPattern = '{group}/{basename}/{width}x{height}.{ext}';
     /**
      * Шаблон удаления файлов.
      * Испольует glob для поиска всех файлов.
      *
      * @var string
      */
-    public $deletePattern = '{root}/{group}/{basename}/*';
+    public $deletePattern = '{group}/{basename}/*';
 
     /**
      * Конструктор параметров

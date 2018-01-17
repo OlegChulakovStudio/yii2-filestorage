@@ -25,14 +25,14 @@ class PathParams
      *
      * @var string
      */
-    public $pathPattern = '{root}/{group}/{basename}.{ext}';
+    public $pathPattern = '{group}/{basename}.{ext}';
     /**
      * Шаблон удаления файлов.
      * Испольует glob для поиска всех файлов.
      *
      * @var string
      */
-    public $deletePattern = '{root}/{group}/{basename}*';
+    public $deletePattern = '{group}/{basename}/*';
 
     /**
      * Получение расширенного списка параметров для генерации пути файла
@@ -55,16 +55,14 @@ class PathParams
     public function getConfigWithPath($path)
     {
         $name = basename($path);
-        $path = dirname($path);
 
         list($basename, $ext) = explode('.', $name);
         $ext = !empty($this->extension) ? $this->extension : $ext;
 
         return ArrayHelper::merge([
-            '{root}' => $path,
             '{name}' => $name,
             '{basename}' => $basename,
-            '{ext}' => $ext,
+            '{ext}' => $ext
         ], $this->config());
     }
 
