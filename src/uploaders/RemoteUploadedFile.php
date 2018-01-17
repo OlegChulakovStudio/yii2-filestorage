@@ -29,7 +29,7 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
     use ObserverTrait;
 
     /**
-     * Ссылка на файл
+     * Ссылка на файл (UploadedFiles::tempName)
      *
      * @var string
      */
@@ -45,19 +45,19 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      *
      * @var integer
      */
-    protected $size;
+    public $size;
     /**
      * Mime тип файла
      *
      * @var string
      */
-    protected $type;
+    public $type;
     /**
      * Имя файла
      *
      * @var string
      */
-    protected $name;
+    public $name;
     /**
      * Оригинальное имя файла
      *
@@ -72,7 +72,8 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
     protected $extension;
 
     /**
-     * RemoteUploadedFile constructor.
+     * Конструктор файла по ссылке
+     *
      * @param string $link
      * @param array $config
      */
@@ -80,6 +81,17 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
     {
         $this->link = $link;
         parent::__construct($config);
+    }
+
+    /**
+     * Инициализация базовых параметров файла
+     */
+    public function init()
+    {
+        parent::init();
+        $this->setName($this->getFileNameFromLink());
+        $this->setType($this->getMimeTypeFromLink());
+        $this->setSize($this->getFileSizeFormLink());
     }
 
     /**
@@ -175,16 +187,12 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      */
     protected function beforeSave($filePath, $deleteFile = false)
     {
-        $event = new Event();
+        $event = new Event($this);
 
         $event->savedPath = $filePath;
         $event->needDelete = $deleteFile;
 
-        $event->needSave = true;
-        $event->sender = $this;
-
         $this->trigger(Event::SAVE_EVENT, $event);
-        $this->trigger(Event::DELETE_EVENT, $event);
         return $event->needSave;
     }
 
@@ -233,10 +241,7 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      */
     public function getExtension()
     {
-        if (empty($this->extension)) {
-            $this->extension = strtolower(pathinfo(basename($this->getName()), PATHINFO_EXTENSION));
-        }
-        return $this->extension;
+        return strtolower(pathinfo(basename($this->getName()), PATHINFO_EXTENSION));
     }
 
     /**
@@ -246,7 +251,7 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      */
     public function setExtension($extension)
     {
-        $this->extension = $extension;
+        $this->setName($this->getBaseName() . '.' . $extension);
     }
 
     /**
@@ -256,10 +261,6 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      */
     public function getName()
     {
-        if (empty($this->name)) {
-            $name = $this->getFileSizeFormLink();
-            $this->name = !empty($name) ? $name : basename($this->link);
-        }
         return $this->name;
     }
 
@@ -387,7 +388,7 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
         if (preg_match('/filename=\"([^\"]*)\";/sui', $header, $match)) {
             return trim($match[1]);
         }
-        return null;
+        return basename($this->link);
     }
 
     /**
@@ -398,6 +399,7 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      */
     protected function getHeaderContent($name)
     {
+        // todo: закешировать заголовки, чтобы не делать дважды запрос
         if ($headers = get_headers($this->link)) {
             foreach ($headers as $header) {
                 if (strpos($header, $name) !== false) {

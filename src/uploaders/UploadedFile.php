@@ -54,7 +54,7 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
             parent::saveAs($file, false);
         }
         if ($deleteFile) {
-            $this->deleteFile($this->tempName);
+            $this->deleteFile($this->getFile());
         }
     }
 
@@ -66,8 +66,10 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
      */
     protected function deleteFile($filePath)
     {
-        if (file_exists($filePath)) {
-            unlink($filePath);
+        if ($this->beforeDelete($filePath)) {
+            if (file_exists($filePath)) {
+                return unlink($filePath);
+            }
         }
         return true;
     }
@@ -81,16 +83,30 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
      */
     protected function beforeSave($savedPath, $deleteFile = true)
     {
-        $event = new Event();
+        $event = new Event($this);
 
         $event->savedPath = $savedPath;
         $event->needDelete = $deleteFile;
 
-        $event->needSave = true;
-        $event->sender = $this;
-
         $this->trigger(Event::SAVE_EVENT, $event);
         return $event->needSave;
+    }
+
+    /**
+     * Событие удаления файлов
+     *
+     * @param string $filePath
+     * @return bool
+     */
+    protected function beforeDelete($filePath)
+    {
+        $event = new Event($this);
+
+        $event->savedPath = $filePath;
+        $event->needDelete = true;
+
+        $this->trigger(Event::DELETE_EVENT, $event);
+        return $event->needDelete;
     }
 
     /**
@@ -112,11 +128,11 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     }
 
     /**
-     * Получение имени файла после сохранения
+     * Получить имя файла с расширением
      *
      * @return string
      */
-    public function getSavedName()
+    public function getName()
     {
         return $this->name;
     }
@@ -195,21 +211,12 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     }
 
     /**
-     * Получить имя файла с расширением
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
      * Установить расширение файла
+     *
      * @param string $extension
      */
     public function setExtension($extension)
     {
-        $this->extension = $extension;
+        $this->setName($this->getBaseName() . '.' . $extension);
     }
 }
