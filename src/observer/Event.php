@@ -17,45 +17,44 @@ class Event
     /**
      * Событие сохранения
      */
-    const SAVE_EVENT = 1;
+    const SAVE_EVENT = 'eventUploadSave';
     /**
      * Событие удаления
      */
-    const DELETE_EVENT = 2;
-    /**
-     * Содержимое изображения
-     *
-     * @var string
-     */
-    public $content;
-    /**
-     * Нужно ли сохранить
-     *
-     * @var bool
-     */
-    public $needSave;
-    /**
-     * Нужно ли удалить
-     *
-     * @var bool
-     */
-    public $needDelete;
-    /**
-     * Путь к оригинальному файлу
-     *
-     * @var string
-     */
-    public $filePath;
-    /**
-     * Путь
-     *
-     * @var string
-     */
-    public $savedPath;
+    const DELETE_EVENT = 'eventUploadDelete';
+
     /**
      * Отправитель
      *
      * @var object
      */
     public $sender;
+    /**
+     * Нужно ли сохранить
+     *
+     * @var bool
+     */
+    public $needSave = true;
+    /**
+     * Нужно ли удалить
+     *
+     * @var bool
+     */
+    public $needDelete = false;
+    /**
+     * Путь
+     *
+     * @var string
+     */
+    public $savedPath;
+
+    /**
+     * Конструктор события
+     *
+     * @param object $sender
+     */
+    public function __construct($sender)
+    {
+        $this->sender = $sender;
+    }
 }
