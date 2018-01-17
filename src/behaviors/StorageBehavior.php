@@ -14,6 +14,8 @@ use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\exceptions\NoAccessException;
+use chulakov\filestorage\exceptions\NotFoundFileException;
 
 /**
  * Class StorageBehavior
@@ -30,7 +32,7 @@ class StorageBehavior extends Behavior
      *
      * @var FileStorage
      */
-    public $storageComponent = 'fileStorage';
+    public $fileStorage = 'fileStorage';
 
     /**
      * @inheritdoc
@@ -39,7 +41,7 @@ class StorageBehavior extends Behavior
     public function init()
     {
         parent::init();
-        $this->storageComponent = Instance::ensure($this->storageComponent);
+        $this->fileStorage = Instance::ensure($this->fileStorage);
     }
 
     /**
@@ -56,28 +58,27 @@ class StorageBehavior extends Behavior
      * Возвращает абсолютный или относительный URL-адрес к файлу
      *
      * @param bool $isAbsolute
-     * @param Item $role
+     * @param string|Item|null $role
      * @return string
-     * @throws \yii\base\InvalidParamException
-     * @throws \chulakov\filestorage\exceptions\NoAccessException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
      */
     public function getUrl($isAbsolute = false, $role = null)
     {
-        return $this->storageComponent->getFileUrl($this->owner, $isAbsolute, $role);
+        return $this->fileStorage->getFileUrl($this->owner, $isAbsolute, $role);
     }
 
     /**
      * Возвращает полный путь к файлу в файловой системе
      *
-     * @param Item $role
+     * @param string|Item|null $role
      * @return string
-     * @throws \yii\base\InvalidParamException
-     * @throws \chulakov\filestorage\exceptions\NoAccessException
-     * @throws \chulakov\filestorage\exceptions\NotFoundFileException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
      */
-    public function getPath($role)
+    public function getPath($role = null)
     {
-        return $this->storageComponent->getFilePath($this->owner, $role);
+        return $this->fileStorage->getFilePath($this->owner, $role);
     }
 
     /**
@@ -85,22 +86,24 @@ class StorageBehavior extends Behavior
      *
      * @param bool $isAbsolute
      * @return string
-     * @throws \yii\base\InvalidParamException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
      */
     public function getUploadUrl($isAbsolute = false)
     {
-        return $this->storageComponent->getUploadUrl($this->owner, $isAbsolute);
+        return $this->fileStorage->getUploadUrl($this->owner, $isAbsolute);
     }
 
     /**
      * Возвращает абсолютный путь к директории хранения файлов определенного типа
      *
      * @return string
-     * @throws \yii\base\InvalidParamException
+     * @throws NoAccessException
+     * @throws NotFoundFileException
      */
     public function getUploadPath()
     {
-        return $this->storageComponent->getUploadPath($this->owner);
+        return $this->fileStorage->getUploadPath($this->owner);
     }
 
     /**
@@ -111,6 +114,6 @@ class StorageBehavior extends Behavior
      */
     public function deleteFile()
     {
-        $this->storageComponent->removeFile($this->owner);
+        $this->fileStorage->removeFile($this->owner);
     }
 }
