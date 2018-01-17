@@ -97,13 +97,13 @@ class ImageComponent extends Component
     public function createImage($path, ImageParams $params)
     {
         if ($image = $this->make($path)) {
-            $image->resize($params->width, $params->height);
             if (!empty($params->watermarkPath)) {
                 $image->watermark($params->watermarkPath, $params->watermarkPosition);
             }
             if (!empty($params->extension)) {
                 $image->convert($params->extension);
             }
+            $image->resize($params->width, $params->height);
             return $image;
         }
         return null;
