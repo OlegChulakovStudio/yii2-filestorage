@@ -8,8 +8,7 @@
 
 namespace chulakov\filestorage\params;
 
-use yii\helpers\ArrayHelper;
-use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\image\Position;
 
 /**
  * Class ImageParams
@@ -58,13 +57,26 @@ class ImageParams extends PathParams
      *
      * @var string
      */
-    public $coverPosition = ImageComponent::POSITION_CENTER;
+    public $coverPosition = Position::POSITION_CENTER;
     /**
      * Категория файлов
      *
      * @var string
      */
     public $group = 'images';
+    /**
+     * Шаблон сохранения thumbnails файлов
+     *
+     * @var string
+     */
+    public $pathPattern = '{root}/{group}/{basename}/{type}_{width}x{height}.{ext}';
+    /**
+     * Шаблон удаления файлов.
+     * Испольует glob для поиска всех файлов.
+     *
+     * @var string
+     */
+    public $searchPattern = '{root}/{group}/{basename}/*';
 
     /**
      * Конструктор параметров
@@ -76,6 +88,7 @@ class ImageParams extends PathParams
     {
         $this->width = $width;
         $this->height = $height;
+        $this->addOption('type', $this->group);
     }
 
     /**
@@ -85,10 +98,11 @@ class ImageParams extends PathParams
      */
     public function config()
     {
-        return ArrayHelper::merge(parent::config(), [
+        return array_merge(parent::config(), [
             '{group}' => $this->group,
             '{width}' => $this->width,
             '{height}' => $this->height,
+            '{ext}' => $this->extension,
         ]);
     }
 }

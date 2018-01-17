@@ -8,8 +8,6 @@
 
 namespace chulakov\filestorage\params;
 
-use yii\helpers\ArrayHelper;
-
 /**
  * Class PathParams
  * @package chulakov\filestorage\params
@@ -25,14 +23,22 @@ class PathParams
      *
      * @var string
      */
-    public $pathPattern = '{group}/{basename}.{ext}';
+    public $pathPattern = '{root}/{group}/{basename}.{ext}';
     /**
      * Шаблон удаления файлов.
      * Испольует glob для поиска всех файлов.
      *
      * @var string
      */
-    public $deletePattern = '{group}/{basename}/*';
+    public $searchPattern = '{root}/{group}/{basename}*';
+
+    /**
+     * Расширенные опции.
+     * Добавлюяются последними и переопределяют все вышестоящие токены
+     *
+     * @var array
+     */
+    protected $options = [];
 
     /**
      * Получение расширенного списка параметров для генерации пути файла
@@ -47,23 +53,13 @@ class PathParams
     }
 
     /**
-     * Получить путь файла относительно параметров
+     * Получение динамических опций
      *
-     * @param string $path
      * @return array
      */
-    public function getConfigWithPath($path)
+    public function options()
     {
-        $name = basename($path);
-
-        list($basename, $ext) = explode('.', $name);
-        $ext = !empty($this->extension) ? $this->extension : $ext;
-
-        return ArrayHelper::merge([
-            '{name}' => $name,
-            '{basename}' => $basename,
-            '{ext}' => $ext
-        ], $this->config());
+        return $this->options;
     }
 
     /**
@@ -76,5 +72,16 @@ class PathParams
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
         }
+    }
+
+    /**
+     * Переопределение токенов генерации пути
+     *
+     * @param string $name
+     * @param string $value
+     */
+    public function addOption($name, $value)
+    {
+        $this->options["\{{$name}\}"] = $value;
     }
 }
