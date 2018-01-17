@@ -15,6 +15,7 @@ use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\params\ImageParams;
+use chulakov\filestorage\image\Position;
 use chulakov\filestorage\image\ImageContainer;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\observer\ListenerInterface;
@@ -73,7 +74,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      *
      * @var string
      */
-    public $watermarkPosition = ImageComponent::POSITION_CENTER;
+    public $watermarkPosition = Position::POSITION_CENTER;
     /**
      * Название компонента для работы с изображениями
      *

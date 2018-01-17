@@ -11,7 +11,6 @@ namespace chulakov\filestorage\image;
 use yii\helpers\FileHelper;
 use Intervention\Image\Image;
 use Intervention\Image\Constraint;
-use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\params\ImageParams;
 
 /**
@@ -41,6 +40,11 @@ class ImageContainer implements ImageInterface
         $this->image = $image;
     }
 
+    /**
+     * Проверка, сохранен ли файл
+     *
+     * @return bool
+     */
     public function isSaved()
     {
         return $this->saved;
@@ -89,7 +93,7 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function watermark($watermarkPath, $position = ImageComponent::POSITION_CENTER)
+    public function watermark($watermarkPath, $position = Position::POSITION_CENTER)
     {
         if (!empty($watermarkPath)) {
             $this->image->insert($watermarkPath, $position);
