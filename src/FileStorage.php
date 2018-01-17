@@ -15,7 +15,6 @@ use yii\base\UnknownClassException;
 use yii\base\InvalidConfigException;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\PathParams;
-use chulakov\filestorage\params\ImageParams;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\services\PathService;
 use chulakov\filestorage\services\FileService;
@@ -50,6 +49,12 @@ class FileStorage extends Component
      * @var string
      */
     public $storageDir = 'upload';
+    /**
+     * Если заданы права, то после создания файла они будут принудительно назначены
+     *
+     * @var number|null
+     */
+    public $fileMode = 0775;
     /**
      * Патерн генерации пути сохранения файлов
      * Допустимые токены:
@@ -95,13 +100,15 @@ class FileStorage extends Component
         if (!$this->storagePath) {
             throw new InvalidConfigException("Параметр 'storagePath' должен быть указан");
         }
+        $this->storagePath = Yii::getAlias($this->storagePath);
 
         if (!$this->storageDir) {
             throw new InvalidConfigException("Параметр 'storageDir' должен быть указан");
         }
-        $this->storagePath = Yii::getAlias($this->storagePath);
-        // инициализирование сервиса для работы с path
+
+        // Инициализирование сервиса для работы с путями
         $this->pathService = new PathService($this->storagePath, $this->storageDir, $this->storageBaseUrl);
+        $this->pathService->fileMode = $this->fileMode;
     }
 
     /**
@@ -133,6 +140,128 @@ class FileStorage extends Component
             throw new NotUploadFileException('Не удалось сохранить файл', 0, $e);
         }
         return $single ? array_shift($result) : $result;
+    }
+
+    /**
+     * Возвращает абсолютный путь к директории хранения файлов определенного типа
+     *
+     * @param BaseFile $model
+     * @return string
+     * @throws NoAccessException
+     * @throws NotFoundFileException
+     */
+    public function getUploadPath($model)
+    {
+        return dirname($this->getFilePath($model));
+    }
+
+    /**
+     * Возвращает URL-адрес до директории нахождения файлов определенного типа
+     *
+     * @param BaseFile $model
+     * @param bool $isAbsolute возвращать абсолютный (полный) URL
+     * @return string
+     * @throws NoAccessException
+     * @throws NotFoundFileException
+     */
+    public function getUploadUrl($model, $isAbsolute = false)
+    {
+        return $this->convertToUrl($this->getUploadPath($model), $isAbsolute);
+    }
+
+    /**
+     * Возвращает полный путь к файлу в файловой системе
+     *
+     * @param BaseFile $model
+     * @param Item $role
+     * @return string
+     * @throws NoAccessException
+     * @throws NotFoundFileException
+     */
+    public function getFilePath($model, $role = null)
+    {
+        $this->canAccess($role, $model);
+        return $this->pathService->findPath(
+            $model->sys_file, $this->getPathFromModel($model)
+        );
+    }
+
+    /**
+     * Возвращает абсолютный или относительный URL-адрес к файлу
+     *
+     * @param BaseFile $model
+     * @param bool $isAbsolute
+     * @param string|Item $role
+     * @return string
+     * @throws NoAccessException
+     * @throws NotFoundFileException
+     */
+    public function getFileUrl($model, $isAbsolute = false, $role = null)
+    {
+        return $this->pathService->convertToUrl($this->getFilePath($model, $role), $isAbsolute);
+    }
+
+    /**
+     * Формирование абсолютного пути до файлов с созданием новой директории, если ее еще не существует
+     *
+     * @param string $path
+     * @return string
+     *
+     * @throws \yii\base\InvalidParamException
+     */
+    public function getAbsolutePath($path)
+    {
+        return $this->pathService->getAbsolutePath($path);
+    }
+
+    /**
+     * Удаление модели и сохраненого файла
+     *
+     * @param BaseFile $model
+     * @throws \Exception
+     * @throws \Throwable
+     */
+    public function removeFile($model)
+    {
+        $this->pathService->removeFile($model->getPath());
+    }
+
+    /**
+     * Формирование полного пути до файла по шаблону
+     *
+     * @param string $path
+     * @param PathParams $params
+     * @return string
+     */
+    public function makePath($path, PathParams $params)
+    {
+        return $this->pathService->makePath($path, $params);
+    }
+
+    /**
+     * Получение файлов, подходящих для удаления
+     *
+     * @param string $path
+     * @param PathParams $params
+     * @return array
+     */
+    public function searchAllFiles($path, PathParams $params)
+    {
+        return $this->pathService->searchAllFiles($path, $params);
+    }
+
+    /**
+     * Добавление в URL адрес исходной точки
+     *
+     * @param string $path
+     * @param bool $isAbsolute
+     * @return string
+     *
+     * @throws \yii\base\InvalidParamException
+     */
+    public function convertToUrl($path, $isAbsolute = false)
+    {
+        return $this->pathService->convertToUrl($path, $isAbsolute);
     }
 
     /**
@@ -171,9 +300,13 @@ class FileStorage extends Component
     protected function saveFile(UploadInterface $file, UploadParams $params)
     {
         // Генерация всех необходимых частей для сохранения файла
-        $path = $this->getSavePath($params); // photos
-        $full = $this->getAbsolutePath($path); // /Users/vladimir.pogarsky/Projects/Works/fileuploader/fileuploader-app/backend/web/upload/photos
+        $path = $this->getSavePath($params);
+        $full = $this->getAbsolutePath($path);
         // Сохранение файла и создание модели с данными о файле
+
+        // /tmp/upload/jfnkwjefvkwkck/img_00239eqwe0.jpg
+        // /frontend/web/upload/group/45/uniqename.jpg
+
         $file->saveAs($full . DIRECTORY_SEPARATOR . $file->getSysName());
         if ($model = $this->createModel($file, $params)) {
             $model->setSystemFile($file->getSysName(), $path);
@@ -188,53 +321,16 @@ class FileStorage extends Component
      * Формирование относительного пути с учетом настроек и переданных параметров
      *
      * @param UploadParams $params
-     * @param array $config
      * @return string
      */
-    protected function getSavePath(UploadParams $params, $config = [])
+    protected function getSavePath(UploadParams $params)
     {
-        $pathPattern = $this->pathService->parsePattern(
-            $this->storagePattern, [
+        $pathParams = new PathParams();
+        $pathParams->group = $params->group_code;
+        $pathParams->pathPattern = $this->storagePattern;
+        return $this->pathService->savedPath($pathParams, [
             '{id}' => $params->object_id,
-            '{group}' => $params->group_code
         ]);
-        if (!empty($config)) {
-            array_unshift($config, $pathPattern);
-            $pathPattern = implode(DIRECTORY_SEPARATOR, $config);
-        }
-        if ($pathPattern[strlen($pathPattern) - 1] === '/') {
-            $pathPattern = substr($pathPattern, 0, -1);
-        }
-        return $pathPattern;
-    }
-
-    /**
-     * Обновить сохраняемый путь через параметры
-     *
-     * @param string $pathUpdate
-     * @param ImageParams $params
-     * @return string
-     */
-    public function getSavePathFromParams($pathUpdate, ImageParams $params)
-    {
-        return $this->pathService->parsePattern(
-            $params->pathPattern,
-            $params->getConfigWithPath($pathUpdate)
-        );
-    }
-
-    /**
-     * Формирование абсолютного пути до файлов с созданием новой директории, если ее еще не существует
-     *
-     * @param string $path
-     * @return string
-     *
-     * @throws \yii\base\InvalidParamException
-     * @throws NotUploadFileException
-     */
-    public function getAbsolutePath($path)
-    {
-        return $this->pathService->getAbsolutePath($path);
     }
 
     /**
@@ -265,18 +361,6 @@ class FileStorage extends Component
     protected function isImage($mime)
     {
         return strpos($mime, 'image') !== false;
-    }
-
-    /**
-     * Удаление модели и сохраненого файла
-     *
-     * @param BaseFile $model
-     * @throws \Exception
-     * @throws \Throwable
-     */
-    public function removeFile($model)
-    {
-        $this->pathService->removeFile($model->getPath());
     }
 
     /**
@@ -316,72 +400,18 @@ class FileStorage extends Component
     }
 
     /**
-     * Возвращает абсолютный путь к директории хранения файлов определенного типа
+     * Формирование пути до загружаемых файлов из данных модели
      *
      * @param BaseFile $model
      * @return string
-     *
-     * @throws \yii\base\InvalidParamException
      */
-    public function getUploadPath($model)
+    protected function getPathFromModel($model)
     {
-        $params = $this->getParamsFromModel($model);
-        return $this->pathService->getUploadPath($this->getSavePath($params));
+        return $this->getSavePath($this->getParamsFromModel($model));
     }
 
     /**
-     * Возвращает URL-адрес до директории нахождения файлов определенного типа
-     *
-     * @param BaseFile $model
-     * @param bool $isAbsolute возвращать абсолютный (полный) URL
-     * @return string
-     * @throws \yii\base\InvalidParamException
-     */
-    public function getUploadUrl($model, $isAbsolute = false)
-    {
-        $path = $this->getSavePath($this->getParamsFromModel($model));
-        return $this->convertToUrl($path, $isAbsolute);
-    }
-
-    /**
-     * Возвращает полный путь к файлу в файловой системе
-     *
-     * @param BaseFile $model
-     * @param Item $role
-     * @return string
-     * @throws \yii\base\InvalidParamException
-     * @throws NoAccessException
-     * @throws NotFoundFileException
-     */
-    public function getFilePath($model, $role = null)
-    {
-        $this->canAccess($role, $model);
-        return $this->pathService->findPath(
-            $model->sys_file, $this->getUploadPath($model)
-        );
-    }
-
-    /**
-     * Возвращает абсолютный или относительный URL-адрес к файлу
-     *
-     * @param BaseFile $model
-     * @param bool $isAbsolute
-     * @param Item $role
-     * @return string
-     * @throws \yii\base\InvalidParamException
-     * @throws NoAccessException
-     */
-    public function getFileUrl($model, $isAbsolute = false, $role = null)
-    {
-        $this->canAccess($role, $model);
-
-        return $this->pathService->findUrl(
-            $model->sys_file, $this->getUploadUrl($model, $isAbsolute), $isAbsolute
-        );
-    }
-
-    /**
-     * Получение параметров пути из модели
+     * Получение параметров загрузки из модели
      *
      * @param BaseFile $model
      * @return UploadParams
@@ -393,32 +423,5 @@ class FileStorage extends Component
             $params->object_id = $model->object_id;
         }
         return $params;
-    }
-
-    /**
-     * Обновить путь
-     *
-     * @param string $path
-     * @param PathParams $params
-     * @param bool $absolute
-     * @return string
-     */
-    public function updatePath($path, PathParams $params, $absolute = true)
-    {
-        return $this->pathService->updatePath($path, $params, $absolute);
-    }
-
-    /**
-     * Добавление в URL адрес исходной точки
-     *
-     * @param string $path
-     * @param bool $isAbsolute
-     * @return string
-     *
-     * @throws \yii\base\InvalidParamException
-     */
-    public function convertToUrl($path, $isAbsolute = false)
-    {
-        return $this->pathService->convertToUrl($path, $isAbsolute);
     }
 }
