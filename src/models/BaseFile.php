@@ -24,8 +24,8 @@ use chulakov\filestorage\behaviors\StorageBehavior;
  * @property $group_code
  * @property $object_id
  *
- * @method string getUrl(bool $isAbsolute, Item $role) Возвращает абсолютный или относительный URL-адрес к файлу
- * @method string getPath(Item $role)                  Возвращает полный путь к файлу в файловой системе
+ * @method string getUrl(bool $isAbsolute, Item $role = null) Возвращает абсолютный или относительный URL-адрес к файлу
+ * @method string getPath(Item $role = null)                  Возвращает полный путь к файлу в файловой системе
  * @method string getUploadUrl(bool $isAbsolute)       Возвращает URL-адрес до директории нахождения файлов определенного типа
  * @method string getUploadPath()                      Возвращает абсолютный путь к директории хранения файлов определенного типа
  */
@@ -73,7 +73,7 @@ abstract class BaseFile extends ActiveRecord
      */
     public function setSystemFile($name, $path = null)
     {
-        $this->sys_file = implode('/', array_filter([$path, $name]));
+        $this->sys_file = implode(DIRECTORY_SEPARATOR, array_filter([$path, $name]));
     }
 
     /**
