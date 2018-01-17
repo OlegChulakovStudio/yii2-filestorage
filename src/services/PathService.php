@@ -13,7 +13,6 @@ use Exception;
 use yii\helpers\Url;
 use yii\helpers\FileHelper;
 use chulakov\filestorage\params\PathParams;
-use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\exceptions\NotFoundFileException;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 
@@ -34,7 +33,7 @@ class PathService
      *
      * @var string
      */
-    protected $storageDir = 'uploaded';
+    protected $storageDir = 'upload';
     /**
      * Базовый url путь
      *
@@ -55,11 +54,12 @@ class PathService
      * @param string $storageDir
      * @param string $storageBaseUrl
      */
-    public function __construct($path, $storageDir, $storageBaseUrl = '')
+    public function __construct($path, $storageDir = '', $storageBaseUrl = '')
     {
         $this->storagePath = $path;
-        $this->storageDir = $storageDir;
-
+        if (!empty($storageDir)) {
+            $this->storageDir = $storageDir;
+        }
         if (!empty($storageBaseUrl)) {
             $this->storageBaseUrl = $storageBaseUrl;
         }
@@ -100,39 +100,48 @@ class PathService
      * Получить составной путь
      *
      * @param string $path
+     * @param bool $absolute
      * @return string
      */
-    public function getPath($path)
+    public function getPath($path, $absolute = true)
     {
-        return implode(DIRECTORY_SEPARATOR, [
-            $this->storagePath, $this->storageDir, $path
-        ]);
+        $arguments = [$this->storageDir, $path];
+        if ($absolute) {
+            array_unshift($arguments, $this->storagePath);
+        }
+        return implode(DIRECTORY_SEPARATOR, $arguments);
     }
 
     /**
      * Обновить path по паттерну
      *
      * @param string $path
-     * @param string $pattern
-     * @param array $config
+     * @param PathParams $params
+     * @param bool $absolute
      * @return string
      */
-    public function updatePath($path, $pattern, $config)
+    public function updatePath($path, PathParams $params, $absolute = true)
     {
+        $pattern = $params->pathPattern;
+
         $name = basename($path);
-        $path = dirname($path);
+        $root = dirname($path);
 
         list($basename, $ext) = explode('.', $name);
 
-        return $this->parsePattern($pattern, array_merge(
+        $pathPattern = $this->parsePattern($pattern, array_merge(
+            $params->getConfigWithPath($path),
             [
-                '{root}' => $path,
                 '{name}' => $name,
                 '{basename}' => $basename,
                 '{ext}' => $ext,
-            ],
-            $config
+            ]
         ));
+
+        if ($absolute) {
+            return implode(DIRECTORY_SEPARATOR, [$root, $pathPattern]);
+        }
+        return $pathPattern;
     }
 
     /**
@@ -147,7 +156,6 @@ class PathService
         return trim(strtr($pattern, $config));
     }
 
-
     /**
      * Получить сохраняемый путь через параметры
      *
@@ -156,7 +164,7 @@ class PathService
      */
     public function getSavePathFromParams(PathParams $params)
     {
-        return $this->parsePattern($params->pathPattern, $params->config());
+        return $this->getPath($this->parsePattern($params->pathPattern, $params->config()));
     }
 
     /**
@@ -193,6 +201,7 @@ class PathService
      *
      * @param string $file
      * @return string
+     *
      * @throws \yii\base\InvalidParamException
      */
     protected function checkSystemPath($file)
@@ -208,6 +217,7 @@ class PathService
      * @param string $file
      * @param string $uploadPath
      * @return null|string
+     *
      * @throws \yii\base\InvalidParamException
      * @throws NotFoundFileException
      */
@@ -229,6 +239,7 @@ class PathService
      * @param $uploadPath
      * @param bool $isAbsolute
      * @return string
+     *
      * @throws \yii\base\InvalidParamException
      */
     public function findUrl($file, $uploadPath, $isAbsolute = false)
@@ -250,24 +261,16 @@ class PathService
      * @return string
      *
      * @throws \yii\base\InvalidParamException
-     * @throws NotUploadFileException
      */
     public function getAbsolutePath($path)
     {
-        $full = FileHelper::normalizePath(
-            implode(
-                DIRECTORY_SEPARATOR,
-                [
-                    Yii::getAlias($this->storagePath),
-                    $this->storageDir,
-                    $path,
-                ])
+        return FileHelper::normalizePath(
+            implode(DIRECTORY_SEPARATOR, [
+                Yii::getAlias($this->storagePath),
+                $this->storageDir,
+                $path,
+            ])
         );
-
-        if (!$this->checkPath($full)) {
-            throw new NotUploadFileException('Нет доступа к каталогу для сохранения файла.');
-        }
-        return $full;
     }
 
     /**
@@ -306,6 +309,7 @@ class PathService
      * @param string $path
      * @param bool $isAbsolute
      * @return string
+     *
      * @throws \yii\base\InvalidParamException
      */
     public function convertToUrl($path, $isAbsolute = false)
@@ -322,15 +326,16 @@ class PathService
     /**
      * Возвращает абсолютный путь к директории хранения файлов определенного типа
      *
-     * @param string $savePath
+     * @param string $path
      * @return string
+     *
      * @throws \yii\base\InvalidParamException
      */
-    public function getUploadPath($savePath)
+    public function getUploadPath($path)
     {
-        $path = FileHelper::normalizePath(implode(DIRECTORY_SEPARATOR, [
-            Yii::getAlias($this->storagePath), $savePath
+        $filePath = FileHelper::normalizePath(implode(DIRECTORY_SEPARATOR, [
+            Yii::getAlias($this->storagePath), $path
         ]));
-        return $path;
+        return $filePath;
     }
 }
