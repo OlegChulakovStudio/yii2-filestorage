@@ -15,6 +15,7 @@ use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\models\repositories\FileRepository;
+use chulakov\filestorage\exceptions\NotFoundModelException;
 
 /**
  * Class FileService
@@ -44,8 +45,7 @@ class FileService
      *
      * @param UploadInterface $uploadedFile
      * @param UploadParams $params
-     * @return File|null
-     *
+     * @return File|BaseFile|null
      * @throws UnknownClassException
      */
     public function createFile(UploadInterface $uploadedFile, UploadParams $params)
@@ -58,8 +58,7 @@ class FileService
      *
      * @param UploadInterface $uploadedFile
      * @param UploadParams $params
-     * @return Image|null
-     *
+     * @return Image|BaseFile|null
      * @throws UnknownClassException
      */
     public function createImage(UploadInterface $uploadedFile, UploadParams $params)
@@ -82,10 +81,9 @@ class FileService
     /**
      * Получить изображение по его Id
      *
-     * @param $id
+     * @param integer $id
      * @return File|\yii\db\ActiveRecord
-     *
-     * @throws \chulakov\filestorage\exceptions\NotFoundModelException
+     * @throws NotFoundModelException
      */
     public function getImage($id)
     {
@@ -95,10 +93,9 @@ class FileService
     /**
      * Получить файл по его Id
      *
-     * @param $id
+     * @param integer $id
      * @return File|\yii\db\ActiveRecord
-     *
-     * @throws \chulakov\filestorage\exceptions\NotFoundModelException
+     * @throws NotFoundModelException
      */
     public function getFile($id)
     {
@@ -110,10 +107,8 @@ class FileService
      *
      * @param BaseFile $model
      * @return bool
-     *
      * @throws \Exception
      * @throws \Throwable
-     * @throws \yii\db\StaleObjectException
      */
     public function delete($model)
     {
@@ -126,8 +121,7 @@ class FileService
      * @param string $class
      * @param UploadInterface $file
      * @param UploadParams $params
-     * @return mixed
-     *
+     * @return BaseFile
      * @throws UnknownClassException
      */
     protected function createUpload($class, UploadInterface $file, UploadParams $params)
