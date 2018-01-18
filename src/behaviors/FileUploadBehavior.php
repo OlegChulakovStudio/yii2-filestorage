@@ -81,9 +81,11 @@ class FileUploadBehavior extends Behavior
             return;
         }
         $files = $this->getInstances();
-        $this->configureInstances($files);
-        if ($this->isInstances($files)) {
-            $this->owner->{$this->attribute} = $files;
+        if (!empty($files)) {
+            $this->configureInstances($files);
+            if ($this->isInstances($files)) {
+                $this->owner->{$this->attribute} = $files;
+            }
         }
     }
 
