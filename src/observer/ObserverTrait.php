@@ -71,4 +71,23 @@ trait ObserverTrait
         }
         return true;
     }
+
+    /**
+     * Создание события
+     *
+     * @param string $savePath
+     * @param boolean $needSave
+     * @param boolean $needDelete
+     * @param \Exception $exception
+     * @return Event
+     */
+    public function createEvent($savePath, $needSave, $needDelete, $exception = null)
+    {
+        $event = new Event($this);
+        $event->savedPath = $savePath;
+        $event->needSave = $needSave;
+        $event->needDelete = $needDelete;
+        $event->exception = $exception;
+        return $event;
+    }
 }
