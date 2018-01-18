@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\uploaders;
 
+use Exception;
 use yii\base\Model;
 use yii\base\BaseObject;
 use chulakov\filestorage\ImageComponent;
@@ -70,6 +71,12 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      * @var string
      */
     protected $extension;
+    /**
+     * Http заголовки ссылки
+     *
+     * @var array
+     */
+    protected $headers;
 
     /**
      * Конструктор файла по ссылке
@@ -187,13 +194,37 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      */
     protected function beforeSave($filePath, $deleteFile = false)
     {
-        $event = new Event($this);
-
-        $event->savedPath = $filePath;
-        $event->needDelete = $deleteFile;
-
+        $event = $this->createEvent($filePath, true, $deleteFile);
         $this->trigger(Event::SAVE_EVENT, $event);
         return $event->needSave;
+    }
+
+    /**
+     * Удаление файла
+     *
+     * @param string $filePath
+     * @param Exception $exception
+     * @return bool
+     */
+    public function deleteFile($filePath, Exception $exception = null)
+    {
+        return $this->beforeDelete($filePath, $exception);
+    }
+
+    /**
+     * Событие удаления файлов
+     *
+     * @param string $filePath
+     * @param Exception $exception
+     * @return bool
+     */
+    protected function beforeDelete($filePath, $exception)
+    {
+        $event = $this->createEvent(
+            $filePath, false, true, $exception
+        );
+        $this->trigger(Event::DELETE_EVENT, $event);
+        return $event->needDelete;
     }
 
     /**
@@ -399,14 +430,16 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      */
     protected function getHeaderContent($name)
     {
-        // todo: закешировать заголовки, чтобы не делать дважды запрос
-        if ($headers = get_headers($this->link)) {
+        if (empty($this->headers) && $headers = get_headers($this->link)) {
             foreach ($headers as $header) {
-                if (strpos($header, $name) !== false) {
-                    $items = explode(':', $header);
-                    return strtolower(trim(array_pop($items)));
+                $items = explode(':', $header);
+                if (count($items) >= 2) {
+                    $this->headers[array_shift($items)] = array_pop($items);
                 }
             }
+        }
+        if (!empty($this->headers[$name])) {
+            return $this->headers[$name];
         }
         return null;
     }

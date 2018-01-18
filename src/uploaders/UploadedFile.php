@@ -11,6 +11,7 @@ namespace chulakov\filestorage\uploaders;
 use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\observer\ObserverTrait;
 use chulakov\filestorage\observer\ObserverInterface;
+use Exception;
 
 /**
  * Class UploadedFile
@@ -54,24 +55,8 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
             parent::saveAs($file, false);
         }
         if ($deleteFile) {
-            $this->deleteFile($this->getFile());
+            unlink($this->getFile());
         }
-    }
-
-    /**
-     * Удаление файла
-     *
-     * @param string $filePath
-     * @return bool
-     */
-    protected function deleteFile($filePath)
-    {
-        if ($this->beforeDelete($filePath)) {
-            if (file_exists($filePath)) {
-                return unlink($filePath);
-            }
-        }
-        return true;
     }
 
     /**
@@ -83,28 +68,40 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
      */
     protected function beforeSave($savedPath, $deleteFile = true)
     {
-        $event = new Event($this);
-
-        $event->savedPath = $savedPath;
-        $event->needDelete = $deleteFile;
-
+        $event = $this->createEvent($savedPath, true, $deleteFile);
         $this->trigger(Event::SAVE_EVENT, $event);
         return $event->needSave;
+    }
+
+    /**
+     * Удаление файла
+     *
+     * @param string $filePath
+     * @param Exception $exception
+     * @return bool
+     */
+    public function deleteFile($filePath, Exception $exception = null)
+    {
+        if ($this->beforeDelete($filePath, $exception)) {
+            if (file_exists($filePath)) {
+                return unlink($filePath);
+            }
+        }
+        return true;
     }
 
     /**
      * Событие удаления файлов
      *
      * @param string $filePath
+     * @param Exception $exception
      * @return bool
      */
-    protected function beforeDelete($filePath)
+    protected function beforeDelete($filePath, $exception)
     {
-        $event = new Event($this);
-
-        $event->savedPath = $filePath;
-        $event->needDelete = true;
-
+        $event = $this->createEvent(
+            $filePath, false, true, $exception
+        );
         $this->trigger(Event::DELETE_EVENT, $event);
         return $event->needDelete;
     }
