@@ -125,7 +125,9 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      *
      * @param Event $event
      */
-    public function handleDelete(Event $event) {}
+    public function handleDelete(Event $event)
+    {
+    }
 
     /**
      * Присоединение к Observer

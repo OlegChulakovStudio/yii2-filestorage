@@ -26,6 +26,7 @@ class ImageManager extends AbstractImageManager
     {
         // Проверка корректного типа отправителя
         if ($this->validate($event->sender)) {
+            $this->processing();
             $this->uploader->setExtension($this->getExtension());
             if ($this->saveImage($this->updatePath($event->savedPath))) {
                 $this->uploader->setSize($this->getSize());
@@ -33,6 +34,32 @@ class ImageManager extends AbstractImageManager
                 $event->needSave = false;
             }
         }
+    }
+
+    /**
+     * Событие на уладение
+     *
+     * @param Event $event
+     * @throws \Exception
+     */
+    public function handleDelete(Event $event)
+    {
+        if ($this->validate($event->sender)) {
+            $this->deleteFile(
+                $this->updatePath($event->savedPath)
+            );
+        }
+    }
+
+    /**
+     * Удаление файла
+     *
+     * @param string $path
+     * @return bool
+     */
+    protected function deleteFile($path)
+    {
+        return file_exists($path) ? unlink($path) : false;
     }
 
     /**
