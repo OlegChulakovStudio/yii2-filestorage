@@ -164,10 +164,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
         }
         // Проверка файла по типу изменяемого
         $this->uploader = $uploader;
-        if (!$this->isImage()) {
-            return false;
-        }
-        return $this->processing();
+        return $this->isImage();
     }
 
     /**
