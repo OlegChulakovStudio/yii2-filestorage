@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\uploaders;
 
+use Exception;
 use yii\base\Model;
 
 /**
@@ -155,4 +156,13 @@ interface UploadInterface
      * @param integer $size
      */
     public function setSize($size);
+
+    /**ы
+     * Удаление зависимостей файла
+     *
+     * @param string $savedPath
+     * @param Exception $exception
+     * @return bool|mixed
+     */
+    public function deleteFile($savedPath, Exception $exception);
 }
