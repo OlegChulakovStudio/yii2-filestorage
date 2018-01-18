@@ -19,6 +19,7 @@ use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\services\PathService;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\observer\ObserverInterface;
 use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\exceptions\NotFoundFileException;
 use chulakov\filestorage\exceptions\NotUploadFileException;
@@ -117,8 +118,10 @@ class FileStorage extends Component
      * @param UploadInterface|UploadInterface[] $files
      * @param UploadParams $params
      * @return array|BaseFile|null
+     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotUploadFileException
+     * @throws \Exception
      */
     public function uploadFile($files, UploadParams $params)
     {
@@ -135,7 +138,7 @@ class FileStorage extends Component
                 $result[] = $this->saveFile($file, $params);
             }
         } catch (\Exception $e) {
-            $this->clearFiles($files, $e);
+            $this->clearFiles($files, $params, $e);
             $this->clearModel($result);
             throw new NotUploadFileException('Не удалось сохранить файл', 0, $e);
         }
@@ -384,19 +387,23 @@ class FileStorage extends Component
     /**
      * Зачистка файлов
      *
-     * @param UploadInterface[] $files
+     * @param UploadInterface[]|ObserverInterface[] $files
+     * @param UploadParams $params
      * @param \Exception $e
+     * @throws \yii\base\InvalidParamException
+     * @throws \Exception
      */
-    protected function clearFiles($files, \Exception $e)
+    protected function clearFiles($files, $params, \Exception $e)
     {
+        $path = $this->getAbsolutePath($this->getSavePath($params));
         foreach ($files as $file) {
             try {
-                // todo: обработать событие удаление для всех $files
-                // $file->triggerClearEvent($e);
+                $file->deleteFile($path . DIRECTORY_SEPARATOR . $file->getSysName(), $e);
             } catch (\Exception $e) {
                 Yii::error($e);
             }
         }
+        throw $e;
     }
 
     /**
