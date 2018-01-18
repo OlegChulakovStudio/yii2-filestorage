@@ -69,14 +69,14 @@ class ImageParams extends PathParams
      *
      * @var string
      */
-    public $pathPattern = '{root}/{group}/{basename}/{type}_{width}x{height}.{ext}';
+    public $pathPattern = '{relay}/{group}/{basename}/{type}_{width}x{height}.{ext}';
     /**
      * Шаблон удаления файлов.
      * Испольует glob для поиска всех файлов.
      *
      * @var string
      */
-    public $searchPattern = '{root}/{group}/{basename}/*';
+    public $searchPattern = '{relay}/{group}/{basename}/*';
 
     /**
      * Конструктор параметров

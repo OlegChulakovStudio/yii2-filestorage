@@ -23,14 +23,14 @@ class PathParams
      *
      * @var string
      */
-    public $pathPattern = '{root}/{group}/{basename}.{ext}';
+    public $pathPattern = '{relay}/{group}/{basename}.{ext}';
     /**
      * Шаблон удаления файлов.
      * Испольует glob для поиска всех файлов.
      *
      * @var string
      */
-    public $searchPattern = '{root}/{group}/{basename}*';
+    public $searchPattern = '{relay}/{group}/{basename}*';
 
     /**
      * Расширенные опции.

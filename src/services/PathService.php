@@ -116,8 +116,9 @@ class PathService
 
         $config = array_filter($params->config());
         $options = array_filter($params->options());
+        $relay = str_replace($this->getAbsolute(), '', $root);
         return array_merge([
-            '{root}' => $root,
+            '{relay}' => $relay,
             '{name}' => $name,
             '{basename}' => $basename,
             '{ext}' => $ext,
@@ -241,9 +242,7 @@ class PathService
     {
         return FileHelper::normalizePath(
             implode(DIRECTORY_SEPARATOR, [
-                $this->storagePath,
-                $this->storageDir,
-                $path,
+                $this->getAbsolute(), $path,
             ])
         );
     }
@@ -277,5 +276,13 @@ class PathService
             $url = Url::base(true) . $url;
         }
         return $url;
+    }
+
+    protected function getAbsolute()
+    {
+        return implode(DIRECTORY_SEPARATOR, [
+            $this->storagePath,
+            $this->storageDir,
+        ]);
     }
 }

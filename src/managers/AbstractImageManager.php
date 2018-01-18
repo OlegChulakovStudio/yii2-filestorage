@@ -98,7 +98,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      *
      * @var FileStorage
      */
-    public $storageComponent = 'chulakov\filestorage\FileStorage';
+    public $fileStorage = 'fileStorage';
     /**
      * @var UploadInterface
      */
@@ -148,7 +148,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     public function init()
     {
         parent::init();
-        $this->storageComponent = Instance::ensure($this->storageComponent);
+        $this->fileStorage = Instance::ensure($this->fileStorage);
     }
 
     /**
@@ -290,7 +290,9 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     protected function updatePath($savedPath)
     {
-        return $this->storageComponent->makePath($savedPath, $this->getImageParams());
+        return $this->fileStorage->getAbsolutePath(
+            $this->fileStorage->makePath($savedPath, $this->getImageParams())
+        );
     }
 
     /**
