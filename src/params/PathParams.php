@@ -82,6 +82,6 @@ class PathParams
      */
     public function addOption($name, $value)
     {
-        $this->options["{{$name}}"] = $value;
+        $this->options['{' . $name . '}'] = $value;
     }
 }
