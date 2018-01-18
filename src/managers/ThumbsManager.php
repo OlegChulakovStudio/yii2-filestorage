@@ -58,7 +58,6 @@ class ThumbsManager extends AbstractImageManager
     public function handleDelete(Event $event)
     {
         if ($this->validate($event->sender)) {
-            $params = $this->getImageParams();
             $path = $this->updatePath($event->savedPath);
             if (is_file($path)) {
                 $path = dirname($path);
