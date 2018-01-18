@@ -47,6 +47,10 @@ class Event
      * @var string
      */
     public $savedPath;
+    /**
+     * @var \Exception
+     */
+    public $exception;
 
     /**
      * Конструктор события
