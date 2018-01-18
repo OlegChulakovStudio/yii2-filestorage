@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\managers;
 
+use yii\helpers\FileHelper;
 use chulakov\filestorage\observer\Event;
 
 /**
@@ -45,22 +46,26 @@ class ThumbsManager extends AbstractImageManager
     public function handle(Event $event)
     {
         if ($this->validate($event->sender)) {
+            $this->processing();
             $this->saveImage($this->updatePath($event->savedPath));
         }
     }
 
     /**
-     * Обновление пути
-     *
-     * @param string $savedPath
-     * @return string
+     * @param Event $event
      * @throws \Exception
      */
-    protected function updatePath($savedPath)
+    public function handleDelete(Event $event)
     {
-        $params = $this->getImageParams();
-        $params->addOption('type', 'thumb');
-
-        return $this->storageComponent->makePath($savedPath, $params);
+        if ($this->validate($event->sender)) {
+            $params = $this->getImageParams();
+            $path = $this->updatePath($event->savedPath);
+            if (is_file($path)) {
+                $path = dirname($path);
+            }
+            if(is_dir($path)) {
+                FileHelper::removeDirectory($path);
+            }
+        }
     }
 }
