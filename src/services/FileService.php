@@ -133,7 +133,9 @@ class FileService
         $model = new $class();
 
         $model->group_code = $params->group_code;
-        $model->object_id = $params->object_id;
+        if (!empty($params->object_id)) {
+            $model->object_id = $params->object_id;
+        }
         $model->ori_extension = $file->getExtension();
         $model->ori_name = $file->getName();
         $model->mime = $file->getType();
