@@ -92,12 +92,13 @@ class PathService
      * @param string $path
      * @param PathParams $params
      * @return array
+     * @throws \yii\base\InvalidParamException
      */
     public function searchAllFiles($path, PathParams $params)
     {
-        $patternPath = $this->parsePattern($params->searchPattern,
+        $patternPath = $this->getAbsolutePath($this->parsePattern($params->searchPattern,
             $this->parseConfig($path, $params)
-        );
+        ));
         return glob($patternPath, GLOB_BRACE & GLOB_ERR);
     }
 
@@ -157,7 +158,7 @@ class PathService
         if ($path = $this->checkMovedPath($file, $uploadPath)) {
             return $path;
         }
-        throw new NotFoundFileException('Не удалось найти файл :' . basename($file));
+        throw new NotFoundFileException('Не удалось найти файл :' . $file);
     }
 
     /**
