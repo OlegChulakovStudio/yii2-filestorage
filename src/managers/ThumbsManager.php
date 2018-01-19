@@ -62,7 +62,7 @@ class ThumbsManager extends AbstractImageManager
             if (is_file($path)) {
                 $path = dirname($path);
             }
-            if(is_dir($path)) {
+            if (is_dir($path)) {
                 FileHelper::removeDirectory($path);
             }
         }
