@@ -13,37 +13,37 @@ class Position
     /**
      * Позиционирование от левого верхнего края
      */
-    const POSITION_TOP_LEFT = 'top-left';
+    const TOP_LEFT = 'top-left';
     /**
      * Позиционирование от верха
      */
-    const POSITION_TOP = 'top';
+    const TOP = 'top';
     /**
      * Позиционирование от верхнего правого края
      */
-    const POSITION_TOP_RIGHT = 'top-right';
+    const TOP_RIGHT = 'top-right';
     /**
      * Позиционирование от левого края
      */
-    const POSITION_LEFT = 'left';
+    const LEFT = 'left';
     /**
      * Позиционирование от ценрта (по-умолчанию)
      */
-    const POSITION_CENTER = 'center';
+    const CENTER = 'center';
     /**
      * Позиционирование от правого края
      */
-    const POSITION_RIGHT = 'right';
+    const RIGHT = 'right';
     /**
      * Позиционирование от нижнего левого края
      */
-    const POSITION_BOTTOM_LEFT = 'bottom-left';
+    const BOTTOM_LEFT = 'bottom-left';
     /**
      * Позиционирование от нижнего края
      */
-    const POSITION_BOTTOM = 'bottom';
+    const BOTTOM = 'bottom';
     /**
      * Позиционирование от нижнего правого края
      */
-    const POSITION_BOTTOM_RIGHT = 'bottom-right';
+    const BOTTOM_RIGHT = 'bottom-right';
 }

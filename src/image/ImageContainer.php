@@ -93,7 +93,7 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function watermark($watermarkPath, $position = Position::POSITION_CENTER)
+    public function watermark($watermarkPath, $position = Position::CENTER)
     {
         if (!empty($watermarkPath)) {
             $this->image->insert($watermarkPath, $position);
