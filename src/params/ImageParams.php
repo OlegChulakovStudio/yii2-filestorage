@@ -53,11 +53,11 @@ class ImageParams extends PathParams
      */
     public $watermarkPosition;
     /**
-     * Позицыя при cover
+     * Позиция при cover
      *
      * @var string
      */
-    public $coverPosition = Position::POSITION_CENTER;
+    public $coverPosition = Position::CENTER;
     /**
      * Категория файлов
      *
