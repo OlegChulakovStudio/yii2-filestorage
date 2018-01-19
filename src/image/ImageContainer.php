@@ -139,10 +139,7 @@ class ImageContainer implements ImageInterface
         if (!is_dir($dir)) {
             FileHelper::createDirectory($dir);
         }
-        if ($this->saved = !!$this->image->save($path, $quality)) {
-            return true;
-        }
-        return false;
+        return !!$this->image->save($path, $quality);
     }
 
     /**
@@ -173,20 +170,21 @@ class ImageContainer implements ImageInterface
      * @param string $savePath
      * @param ImageParams $params
      * @return bool
+     * @throws \yii\base\Exception
      */
     public function contain($savePath, ImageParams $params)
     {
-        if ($this->image) {
-            $this->image->resize(
-                $params->width,
-                $params->height,
-                function (Constraint $constraint) {
-                    $constraint->aspectRatio();
-                }
-            )->save($savePath, $params->quality);
-            return true;
+        if (!$this->image) {
+            return false;
         }
-        return false;
+        $this->image->resize(
+            $params->width,
+            $params->height,
+            function (Constraint $constraint) {
+                $constraint->aspectRatio();
+            }
+        );
+        return $this->save($savePath, $params->quality);
     }
 
     /**
@@ -195,15 +193,15 @@ class ImageContainer implements ImageInterface
      * @param string $savePath
      * @param ImageParams $params
      * @return bool
+     * @throws \yii\base\Exception
      */
     public function widen($savePath, ImageParams $params)
     {
-        if ($this->image) {
-            $this->image->widen($params->width)
-                ->save($savePath, $params->quality);
-            return true;
+        if (!$this->image) {
+            return false;
         }
-        return false;
+        $this->image->widen($params->width);
+        return $this->save($savePath, $params->quality);
     }
 
     /**
@@ -212,15 +210,15 @@ class ImageContainer implements ImageInterface
      * @param string $savePath
      * @param ImageParams $params
      * @return bool
+     * @throws \yii\base\Exception
      */
     public function heighten($savePath, ImageParams $params)
     {
-        if ($this->image) {
-            $this->image->heighten($params->height)
-                ->save($savePath, $params->quality);
-            return true;
+        if (!$this->image) {
+            return false;
         }
-        return false;
+        $this->image->heighten($params->height);
+        return $this->save($savePath, $params->quality);
     }
 
     /**
@@ -230,14 +228,29 @@ class ImageContainer implements ImageInterface
      * @param string $savePath
      * @param ImageParams $params
      * @return bool
+     * @throws \yii\base\Exception
      */
     public function cover($savePath, ImageParams $params)
     {
-        if ($this->image) {
-            $this->image->fit($params->width, $params->height)
-                ->save($savePath, $params->quality);
-            return true;
+        if (!$this->image) {
+            return false;
         }
-        return false;
+        $this->image->fit($params->width, $params->height);
+        return $this->save($savePath, $params->quality);
+    }
+
+    /**
+     * Генерация thumbnail
+     *
+     * @param $savePath
+     * @param ImageParams $params
+     * @return bool
+     * @throws \yii\base\Exception
+     */
+    public function thumb($savePath, ImageParams $params)
+    {
+        return !!$this->image ?
+            $this->save($savePath, $params->quality)
+            : false;
     }
 }
