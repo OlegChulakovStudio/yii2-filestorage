@@ -9,6 +9,7 @@
 namespace chulakov\filestorage\tests;
 
 use yii\helpers\ArrayHelper;
+use chulakov\filestorage\FileStorage;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
 /**
@@ -28,6 +29,14 @@ class TestCase extends BaseTestCase
         new $appClass(ArrayHelper::merge([
             'id' => 'testapp',
             'basePath' => __DIR__,
+            'components' => [
+                'fileStorage' => [
+                    'class' => FileStorage::className(),
+                    'storageBaseUrl' => false,
+                    'storagePath' => '@runtime',
+                    'storageDir' => 'upload',
+                ]
+            ],
             'vendorPath' => $this->getVendorPath(),
         ], $config));
     }
