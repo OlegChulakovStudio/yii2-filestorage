@@ -8,12 +8,14 @@
 
 namespace chulakov\filestorage\behaviors;
 
+use yii\rbac\Item;
 use yii\base\Model;
 use yii\di\Instance;
 use yii\base\Behavior;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 
 /**
@@ -43,11 +45,11 @@ class FileUploadBehavior extends Behavior
      */
     public $repositoryOptions;
     /**
-     * @var string|FileStorage
+     * @var string|array|FileStorage
      */
-    public $storage;
+    public $fileStorage;
     /**
-     * @var string
+     * @var string|Item
      */
     public $accessRole;
 
@@ -57,7 +59,7 @@ class FileUploadBehavior extends Behavior
     public function init()
     {
         parent::init();
-        $this->storage = Instance::ensure($this->storage);
+        $this->fileStorage = Instance::ensure($this->fileStorage);
     }
 
     /**
@@ -79,9 +81,11 @@ class FileUploadBehavior extends Behavior
             return;
         }
         $files = $this->getInstances();
-        $this->configureInstances($files);
-        if ($this->isInstances($files)) {
-            $this->owner->{$this->attribute} = $files;
+        if (!empty($files)) {
+            $this->configureInstances($files);
+            if ($this->isInstances($files)) {
+                $this->owner->{$this->attribute} = $files;
+            }
         }
     }
 
@@ -127,11 +131,8 @@ class FileUploadBehavior extends Behavior
      * Загрузка и сохранение файлов
      *
      * @return mixed
-     * @throws \yii\base\InvalidParamException
      * @throws NotUploadFileException
-     * @throws \Exception
-     * @throws \chulakov\filestorage\exceptions\NoAccessException
-     * @throws \Throwable
+     * @throws NoAccessException
      */
     public function upload()
     {
@@ -145,6 +146,6 @@ class FileUploadBehavior extends Behavior
         if (method_exists($this->owner, 'getPrimaryKey')) {
             $params->object_id = $this->owner->getPrimaryKey();
         }
-        return $this->storage->uploadFile($files, $params);
+        return $this->fileStorage->uploadFile($files, $params);
     }
 }

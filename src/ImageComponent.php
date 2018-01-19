@@ -9,229 +9,45 @@
 namespace chulakov\filestorage;
 
 use yii\base\Component;
-use Intervention\Image\Image;
 use Intervention\Image\ImageManager;
 use chulakov\filestorage\params\ImageParams;
+use chulakov\filestorage\image\ImageContainer;
 
 /**
  * Class ImageComponent
  * @package chulakov\filestorage
  */
-class ImageComponent extends Component implements ImageComponentInterface
+class ImageComponent extends Component
 {
     /**
-     * Позиционирование от левого верхнего края
+     * Драйвер обработки изображений - GD
      */
-    const POSITION_TOP_LEFT = 'top-left';
+    const DRIVER_GD = 'gd';
     /**
-     * Позиционирование от верха
+     * Драйвер обработки изображений - Imagick
      */
-    const POSITION_TOP = 'top';
+    const DRIVER_IMAGICK = 'imagick';
+
     /**
-     * Позиционирование от верхнего правого края
+     * @var array Конфигурация драйвера
      */
-    const POSITION_TOP_RIGHT = 'top-right';
+    public $driver = self::DRIVER_GD;
+
     /**
-     * Позиционирование от левого края
+     * @var ImageManager
      */
-    const POSITION_LEFT = 'left';
-    /**
-     * Позиционирование от ценрта (по-умолчанию)
-     */
-    const POSITION_CENTER = 'center';
-    /**
-     * Позиционирование от правого края
-     */
-    const POSITION_RIGHT = 'right';
-    /**
-     * Позиционирование от нижнего левого края
-     */
-    const POSITION_BOTTOM_LEFT = 'bottom-left';
-    /**
-     * Позиционирование от нижнего края
-     */
-    const POSITION_BOTTOM = 'bottom';
-    /**
-     * Позиционирование от нижнего правого края
-     */
-    const POSITION_BOTTOM_RIGHT = 'bottom-right';
-    /**
-     * @var Image
-     */
-    protected $image;
+    protected $manager;
 
     /**
      * Установить изображение в компонент
      *
      * @param string $file
-     * @param array $config
-     * @return bool
+     * @return ImageContainer
      */
-    public function make($file, $config = [])
+    public function make($file)
     {
-        $this->image = (new ImageManager($config))->make($file);
-        return $this->hasImage();
-    }
-
-    /**
-     * Получить текущее изображение
-     *
-     * @return Image
-     */
-    public function getImage()
-    {
-        return $this->image;
-    }
-
-    /**
-     * Проверка на использование
-     *
-     * @return bool
-     */
-    public function hasImage()
-    {
-        return !is_null($this->image);
-    }
-
-    /**
-     * Сохранение файла
-     *
-     * @param string $path
-     * @param integer $quality
-     * @return Image
-     */
-    public function save($path, $quality)
-    {
-        return $this->image->save($path, $quality);
-    }
-
-    /**
-     * Получение информации о текущем типе файла
-     *
-     * @return string
-     */
-    public function getMimeType()
-    {
-        return $this->image->mime;
-    }
-
-    /**
-     * Получение расширения файла
-     *
-     * @return string
-     */
-    public function getExtension()
-    {
-        return $this->image->extension;
-    }
-
-    /**
-     * Получение размера изображения
-     *
-     * @return mixed
-     */
-    public function getFileSize()
-    {
-        return $this->image->filesize();
-    }
-
-    /**
-     * Нанесение водяной метки на изображение
-     *
-     * @param string $watermarkPath
-     * @param string $position
-     */
-    public function watermark($watermarkPath, $position = self::POSITION_CENTER)
-    {
-        if (!empty($watermarkPath)) {
-            $this->image->insert($watermarkPath, $position);
-        }
-    }
-
-    /**
-     * Изменить размер изображения
-     *
-     * @param integer $width
-     * @param integer $height
-     */
-    public function resize($width, $height)
-    {
-        $currentWidth = $this->getWidth();
-        $currentHeight = $this->getHeight();
-
-        if (!empty($width) && !empty($height)) {
-            if ($this->checkSizeForResize($width, $height)) {
-                $this->image->resize($width, $height, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-            } elseif (!empty($width) && $currentWidth < $width) {
-                $this->image->widen($currentWidth);
-            } elseif (!empty($height) && $currentHeight < $height) {
-                $this->image->heighten($currentHeight);
-            }
-        }
-    }
-
-    /**
-     * Ресет компонента
-     */
-    public function reset()
-    {
-        $this->image = null;
-    }
-
-    /**
-     * Получить ширину
-     *
-     * @return int
-     */
-    public function getWidth()
-    {
-        return $this->image->getWidth();
-    }
-
-    /**
-     * Получить высоту
-     *
-     * @return int
-     */
-    public function getHeight()
-    {
-        return $this->image->getHeight();
-    }
-
-    /**
-     * Изменение кодировки изображения
-     *
-     * Доступные разрешения для изображений
-     *
-     * jpg — return JPEG encoded image data
-     * png — return Portable Network Graphics (PNG) encoded image data
-     * gif — return Graphics Interchange Format (GIF) encoded image data
-     * tif — return Tagged Image File Format (TIFF) encoded image data
-     * bmp — return Bitmap (BMP) encoded image data
-     * ico — return ICO encoded image data
-     * psd — return Photoshop Document (PSD) encoded image data
-     * webp — return WebP encoded image data
-     * data-url — encode current image data in data URI scheme (RFC 2397)
-     *
-     * @param $encode
-     */
-    public function convert($encode)
-    {
-        $this->image->encode($encode);
-    }
-
-    /**
-     * Проверка размера изображения
-     *
-     * @param $width
-     * @param $height
-     * @return bool
-     */
-    protected function checkSizeForResize($width, $height)
-    {
-        return ($this->getWidth() > $width) && ($this->getHeight() > $height);
+        $image = $this->getManager()->make($file);
+        return new ImageContainer($image);
     }
 
     /**
@@ -239,20 +55,36 @@ class ImageComponent extends Component implements ImageComponentInterface
      *
      * @param string $path
      * @param ImageParams $params
-     * @return bool
+     * @return ImageContainer
      */
     public function createImage($path, ImageParams $params)
     {
-        if ($this->make($path)) {
-            $this->resize($params->width, $params->height);
+        if ($image = $this->make($path)) {
             if (!empty($params->watermarkPath)) {
-                $this->watermark($params->watermarkPath, $params->watermarkPosition);
+                $image->watermark($params->watermarkPath, $params->watermarkPosition);
             }
             if (!empty($params->extension)) {
-                $this->convert($params->extension);
+                $image->convert($params->extension);
             }
-            return true;
+            $image->resize($params->width, $params->height);
+            return $image;
         }
-        return false;
+        return null;
+    }
+
+    /**
+     * Инициализация и конфигурация менеджера изображений
+     *
+     * @return ImageManager
+     */
+    protected function getManager()
+    {
+        if (is_null($this->manager)) {
+            $config = [
+                'driver' => $this->driver,
+            ];
+            $this->manager = new ImageManager($config);
+        }
+        return $this->manager;
     }
 }

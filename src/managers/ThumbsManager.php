@@ -8,40 +8,34 @@
 
 namespace chulakov\filestorage\managers;
 
-use yii\di\Instance;
-use yii\base\BaseObject;
 use yii\helpers\FileHelper;
-use chulakov\filestorage\ImageComponent;
-use chulakov\filestorage\params\ThumbParams;
-use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\observer\Event;
-use chulakov\filestorage\observer\ListenerInterface;
-use chulakov\filestorage\observer\ObserverInterface;
 
 /**
  * Class ThumbsManager
  * @package chulakov\filestorage\managers
  */
-class ThumbsManager extends BaseObject implements ListenerInterface
+class ThumbsManager extends AbstractImageManager
 {
     /**
-     * @var ThumbParams
+     * Ширина
+     *
+     * @var integer
      */
-    public $thumbParams;
+    public $width = 192;
     /**
-     * Название компонента для работы с изображениями
+     * Высота
+     *
+     * @var integer
+     */
+    public $height = 144;
+
+    /**
+     * Класс параметров
      *
      * @var string
      */
-    public $imageClass;
-    /**
-     * @var ImageComponent
-     */
-    public $imageComponent;
-    /**
-     * @var UploadInterface
-     */
-    public $uploader;
+    public $imageParamsClass = 'chulakov\filestorage\params\ThumbParams';
 
     /**
      * Событие на сохранение thumbnail
@@ -49,92 +43,28 @@ class ThumbsManager extends BaseObject implements ListenerInterface
      * @param Event $event
      * @throws \Exception
      */
-    public function generateThumb(Event $event)
+    public function handle(Event $event)
     {
-        if (!$this->validate($event->sender)) {
-            return;
-        }
-        // проверка на изображение
-        if (!$this->isImage()) {
-            return;
-        }
-
-        if ($this->thumbParams) {
-            $this->getImageManager()->createImage($this->uploader->getFile(), $this->thumbParams);
-            $this->saveThumb($event->savedPath, $this->thumbParams->quality);
+        if ($this->validate($event->sender)) {
+            $this->processing();
+            $this->saveImage($this->updatePath($event->savedPath));
         }
     }
 
     /**
-     * Присоединение к Observer
-     *
-     * @param ObserverInterface $observer
-     * @return mixed
-     */
-    public function attach(ObserverInterface $observer)
-    {
-        $observer->on(Event::SAVE_EVENT, [$this, 'generateThumb']);
-    }
-
-    public function isImage()
-    {
-        return strpos($this->uploader->getType(), 'image') !== false;
-    }
-
-    /**
-     * Валидация файла для обработки
-     *
-     * @param object $uploader
-     * @return bool
+     * @param Event $event
      * @throws \Exception
      */
-    protected function validate($uploader)
+    public function handleDelete(Event $event)
     {
-        // Проверка корректного типа отправителя
-        if (!($uploader instanceof UploadInterface)) {
-            return false;
-        }
-        // Проверка файла по типу изменяемого
-        $this->uploader = $uploader;
-        if (!$this->isImage()) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Сохранение Thumbnail
-     *
-     * @param $path
-     * @param $quality
-     * @throws \Exception
-     */
-    protected function saveThumb($path, $quality)
-    {
-        $savedPath = $this->thumbParams->getSavePath($path);
-        $savedDir = dirname($savedPath);
-        if (!is_dir($savedDir)) {
-            FileHelper::createDirectory($savedDir);
-        }
-        $this->getImageManager()->save($savedPath, $quality);
-    }
-
-    /**
-     * Геттер для работы с imageComponent
-     * Получить менеджер работы с изображениями
-     *
-     * @return ImageComponent
-     * @throws \Exception
-     */
-    protected function getImageManager()
-    {
-        if (empty($this->imageComponent)) {
-            $this->imageComponent = $this->imageClass;
-            if (is_array($this->imageComponent) && empty($this->imageComponent['class'])) {
-                $this->imageComponent['class'] = $this->imageComponent;
+        if ($this->validate($event->sender)) {
+            $path = $this->updatePath($event->savedPath);
+            if (is_file($path)) {
+                $path = dirname($path);
             }
-            $this->imageComponent = Instance::ensure($this->imageComponent);
+            if (is_dir($path)) {
+                FileHelper::removeDirectory($path);
+            }
         }
-        return $this->imageComponent;
     }
 }

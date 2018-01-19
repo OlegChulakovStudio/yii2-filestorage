@@ -14,35 +14,19 @@ namespace chulakov\filestorage\params;
  */
 class ThumbParams extends ImageParams
 {
+    /**
+     * @var string Категория превью
+     */
     public $group = 'thumbs';
-    /**
-     * Шаблон сохранения thumbnails файлов
-     *
-     * @var string
-     */
-    protected $pathPattern = '{root}/{group}/{basename}/{width}x{height}.{ext}';
 
     /**
-     * Получить путь файла относительно параметров
+     * Конструктор параметров
      *
-     * @param string $path
-     * @return string
+     * @param integer $width
+     * @param integer $height
      */
-    public function getSavePath($path)
+    public function __construct($width = 195, $height = 144)
     {
-        $basename = basename($path);
-        $path = dirname($path);
-
-        list($name, $ext) = explode('.', $basename);
-        $ext = !empty($this->extension) ? $this->extension : $ext;
-
-        return  strtr($this->pathPattern, [
-            '{root}' => $path,
-            '{group}' => $this->group,
-            '{basename}' => $name,
-            '{width}' => $this->width,
-            '{height}' => $this->height,
-            '{ext}' => $ext,
-        ]);
+        parent::__construct($width, $height);
     }
 }

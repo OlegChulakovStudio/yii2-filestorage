@@ -12,9 +12,10 @@ use yii\base\UnknownClassException;
 use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
-use chulakov\filestorage\models\repositories\FileRepository;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\models\repositories\FileRepository;
+use chulakov\filestorage\exceptions\NotFoundModelException;
 
 /**
  * Class FileService
@@ -44,7 +45,7 @@ class FileService
      *
      * @param UploadInterface $uploadedFile
      * @param UploadParams $params
-     * @return File|null
+     * @return File|BaseFile|null
      * @throws UnknownClassException
      */
     public function createFile(UploadInterface $uploadedFile, UploadParams $params)
@@ -57,7 +58,7 @@ class FileService
      *
      * @param UploadInterface $uploadedFile
      * @param UploadParams $params
-     * @return Image|null
+     * @return Image|BaseFile|null
      * @throws UnknownClassException
      */
     public function createImage(UploadInterface $uploadedFile, UploadParams $params)
@@ -80,9 +81,9 @@ class FileService
     /**
      * Получить изображение по его Id
      *
-     * @param $id
+     * @param integer $id
      * @return File|\yii\db\ActiveRecord
-     * @throws \chulakov\filestorage\exceptions\NotFoundModelException
+     * @throws NotFoundModelException
      */
     public function getImage($id)
     {
@@ -92,9 +93,9 @@ class FileService
     /**
      * Получить файл по его Id
      *
-     * @param $id
+     * @param integer $id
      * @return File|\yii\db\ActiveRecord
-     * @throws \chulakov\filestorage\exceptions\NotFoundModelException
+     * @throws NotFoundModelException
      */
     public function getFile($id)
     {
@@ -108,7 +109,6 @@ class FileService
      * @return bool
      * @throws \Exception
      * @throws \Throwable
-     * @throws \yii\db\StaleObjectException
      */
     public function delete($model)
     {
@@ -121,7 +121,7 @@ class FileService
      * @param string $class
      * @param UploadInterface $file
      * @param UploadParams $params
-     * @return mixed
+     * @return BaseFile
      * @throws UnknownClassException
      */
     protected function createUpload($class, UploadInterface $file, UploadParams $params)
@@ -133,7 +133,9 @@ class FileService
         $model = new $class();
 
         $model->group_code = $params->group_code;
-        $model->object_id = $params->object_id;
+        if (!empty($params->object_id)) {
+            $model->object_id = $params->object_id;
+        }
         $model->ori_extension = $file->getExtension();
         $model->ori_name = $file->getName();
         $model->mime = $file->getType();

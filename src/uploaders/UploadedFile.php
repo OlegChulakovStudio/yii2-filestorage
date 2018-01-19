@@ -11,6 +11,7 @@ namespace chulakov\filestorage\uploaders;
 use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\observer\ObserverTrait;
 use chulakov\filestorage\observer\ObserverInterface;
+use Exception;
 
 /**
  * Class UploadedFile
@@ -54,22 +55,8 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
             parent::saveAs($file, false);
         }
         if ($deleteFile) {
-            $this->deleteFile($this->tempName);
+            unlink($this->getFile());
         }
-    }
-
-    /**
-     * Удаление файла
-     *
-     * @param string $filePath
-     * @return bool
-     */
-    protected function deleteFile($filePath)
-    {
-        if (file_exists($filePath)) {
-            unlink($filePath);
-        }
-        return true;
     }
 
     /**
@@ -81,16 +68,42 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
      */
     protected function beforeSave($savedPath, $deleteFile = true)
     {
-        $event = new Event();
-
-        $event->savedPath = $savedPath;
-        $event->needDelete = $deleteFile;
-
-        $event->needSave = true;
-        $event->sender = $this;
-
+        $event = $this->createEvent($savedPath, true, $deleteFile);
         $this->trigger(Event::SAVE_EVENT, $event);
         return $event->needSave;
+    }
+
+    /**
+     * Удаление файла
+     *
+     * @param string $filePath
+     * @param Exception $exception
+     * @return bool
+     */
+    public function deleteFile($filePath, Exception $exception = null)
+    {
+        if ($this->beforeDelete($filePath, $exception)) {
+            if (file_exists($filePath)) {
+                return unlink($filePath);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Событие удаления файлов
+     *
+     * @param string $filePath
+     * @param Exception $exception
+     * @return bool
+     */
+    protected function beforeDelete($filePath, $exception)
+    {
+        $event = $this->createEvent(
+            $filePath, false, true, $exception
+        );
+        $this->trigger(Event::DELETE_EVENT, $event);
+        return $event->needDelete;
     }
 
     /**
@@ -112,11 +125,11 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     }
 
     /**
-     * Получение имени файла после сохранения
+     * Получить имя файла с расширением
      *
      * @return string
      */
-    public function getSavedName()
+    public function getName()
     {
         return $this->name;
     }
@@ -195,21 +208,12 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     }
 
     /**
-     * Получить имя файла с расширением
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
      * Установить расширение файла
+     *
      * @param string $extension
      */
     public function setExtension($extension)
     {
-        $this->extension = $extension;
+        $this->setName($this->getBaseName() . '.' . $extension);
     }
 }

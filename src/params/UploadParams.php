@@ -25,7 +25,7 @@ class UploadParams
      *
      * @var integer
      */
-    public $object_id = null;
+    public $object_id = 0;
     /**
      * Роль доступа
      *

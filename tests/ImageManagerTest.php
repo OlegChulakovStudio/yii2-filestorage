@@ -67,7 +67,7 @@ class ImageManagerTest extends TestCase
     public function testImageManage()
     {
         // путь к сохраняемому файлу
-        $path = \Yii::getAlias('@tests/runtime') . '/images/image.jpg';
+        $path = \Yii::getAlias('@tests/runtime') . '/image.jpg';
         /** @var UploadedFile $uploader */
         $uploader = UploadedFile::getInstance(new ImageModelTest(), 'imageManager');
 
@@ -83,6 +83,10 @@ class ImageManagerTest extends TestCase
         if (!file_exists($path)) {
             $this->throwException(new \Exception('Файл не был загружен.'));
         }
+
+        // Обновление path на который в результате должен так измениться
+        // images - группа ImageManager
+        $path = \Yii::getAlias('@tests/runtime') . '/images/image.jpg';
 
         $this->assertInstanceOf(UploadedFile::className(), $uploader);
         $this->assertEquals(filesize($path), $uploader->getSize());
