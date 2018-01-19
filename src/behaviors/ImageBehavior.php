@@ -86,24 +86,16 @@ class ImageBehavior extends Behavior
      * @param integer $q Quality
      * @param string $p Position
      * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
-     * @throws \yii\base\Exception
      */
     public function thumb($w = 0, $h = 0, $q = 0, $p = null)
     {
-        /** @var BaseFile $model */
-        $model = $this->owner;
-        if (!$model->isImage()) {
-            return '';
-        }
-        $path = $this->getFilePath();
-        $thumbParams = $this->buildThumbParams($w, $h, $q, $p);
-        $thumbPath = $this->makePath($path, $thumbParams);
-        if (!file_exists($thumbPath)) {
-            $this->createThumb($path, $thumbPath, $thumbParams);
-        }
-        return $this->convertToUrl($thumbPath);
+        return $this->getImageData(
+            __FUNCTION__,
+            $this->buildThumbParams($w, $h, $q, $p)
+        );
     }
 
     /**
@@ -253,11 +245,10 @@ class ImageBehavior extends Behavior
      */
     public function widen($width, $quality = 80)
     {
-        list($path, $saveTo, $params) = $this->getImageData(__FUNCTION__, $width, 0, $quality);
-        if (!is_file($saveTo)) {
-            $this->imageComponent->make($path)->widen($saveTo, $params);
-        }
-        return $this->convertToUrl($saveTo);
+        return $this->getImageData(
+            __FUNCTION__,
+            $this->buildImageParams($width, 0, $quality)
+        );
     }
 
     /**
@@ -271,11 +262,10 @@ class ImageBehavior extends Behavior
      */
     public function heighten($height, $quality = 80)
     {
-        list($path, $saveTo, $params) = $this->getImageData(__FUNCTION__, 0, $height, $quality);
-        if (!is_file($saveTo)) {
-            $this->imageComponent->make($path)->heighten($saveTo, $params);
-        }
-        return $this->convertToUrl($saveTo);
+        return $this->getImageData(
+            __FUNCTION__,
+            $this->buildImageParams(0, $height, $quality)
+        );
     }
 
     /**
@@ -290,11 +280,10 @@ class ImageBehavior extends Behavior
      */
     public function contain($width = 0, $height = 0, $quality = 80)
     {
-        list($path, $saveTo, $params) = $this->getImageData(__FUNCTION__, $width, $height, $quality);
-        if (!is_file($saveTo)) {
-            $this->imageComponent->make($path)->contain($saveTo, $params);
-        }
-        return $this->convertToUrl($saveTo);
+        return $this->getImageData(
+            __FUNCTION__,
+            $this->buildImageParams($width, $height, $quality)
+        );
     }
 
     /**
@@ -311,32 +300,43 @@ class ImageBehavior extends Behavior
      */
     public function cover($width = 0, $height = 0, $quality = 0, $position = null)
     {
-        list($path, $saveTo, $params) = $this->getImageData(__FUNCTION__, $width, $height, $quality, $position);
-        if (!is_file($saveTo)) {
-            $this->imageComponent->make($path)->contain($saveTo, $params);
-        }
-        return $this->convertToUrl($saveTo);
+        return $this->getImageData(
+            __FUNCTION__,
+            $this->buildImageParams($width, $height, $quality, $position)
+        );
     }
 
     /**
      * Получить путь к изображению по его параметрам
      *
-     * @param string $type
-     * @param int $width
-     * @param int $height
-     * @param int $quality
-     * @param null $position
-     * @return array
+     * @param callable $method
+     * @param ImageParams $params
+     * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotFoundFileException
      */
-    protected function getImageData($type, $width = 0, $height = 0, $quality = 80, $position = null)
+    protected function getImageData($method, ImageParams $params)
     {
+        /** @var BaseFile $model */
+        $model = $this->owner;
+        if (!$model->isImage()) {
+            return '';
+        }
+        $params->addOption('type', $method);
         $path = $this->getFilePath();
-        $params = $this->buildImageParams($width, $height, $quality, $position);
-        $params->addOptions('type', $type);
-        $saveTo = $this->makePath($path, $params);
-        return [$path, $saveTo, $params];
+        $pathForUrl = $this->makePath($path, $params);
+        $savePath = $this->fileStorage->getAbsolutePath(
+            $pathForUrl
+        );
+        if (!is_file($savePath)) {
+            $image = $this->imageComponent->make($path);
+            if (!method_exists($image, $method)) {
+                return '';
+            }
+            $image->{$method}($savePath, $params);
+        }
+        return $this->convertToUrl($pathForUrl);
     }
 
     /**
@@ -378,8 +378,6 @@ class ImageBehavior extends Behavior
      * @throws \Exception
      * @throws NoAccessException
      * @throws NotFoundFileException
-     * @throws \yii\base\ErrorException
-     * @throws \Throwable
      */
     public function deleteFile()
     {
