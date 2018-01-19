@@ -8,7 +8,6 @@
 
 namespace chulakov\filestorage\behaviors;
 
-use chulakov\filestorage\exceptions\NoAccessException;
 use yii\rbac\Item;
 use yii\base\Model;
 use yii\di\Instance;
@@ -16,6 +15,7 @@ use yii\base\Behavior;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 
 /**
