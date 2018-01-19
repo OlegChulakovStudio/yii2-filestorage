@@ -165,10 +165,7 @@ class PathService
      */
     protected function checkExistFile($path)
     {
-        if (is_file($path)) {
-            return $path;
-        }
-        return null;
+        return is_file($path) ? $path : null;
     }
 
     /**
