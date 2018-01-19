@@ -247,6 +247,7 @@ class FileStorage extends Component
      * @param string $path
      * @param PathParams $params
      * @return array
+     * @throws \yii\base\InvalidParamException
      */
     public function searchAllFiles($path, PathParams $params)
     {
@@ -265,6 +266,18 @@ class FileStorage extends Component
     public function convertToUrl($path, $isAbsolute = false)
     {
         return $this->pathService->convertToUrl($path, $isAbsolute);
+    }
+
+    /**
+     * Получить полный путь системного файла
+     *
+     * @param BaseFile $model
+     * @return string
+     * @throws \yii\base\InvalidParamException
+     */
+    public function getFullSysPath($model)
+    {
+        return $this->getAbsolutePath($model->sys_file);
     }
 
     /**
