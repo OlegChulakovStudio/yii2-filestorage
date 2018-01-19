@@ -114,9 +114,10 @@ class PathService
         $root = dirname($path);
         list($basename, $ext) = explode('.', $name, 2);
 
-        $config = array_filter($params->config());
-        $options = array_filter($params->options());
+        $config = $this->filterConfig($params->config());
+        $options = $this->filterConfig($params->options());
         $relay = str_replace($this->getAbsolute(), '', $root);
+
         return array_merge([
             '{relay}' => $relay,
             '{name}' => $name,
@@ -137,61 +138,6 @@ class PathService
         $path = trim(strtr($pattern, $config));
         $path = str_replace(['\\', '\/'], DIRECTORY_SEPARATOR, $path);
         return rtrim($path, DIRECTORY_SEPARATOR);
-    }
-
-    /**
-     * Проверка наличия директории с попыткой создать новую, если это возможно
-     *
-     * @param string $full
-     * @return boolean
-     * @throws \yii\base\Exception
-     */
-    protected function checkPath($full)
-    {
-        if (is_file($full)) {
-            $full = dirname($full);
-        }
-        if (is_dir($full)) {
-            return true;
-        }
-        return FileHelper::createDirectory($full, $this->fileMode);
-    }
-
-    /**
-     * Проверка существования файла
-     *
-     * @param string $path
-     * @return string|null
-     */
-    protected function checkExistFile($path)
-    {
-        return is_file($path) ? $path : null;
-    }
-
-    /**
-     * Проверка системного расположения файла
-     *
-     * @param string $file
-     * @return string
-     * @throws \yii\base\InvalidParamException
-     */
-    protected function checkSystemPath($file)
-    {
-        return $this->checkExistFile($this->getAbsolutePath($file));
-    }
-
-    /**
-     * Проверка возможного перемещения файлов по новому шаблону
-     *
-     * @param string $file
-     * @param string $uploadPath
-     * @return string|null
-     */
-    protected function checkMovedPath($file, $uploadPath)
-    {
-        return $this->checkSystemPath(implode(DIRECTORY_SEPARATOR, [
-            $uploadPath, basename($file)
-        ]));
     }
 
     /**
@@ -221,6 +167,7 @@ class PathService
      * @param $uploadPath
      * @param bool $isAbsolute
      * @return string
+     * @throws \yii\base\InvalidParamException
      * @throws NotFoundFileException
      */
     public function findUrl($file, $uploadPath, $isAbsolute = false)
@@ -266,7 +213,7 @@ class PathService
      */
     public function convertToUrl($path, $isAbsolute = false)
     {
-        $url = '/' . trim(str_replace('\\', '/', $path), '/');
+        $url = '/' . $this->storageDir . '/' . trim(str_replace('\\', '/', $path), '/');
         if ($this->storageBaseUrl !== false) {
             $url = Url::to($this->storageBaseUrl . $url, true);
         } elseif ($isAbsolute) {
@@ -275,6 +222,79 @@ class PathService
         return $url;
     }
 
+    /**
+     * Фильтрация конфигураций
+     *
+     * @param array $config
+     * @return array
+     */
+    protected function filterConfig($config)
+    {
+        return array_filter($config, function ($value) {
+            if ($value !== null && $value !== '') {
+                return true;
+            }
+        });
+    }
+
+    /**
+     * Проверка наличия директории с попыткой создать новую, если это возможно
+     *
+     * @param string $full
+     * @return boolean
+     * @throws \yii\base\Exception
+     */
+    protected function checkPath($full)
+    {
+        if (is_file($full)) {
+            $full = dirname($full);
+        }
+        return is_dir($full) ? true : FileHelper::createDirectory($full, $this->fileMode);
+    }
+
+    /**
+     * Проверка существования файла
+     *
+     * @param string $path
+     * @return string|null
+     */
+    protected function checkExistFile($path)
+    {
+        return is_file($path) ? $path : null;
+    }
+
+    /**
+     * Проверка системного расположения файла
+     *
+     * @param string $file
+     * @return string
+     * @throws \yii\base\InvalidParamException
+     */
+    protected function checkSystemPath($file)
+    {
+        return $this->checkExistFile($this->getAbsolutePath($file));
+    }
+
+    /**
+     * Проверка возможного перемещения файлов по новому шаблону
+     *
+     * @param string $file
+     * @param string $uploadPath
+     * @return string|null
+     * @throws \yii\base\InvalidParamException
+     */
+    protected function checkMovedPath($file, $uploadPath)
+    {
+        return $this->checkSystemPath(implode(DIRECTORY_SEPARATOR, [
+            $uploadPath, basename($file)
+        ]));
+    }
+
+    /**
+     * Получить абсолютный путь
+     *
+     * @return string
+     */
     protected function getAbsolute()
     {
         return implode(DIRECTORY_SEPARATOR, [

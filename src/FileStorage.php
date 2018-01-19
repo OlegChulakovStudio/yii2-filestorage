@@ -403,7 +403,6 @@ class FileStorage extends Component
                 Yii::error($e);
             }
         }
-        throw $e;
     }
 
     /**
