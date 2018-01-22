@@ -33,8 +33,8 @@ class TestCase extends BaseTestCase
                 'fileStorage' => [
                     'class' => FileStorage::className(),
                     'storageBaseUrl' => false,
-                    'storagePath' => '@runtime',
-                    'storageDir' => 'upload',
+                    'storagePath' => '@tests/runtime',
+                    'storageDir' => 'images',
                 ]
             ],
             'vendorPath' => $this->getVendorPath(),
