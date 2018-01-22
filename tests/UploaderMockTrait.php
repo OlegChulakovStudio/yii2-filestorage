@@ -8,7 +8,6 @@
 
 namespace chulakov\filestorage\tests;
 
-use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\uploaders\UploadedFile;
 
 /**
@@ -17,14 +16,6 @@ use chulakov\filestorage\uploaders\UploadedFile;
  */
 trait UploaderMockTrait
 {
-    /**
-     * @var UploadedFile
-     */
-    protected static $imageUploader;
-    /**
-     * @var UploadedFile
-     */
-    protected static $fileUploader;
 
     /**
      * Генерирование фейковых загрузчиков
@@ -40,13 +31,12 @@ trait UploaderMockTrait
      */
     protected function createFileUploader()
     {
-        $uploader = $this->createUploader(
+        return $this->createUploader(
             'filename.txt',
             12345,
             'text/plain',
             'txt'
         );
-        self::$fileUploader = $uploader;
     }
 
     /**
@@ -54,13 +44,12 @@ trait UploaderMockTrait
      */
     protected function createImageUploader()
     {
-        $uploader = $this->createUploader(
+        return $this->createUploader(
             'filename.png',
             12345,
             'image/png',
             'png'
         );
-        self::$imageUploader = $uploader;
     }
 
     /**
@@ -80,25 +69,5 @@ trait UploaderMockTrait
         $uploader->setType($mime);
         $uploader->setExtension($ext);
         return $uploader;
-    }
-
-    /**
-     * Создание события
-     *
-     * @param string $path
-     * @param bool $deleteFile
-     * @return Event
-     */
-    protected function createEvent($path = 'dummy_path', $deleteFile = false)
-    {
-        $event = new Event();
-
-        $event->filePath = $path;
-        $event->needDelete = $deleteFile;
-
-        $event->needSave = false;
-        $event->sender = $this;
-
-        return $event;
     }
 }
