@@ -13,25 +13,6 @@
  */
 function uploadedFakeDataFile()
 {
-    return [
-        'name' => 'image.png',
-        'tmp_name' => '/path_to_file_tmp/phpsecurityfile',
-        'type' => 'image/png',
-        'size' => 12345,
-        'error' => 0,
-    ];
-}
-
-$_FILES['ImageModelTest[image]'] = uploadedFakeDataFile();
-$_FILES['FileModelTest[files][]'] = uploadedFakeDataFile();
-
-/**
- * Генерация фейковых данных для тестирования менеджера изображений
- *
- * @return array
- */
-function uploadedFakeFileForImageManager()
-{
     $path = \Yii::getAlias('@tests/data') . '/images/image.png';
     return [
         'name' => basename($path),
@@ -42,4 +23,40 @@ function uploadedFakeFileForImageManager()
     ];
 }
 
-$_FILES['ImageModelTest[imageManager]'] = uploadedFakeFileForImageManager();
+/**
+ * Генерация фейковых данных для тестирования менеджера изображений
+ *
+ * @return array
+ */
+function uploadedFakeDataFiles()
+{
+    $path = \Yii::getAlias('@tests/data') . '/images/image.png';
+    return [
+        'name' => [
+            basename($path),
+            basename($path),
+        ],
+        'tmp_name' => [
+            $path,
+            $path,
+        ],
+        'type' => [
+            mime_content_type($path),
+            mime_content_type($path),
+        ],
+        'size' => [
+            filesize($path),
+            filesize($path),
+        ],
+        'error' => [
+            0,
+            0,
+        ],
+    ];
+}
+
+// Загрузка изображений
+$_FILES['ImageModelTest[imageManager]'] = uploadedFakeDataFile();
+$_FILES['ImageModelTest[imageUploader]'] = uploadedFakeDataFile();
+// Загрузка файлов
+$_FILES['FileModelTest[files][]'] = uploadedFakeDataFiles();
