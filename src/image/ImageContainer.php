@@ -139,7 +139,7 @@ class ImageContainer implements ImageInterface
         if (!is_dir($dir)) {
             FileHelper::createDirectory($dir);
         }
-        return !!$this->image->save($path, $quality);
+        return $this->saved = (bool)$this->image->save($path, $quality);
     }
 
     /**
@@ -249,8 +249,16 @@ class ImageContainer implements ImageInterface
      */
     public function thumb($savePath, ImageParams $params)
     {
-        return !!$this->image ?
-            $this->save($savePath, $params->quality)
-            : false;
+        if ($this->image) {
+            if (!empty($params->watermarkPath)) {
+                $this->image->insert($params->watermarkPath, $params->watermarkPosition);
+            }
+            if (!empty($params->encode)) {
+                $this->image->encode($params->encode);
+            }
+            $this->resize($params->width, $params->height);
+            return $this->save($savePath, $params->quality);
+        }
+        return false;
     }
 }
