@@ -35,6 +35,12 @@ class ImageParams extends PathParams
      */
     public $extension;
     /**
+     * Желаемое расширение файла
+     *
+     * @var string
+     */
+    public $encode;
+    /**
      * Качество
      *
      * @var int
