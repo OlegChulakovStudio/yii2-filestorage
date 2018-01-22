@@ -55,13 +55,12 @@ class ObserverTest extends TestCase
     {
         // установка начального положения тумблера
         $this->tumbler = false;
-
         /** @var UploadedFile $uploader */
-        $uploader = self::$fileUploader;
+        $uploader = $this->createFileUploader();
         // регистрирование события
-        $uploader->events[Event::SAVE_EVENT][] = [$this, 'handle'];
+        $uploader->on(Event::SAVE_EVENT, [$this, 'handle']);
         /** @var Event $event */
-        $event = $this->createEvent();
+        $event = $uploader->createEvent('', true, false);
         // срабатывание слушателей
         $uploader->trigger(Event::SAVE_EVENT, $event);
 
