@@ -17,17 +17,11 @@ use chulakov\filestorage\uploaders\RemoteUploadedFile;
 class RemoteUploadedFileTest extends TestCase
 {
     /**
-     * Модель изображения
-     *
-     * @var ImageModelTest
-     */
-    public static $imageModel;
-    /**
-     * Путь к изображению
+     * Статическая ссылка на изображение
      *
      * @var string
      */
-    public static $imagePath;
+    protected static $link = 'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png';
 
     /**
      * @inheritdoc
@@ -36,19 +30,6 @@ class RemoteUploadedFileTest extends TestCase
     {
         parent::setUp();
         $this->mockApplication();
-        $this->generateFakeFiles();
-    }
-
-    /**
-     * Генерация фейковых данных
-     */
-    private function generateFakeFiles()
-    {
-        self::$imagePath = __DIR__ . '/data/images/test.png';
-
-        $image = new ImageModelTest();
-        $image->link = self::$imagePath;
-        self::$imageModel = $image;
     }
 
     /**
@@ -57,27 +38,30 @@ class RemoteUploadedFileTest extends TestCase
     public function testGetInstance()
     {
         /** @var RemoteUploadedFile $image */
-        $image = RemoteUploadedFile::getInstance(self::$imageModel, 'link');
+        $image = new RemoteUploadedFile(self::$link);
         $this->assertInstanceOf(RemoteUploadedFile::class, $image);
     }
 
     /**
      * Обработка загруженного файла
+     * @throws \chulakov\filestorage\exceptions\NotUploadFileException
      */
     public function testUploadFile()
     {
+        $path = \Yii::getAlias('@tests/runtime') . '/images/image.png';
         /** @var RemoteUploadedFile $image */
-        $image = RemoteUploadedFile::getInstance(self::$imageModel, 'link');
-
-        $image->setName('filename.png');
-        $image->setSize('12345');
-        $image->setType('image/png');
-        $image->setExtension('png');
+        $image = new RemoteUploadedFile(self::$link);
+        $image->setSysName('image');
+        $image->saveAs($path);
 
         $this->assertInstanceOf(RemoteUploadedFile::class, $image);
-        $this->assertEquals('filename.png', $image->getName());
-        $this->assertEquals('12345', $image->getSize());
-        $this->assertEquals('image/png', $image->getType());
+        $this->assertFileExists($path);
+        $this->assertEquals('googlelogo_color_150x54dp.png', $image->getName());
+        $this->assertEquals('3170', $image->getSize());
+        $this->assertEquals('image/png', trim($image->getType()));
         $this->assertEquals('png', $image->getExtension());
+
+        // Удаление изображения
+        unlink($path);
     }
 }
