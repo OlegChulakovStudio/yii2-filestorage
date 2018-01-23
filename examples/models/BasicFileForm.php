@@ -49,7 +49,7 @@ class BasicFileForm extends Model
                 // FileUploadBehavior - для загрузки одного файла
                 // FileUploadBehavior - для загрузки множества файлов
                 'class' => FileUploadBehavior::className(),
-                'attribute' => 'file', // Аттирут формы, куда должен загрузиться файл
+                'attribute' => 'file', // Атрибут формы, куда должен загрузиться файл
                 'group' => 'files', // Группа файлов, куда будет сохранен файл
                 'fileStorage' => 'fileStorage', // Файловое хранилище
                 // Репозитории. Два типа:

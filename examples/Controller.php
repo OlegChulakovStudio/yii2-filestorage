@@ -1,4 +1,10 @@
 <?php
+/**
+ * Файл класса Controller
+ *
+ * @copyright Copyright (c) 2018, Oleg Chulakov Studio
+ * @link http://chulakov.com/
+ */
 
 namespace backend\controllers;
 
