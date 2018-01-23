@@ -113,7 +113,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     protected $params;
 
     /**
-     * Обработка изображения
+     * Обработка файла
      *
      * @param Event $event
      * @return mixed
