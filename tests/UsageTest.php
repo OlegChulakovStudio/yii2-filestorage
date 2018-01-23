@@ -58,6 +58,7 @@ class UsageTest extends TestCase
 
     /**
      * Интеграционное тестирование загрузки файла
+     * Подключены два менеджера: ImageManager, ThumbManager
      */
     public function testUploadTest()
     {
