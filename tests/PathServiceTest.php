@@ -8,11 +8,13 @@
 
 namespace chulakov\filestorage\tests;
 
-use chulakov\filestorage\exceptions\NotFoundFileException;
-use chulakov\filestorage\params\PathParams;
-use chulakov\filestorage\services\PathService;
 use yii\base\Exception;
 use yii\helpers\FileHelper;
+use chulakov\filestorage\params\PathParams;
+use chulakov\filestorage\params\ThumbParams;
+use chulakov\filestorage\params\ImageParams;
+use chulakov\filestorage\services\PathService;
+use chulakov\filestorage\exceptions\NotFoundFileException;
 
 /**
  * Class PathServiceTest
@@ -26,6 +28,12 @@ class PathServiceTest extends TestCase
      * @var PathService
      */
     protected static $pathService;
+    /**
+     * Псевдопуть к файлу
+     *
+     * @var string
+     */
+    protected static $simplePath;
 
     /**
      * @inheritdoc
@@ -33,6 +41,8 @@ class PathServiceTest extends TestCase
     protected function setUp()
     {
         parent::setUp();
+        self::$simplePath = '/path/to/file/image.png';
+
         if (empty(self::$pathService)) {
             self::$pathService = $this->createService();
         }
@@ -86,23 +96,6 @@ class PathServiceTest extends TestCase
     }
 
     /**
-     * Тестирование формирования параметров для парсинга из полного пути файла
-     */
-    public function testParseConfig()
-    {
-        $pathParams = new PathParams();
-        $this->assertEquals([
-            '{relay}' => '/path/to/file',
-            '{name}' => 'file.txt',
-            '{basename}' => 'file',
-            '{ext}' => 'txt',
-            '{group}' => 'cache'
-        ],
-            self::$pathService->parseConfig('/path/to/file/file.txt', $pathParams)
-        );
-    }
-
-    /**
      * Тестирование проверки пути
      *
      * @throws NotFoundFileException
@@ -128,5 +121,65 @@ class PathServiceTest extends TestCase
         if (is_dir($moveDir)) {
             rmdir($moveDir);
         }
+    }
+
+    /**
+     * Тестирование работы с PathParams
+     */
+    public function testPathParams()
+    {
+        $pathParams = new PathParams();
+
+        $config = [
+            '{relay}' => '/path/to/file',
+            '{name}' => 'image.png',
+            '{basename}' => 'image',
+            '{ext}' => 'png',
+            '{group}' => 'cache'
+        ];
+
+        $this->assertEquals($config, self::$pathService->parseConfig(self::$simplePath, $pathParams));
+    }
+
+    /**
+     * Тестирование работы с ImageParams
+     */
+    public function testImageParams()
+    {
+        $imageParams = new ImageParams(100, 100);
+
+        $resultImage = [
+            '{relay}' => '/path/to/file',
+            '{name}' => 'image.png',
+            '{basename}' => 'image',
+            '{ext}' => 'png',
+            '{group}' => 'images',
+            '{width}' => 100,
+            '{height}' => 100,
+            '{type}' => 'images',
+        ];
+
+        $this->assertEquals($resultImage, self::$pathService->parseConfig(self::$simplePath, $imageParams));
+    }
+
+    /**
+     * Тестирование работы с ThumbParams
+     */
+    public function testThumbParams()
+    {
+        $thumbParams = new ThumbParams(100, 90);
+
+        $resultThumb = [
+            '{relay}' => '/path/to/file',
+            '{name}' => 'image.png',
+            '{basename}' => 'image',
+            '{ext}' => 'png',
+            '{group}' => 'thumbs',
+            '{width}' => 100,
+            '{height}' => 90,
+            '{type}' => 'thumbs',
+        ];
+
+        $this->assertEquals($resultThumb, self::$pathService->parseConfig(self::$simplePath, $thumbParams));
     }
 }
