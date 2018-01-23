@@ -10,7 +10,7 @@
 
 На данной странице описано базовое использование и базовые настройки данного компонента. Остальное можно посмотреть в следующих разделах: 
 [Слушатели](docs/listeners.md),
-[Thumbnails](docs/thumbnails.md)
+[Thumbnails](docs/thumbnails.md),
 [Генерация файлового пути](docs/path-service.md)
 
 ##Установка
@@ -138,7 +138,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 
 Все слушатели должны реализовывать `ListenerInterface`, только так они могут подписаться на наблюдателя.
 
-####В компоненте реализованы два базовых слушателя: `ImageManager` и `ThumbManager`. 
+В компоненте реализованы два базовых слушателя: `ImageManager` и `ThumbManager`. 
 
 `ImageManager` работает с только изображениями, производит  `resize`, накладывает `watermark`, меняет расширение и т.д. Он имеет следующие настройки: 
 
@@ -151,7 +151,8 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 - `imageClass` - компонент работы с изображениями.
 
 `ThumbManager`, аналогично предыдущему, работает только с изображениями. Его задача: генерировать thumbnail изображения. Все сохраненные thumbnail сохраняются в отдельную папку под названием thumbs. Базовая структура сохранения такая: 
-####`'{relay}/{group}/{basename}/{type}_{width}x{height}.{ext}'`
+
+`'{relay}/{group}/{basename}/{type}_{width}x{height}.{ext}'`
 ####, где:
  - `relay` - полный `root` путь до группы;
  - `group` - название сохраняемой группы; 
@@ -236,7 +237,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
     }
     
 ```
-Все остальные примеры можно посмотреть в [папке с примерами](example/).
+Все остальные примеры можно посмотреть в [папке с примерами](examples).
 
 ## Тестирование
 
