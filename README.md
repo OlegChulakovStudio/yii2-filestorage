@@ -6,7 +6,7 @@
 - `resize` изображения;
 - конвертирование в разные расширения;
 - наложение водяных меток;
-- генерирование `thumbnails` с различными настройками.
+- генерирование `thumbnails`, `cover`, `contain`, `widen`, `heighten` с различными настройками;
 
 На данной странице описано базовое использование и базовые настройки данного компонента. Остальное можно посмотреть в следующих разделах: 
 [Слушатели](docs/listeners.md),
@@ -93,7 +93,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 - `FileUploadBehavior` - поведение рассчитано на загрузку одного файла;
 - `FilesUploadBehavior` - поведение рассчитано на загрузку нескольких файлов. 
 
-Отношения подключаются так: 
+Поведения подключаются так: 
 ```php
  public function behaviors()
     {
@@ -137,7 +137,9 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 
 Все слушатели должны реализовывать `ListenerInterface`, только так они могут подписаться на наблюдателя.
 
-В компоненте реализован базовый слушатель `ImageManager`. Он работает с только изображениями, производит  `resize`, накладывает `watermark`, меняет расширение и т.д. Он имеет следующие настройки: 
+####В компоненте реализованы два базовых слушателя: `ImageManager` и `ThumbManager`. 
+
+`ImageManager` работает с только изображениями, производит  `resize`, накладывает `watermark`, меняет расширение и т.д. Он имеет следующие настройки: 
 
 - `width` - ширина изображения;
 - `height` - высота изображения;
@@ -147,7 +149,18 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 - `watermarkPosition` - позиция водяной метки;
 - `imageClass` - компонент работы с изображениями.
 
-Каждая настройка применяется над файлом, после сохранения все данные настройки будут отображены на конечном сохраненном файле.
+`ThumbManager`, аналогично предыдущему, работает только с изображениями. Его задача: генерировать thumbnail изображения. Все сохраненные thumbnail сохраняются в отдельную папку под названием thumbs. Базовая структура сохранения такая: 
+####`'{relay}/{group}/{basename}/{type}_{width}x{height}.{ext}'`
+####, где:
+ - `relay` - полный `root` путь до группы;
+ - `group` - название сохраняемой группы; 
+ - `basename` - базовое имя файла;
+ - `type` - тип изображения. Есть несколько базовых типов: `thumbs`, `cover`, `contain`, `widen`, `heighten`. Каждый тип говорит о том, каким методом данное изображение было сгененировано;
+ - `width` - ширина;
+ - `height` - высота;
+ - `ext` - расширение файла.
+
+Все параметры по настройки `ThumbManager` аналогичны `ImageManager`. Каждая настройка применяется над файлом, после сохранения все данные настройки будут отображены на конечном сохраненном файле.
 
 Полные настройки имеют следующий вид: 
 ```php
@@ -156,7 +169,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
         return [
             [
                 'class' => FileUploadBehavior::className(), // подключаемое поведение
-                'attribute' => 'image', // атрибут, в которое будет помещен файл
+                'attribute' => 'image', // атрибут, куда будет помещен файл
                 'group' => 'photos', // группа сохраняемого изображения
                 'storage' => 'fileStorage', // компонент хранения
                 'repository' => UploadedFile::class, // выбранный загрузчик
@@ -164,12 +177,22 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
                     'listeners' => // список слушателей
                         [
                             [
+                                'class' => ThumbsManager::className(), // класс слушателя
+                                'width' => 640, // ширина
+                                'height' => 480, // высота
+                                'encode' => 'jpg', // расширение
+                                'quality' => 100, // качество в процентах
+                                'watermarkPath' => '/path/to/image/watermark.png', // наложенная водяная метка
+                                'watermarkPosition' => ImageComponent::POSITION_CENTER, // позиция водяной метки
+                                'imageClass' => ImageComponent::className() // класс работы с изображениями
+                            ],
+                            [
                                 'class' => ImageManager::className(), // класс слушателя
                                 'width' => 640, // ширина
                                 'height' => 480, // высота
                                 'encode' => 'jpg', // расширение
                                 'quality' => 100, // качество в процентах
-                                'watermarkPath' => '/path_to_image/watermark.png', // наложенная водяная метка
+                                'watermarkPath' => '/path/to/image/watermark.png', // наложенная водяная метка
                                 'watermarkPosition' => ImageComponent::POSITION_CENTER, // позиция водяной метки
                                 'imageClass' => ImageComponent::className() // класс работы с изображениями
                                 'accessRole' => 'role_example', // роль разрешенная для работы с изображениями
@@ -180,6 +203,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
         ];
     }
 ```
+
 7) Пример реализации контроллера с загрузкой файла.
 
 В примере реализации контроллера с загрузкой файла можно увидеть метод использования функционала поведения. 
@@ -211,12 +235,14 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
     }
     
 ```
+Все остальные примеры можно посмотреть в [папке с примерами](example/).
 
 ## Тестирование
 
 Реализовано базовое `unit` тестирование. 
 
 Чтобы запустить тесты, нужно выполнить данную команду в корне компонента `filestorage`: 
+
 ```bash
 ./../../vendor/bin/phpunit
 ```
@@ -225,4 +251,10 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 - `ObserverTest` - тестирование работоспособности событийной системы, а именно слушателя и наблюдателя;
 - `UploadedFileTest` - тестирование репозитория базовой загрузки;
 - `RemoteUploadedFileTest` - тестирование репозитория удаленной загрузки; 
-- `ImageManagerTest` - тестирование менеджера работы с изображениями.
+- `ImageManagerTest` - тестирование менеджера работы с изображениями;
+- `ThumbManagerTest` - тестирование менеджера для генерирования thumbnail;
+- `ImageContainer` - тестирование сервиса для работы с изображениями;
+- `PathServiceTest` - тестирование сервиса для работы с путями;
+- `UsageTest` - тестирование полной цепочки действий, от начала загрузки до обработки файлов.
+
+Также, во время тестирования происходит работа с тестовой базой данных, она находится в `/data/database/test.db`. После каждого теста связанного с базой данных - она очищается!
