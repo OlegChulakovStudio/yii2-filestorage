@@ -63,6 +63,17 @@ class PathParams
     }
 
     /**
+     * Переопределение токенов генерации пути
+     *
+     * @param string $name
+     * @param string $value
+     */
+    public function addOption($name, $value)
+    {
+        $this->options['{' . $name . '}'] = $value;
+    }
+
+    /**
      * Конфигурирование
      *
      * @param array $config
@@ -72,16 +83,5 @@ class PathParams
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
         }
-    }
-
-    /**
-     * Переопределение токенов генерации пути
-     *
-     * @param string $name
-     * @param string $value
-     */
-    public function addOption($name, $value)
-    {
-        $this->options['{' . $name . '}'] = $value;
     }
 }
