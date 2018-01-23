@@ -1,0 +1,39 @@
+<?php
+
+namespace backend\controllers;
+
+use yii\web\Controller as BaseController;
+use backend\controllers\actions\WidenAction;
+use backend\controllers\actions\CoverAction;
+use backend\controllers\actions\ThumbAction;
+use backend\controllers\actions\UploadAction;
+use backend\controllers\actions\ContainAction;
+use backend\controllers\actions\HeightenAction;
+use backend\controllers\actions\RemoveImageAction;
+use backend\controllers\actions\RemoveModelAction;
+use backend\controllers\actions\RemoveThumbsAction;
+
+/**
+ * Class SiteController
+ * @package backend\controllers
+ */
+class Controller extends BaseController
+{
+    /**
+     * @inheritdoc
+     */
+    public function actions()
+    {
+        return [
+            'uploader' => UploadAction::class,
+            'thumb' => ThumbAction::class,
+            'cover' => CoverAction::class,
+            'contain' => ContainAction::class,
+            'widen' => WidenAction::class,
+            'heighten' => HeightenAction::class,
+            'remove-model' => RemoveModelAction::class,
+            'remove-thumb' => RemoveThumbsAction::class,
+            'remove-image' => RemoveImageAction::class,
+        ];
+    }
+}
