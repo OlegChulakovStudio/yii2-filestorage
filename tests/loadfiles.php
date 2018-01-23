@@ -60,3 +60,7 @@ $_FILES['ImageModelTest[imageManager]'] = uploadedFakeDataFile(); // ImageManage
 $_FILES['ImageModelTest[imageUploader]'] = uploadedFakeDataFile(); // UploadedFile
 // Загрузка файлов
 $_FILES['FileModelTest[files][]'] = uploadedFakeDataFiles();
+
+$file = uploadedFakeDataFile();
+$file['tmp_name'] = dirname($file['tmp_name']) . '/tmp_image.png';
+$_FILES['FileFormTest[image]'] = $file;
