@@ -24,7 +24,7 @@ function uploadedFakeDataFile()
 }
 
 /**
- * Генерация фейковых данных для тестирования менеджера изображений
+ * Генерация фейковых данных для тестирование множественной загрузки файлов
  *
  * @return array
  */
@@ -56,7 +56,7 @@ function uploadedFakeDataFiles()
 }
 
 // Загрузка изображений
-$_FILES['ImageModelTest[imageManager]'] = uploadedFakeDataFile();
-$_FILES['ImageModelTest[imageUploader]'] = uploadedFakeDataFile();
+$_FILES['ImageModelTest[imageManager]'] = uploadedFakeDataFile(); // ImageManager
+$_FILES['ImageModelTest[imageUploader]'] = uploadedFakeDataFile(); // UploadedFile
 // Загрузка файлов
 $_FILES['FileModelTest[files][]'] = uploadedFakeDataFiles();
