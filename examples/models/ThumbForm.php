@@ -50,7 +50,7 @@ class ThumbForm extends Model
             [
                 'class' => FileUploadBehavior::className(),
                 'attribute' => 'image',
-                'group' => 'ararat',
+                'group' => 'photos',
                 'fileStorage' => 'fileStorage',
                 'repository' => UploadedFile::class,
                 'repositoryOptions' => [
