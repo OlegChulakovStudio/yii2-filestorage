@@ -35,6 +35,12 @@ class ImageParams extends PathParams
      */
     public $extension;
     /**
+     * Желаемое расширение файла
+     *
+     * @var string
+     */
+    public $encode;
+    /**
      * Качество
      *
      * @var int
@@ -53,11 +59,11 @@ class ImageParams extends PathParams
      */
     public $watermarkPosition;
     /**
-     * Позицыя при cover
+     * Позиция при cover
      *
      * @var string
      */
-    public $coverPosition = Position::POSITION_CENTER;
+    public $coverPosition = Position::CENTER;
     /**
      * Категория файлов
      *

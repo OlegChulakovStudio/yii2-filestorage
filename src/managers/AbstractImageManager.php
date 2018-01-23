@@ -74,7 +74,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      *
      * @var string
      */
-    public $watermarkPosition = Position::POSITION_CENTER;
+    public $watermarkPosition = Position::CENTER;
     /**
      * Название компонента для работы с изображениями
      *

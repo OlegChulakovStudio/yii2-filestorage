@@ -142,7 +142,7 @@ class PathService
     }
 
     /**
-     * Проверка path
+     * Проверка пути
      *
      * @param string $file
      * @param string $uploadPath
@@ -229,7 +229,7 @@ class PathService
      * @param array $config
      * @return array
      */
-    protected function filterConfig($config)
+    public function filterConfig($config)
     {
         return array_filter($config, function ($value) {
             if ($value !== null && $value !== '') {

@@ -55,7 +55,7 @@ class ImageBehavior extends Behavior
      *
      * @var string|ImageComponent
      */
-    public $imageComponent = 'imageComponent';
+    public $imageComponent = 'chulakov\filestorage\ImageComponent';
     /**
      * Проверка прав на доступ к файлу
      *
