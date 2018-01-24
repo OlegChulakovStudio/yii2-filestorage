@@ -45,8 +45,14 @@ composer update
             'class' => \chulakov\filestorage\FileStorage::className(),
             'storageBaseUrl' => false,
             'storagePath' => '@webroot', // путь сохранения
-            'storageDir' => 'uploaded',  //  папка с сохраняемыми файлами
+            'storageDir' => 'uploaded',  // папка с сохраняемыми файлами
+            'fileMode' => 0755, // Уровень доступа к сохраняемым файлам
+            'storagePattern' => '{group}/{id}', // Корневой шаблон генерации пути сохранения файлов
         ],
+        'imageComponent' => [
+            'class' => '\chulakov\filestorage\ImageComponent::className(),
+            'driver' => 'gd', // Базовые драйвера: gd и imagick
+        ]
 ```
 
 2) Выполнить миграции. 
