@@ -63,7 +63,7 @@ class RemoteFileForm extends Model
                                 'quality' => 80,
                                 'watermarkPath' => '/path/to/watermark/watermark.png',
                                 'watermarkPosition' => Position::CENTER,
-                                'imageClass' => ImageComponent::className(),
+                                'imageComponent' => 'imageComponent',
                             ],
                             [
                                 'class' => ImageManager::className(),
@@ -73,7 +73,7 @@ class RemoteFileForm extends Model
                                 'quality' => 100,
                                 'watermarkPath' => '/path/to/watermark/watermark.png',
                                 'watermarkPosition' => Position::CENTER,
-                                'imageClass' => ImageComponent::className(),
+                                'imageComponent' => 'imageComponent',
                                 'accessRole' => 'role_example',
                             ]
                         ],
