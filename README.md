@@ -44,9 +44,9 @@ composer update
 ```php
         'fileStorage' => [
             'class' => \chulakov\filestorage\FileStorage::className(),
-            'storageBaseUrl' => false,
-            'storagePath' => '@webroot', // путь сохранения
-            'storageDir' => 'uploaded',  // папка с сохраняемыми файлами
+            'storageBaseUrl' => false, // Базовый url
+            'storagePath' => '@webroot', // Путь сохранения
+            'storageDir' => 'uploaded',  // Папка с сохраняемыми файлами
             'fileMode' => 0755, // Уровень доступа к сохраняемым файлам
             'storagePattern' => '{group}/{id}', // Корневой шаблон генерации пути сохранения файлов
         ],
@@ -107,11 +107,11 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
     {
         return [
             [
-                'class' => FileUploadBehavior::className(), // поведение
-                'attribute' => 'image', // атрибут модели
-                'group' => 'photos', // сохраняемая группа
-                'storage' => 'fileStorage', // компонент хранения файлов 
-                'repository' => UploadedFile::class, // репозиторий
+                'class' => FileUploadBehavior::className(), // Поведение
+                'attribute' => 'image', // Атрибут модели
+                'group' => 'photos', // Сохраняемая группа
+                'storage' => 'fileStorage', // Компонент хранения файлов 
+                'repository' => UploadedFile::class, // Репозиторий
             ],
         ];
     }
@@ -186,25 +186,25 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
                     'listeners' => // список слушателей
                         [
                             [
-                                'class' => ThumbsManager::className(), // класс слушателя
-                                'width' => 640, // ширина
-                                'height' => 480, // высота
-                                'encode' => 'jpg', // расширение
-                                'quality' => 100, // качество в процентах
-                                'watermarkPath' => '/path/to/image/watermark.png', // наложенная водяная метка
-                                'watermarkPosition' => ImageComponent::POSITION_CENTER, // позиция водяной метки
-                                'imageClass' => ImageComponent::className() // класс работы с изображениями
+                                'class' => ThumbsManager::className(), // Класс слушателя
+                                'width' => 640, // Ширина
+                                'height' => 480, // Высота
+                                'encode' => 'jpg', // Расширение
+                                'quality' => 100, // Качество в процентах
+                                'watermarkPath' => '/path/to/image/watermark.png', // Наложенная водяная метка
+                                'watermarkPosition' => ImageComponent::POSITION_CENTER, // Позиция водяной метки
+                                'imageComponent' => 'imageComponent' // Имя компонента для работы изображениями
                             ],
                             [
-                                'class' => ImageManager::className(), // класс слушателя
-                                'width' => 640, // ширина
-                                'height' => 480, // высота
-                                'encode' => 'jpg', // расширение
-                                'quality' => 100, // качество в процентах
-                                'watermarkPath' => '/path/to/image/watermark.png', // наложенная водяная метка
-                                'watermarkPosition' => ImageComponent::POSITION_CENTER, // позиция водяной метки
-                                'imageClass' => ImageComponent::className() // класс работы с изображениями
-                                'accessRole' => 'role_example', // роль разрешенная для работы с изображениями
+                                'class' => ImageManager::className(), // Класс слушателя
+                                'width' => 640, // Ширина
+                                'height' => 480, // Высота
+                                'encode' => 'jpg', // Расширение
+                                'quality' => 100, // Качество в процентах
+                                'watermarkPath' => '/path/to/image/watermark.png', // Наложенная водяная метка
+                                'watermarkPosition' => ImageComponent::POSITION_CENTER, // Позиция водяной метки
+                                'imageComponent' => 'imageComponent' // Имя компонента для работы изображениями
+                                'accessRole' => 'role_example', // Роль разрешенная для работы с изображениями
                             ]
                         ],
                 ]
@@ -234,9 +234,9 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
         $request = \Yii::$app->request;
 
         if ($request->isPost) {
-            $form->load(\Yii::$app->request->post(), ''); // загрузка параментов
-            if ($form->validate() && $form->upload()) { // валидация и загрузка файлов
-                return json_encode(['success' => true]); // выдача сообщения о успешной загрузки
+            $form->load(\Yii::$app->request->post(), ''); // Загрузка параментов
+            if ($form->validate() && $form->upload()) { // Валидация и загрузка файлов
+                return json_encode(['success' => true]); // Выдача сообщения о успешной загрузки
             }
         }
 

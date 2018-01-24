@@ -64,7 +64,7 @@ class ImageForm extends Model
                                 'quality' => 100, // Качество изображений
                                 'watermarkPath' => '/path/to/watermark/watermark.png', // Путь к водяной метке
                                 'watermarkPosition' => Position::CENTER, // Позиция водяной метки
-                                'imageClass' => ImageComponent::className(), // Компонент для работы с изображениями
+                                'imageComponent' => 'imageComponent', // Компонент для работы с изображениями
                                 'accessRole' => 'role_example', // Роль для RBAC
                             ]
                         ],

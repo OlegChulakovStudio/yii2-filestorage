@@ -40,7 +40,7 @@ class Manager implements ListenerInterface {
      */
     public function handle(Event $event)
     {
-       // работа с данными из слушателя
+       // Работа с данными из слушателя
     }
 
     /**
@@ -123,20 +123,20 @@ function behaviors()
                     [
                         [
                             'class' => ListenerExample::class,
-                            // конфигурация слушателя
+                            // Конфигурация слушателя
                         ],
                         [
                             'class' => ListenerExample::class,
-                            // конфигурация слушателя
+                            // Конфигурация слушателя
                         ]
                     ],
                 'events' => [
                     Event::SAVE_EVENT => [
                         function (Event $event) {
-                            // реализация срабатываемого события
+                            // Реализация срабатываемого события
                         },
                         function (Event $event) {
-                            // реализация срабатываемого события
+                            // Реализация срабатываемого события
                         }
                     ]
                 ]

@@ -64,7 +64,7 @@ class ThumbForm extends Model
                                 'height' => 192, // Высота
                                 'watermarkPath' => '/path/to/file/watermark.png', // Путь к водяной метке
                                 'watermarkPosition' => Position::CENTER, // Позиция водяной метки
-                                'imageClass' => ImageComponent::className(), // Компонент для работы с изображениями
+                                'imageComponent' => 'imageComponent', // Компонент для работы с изображениями
                             ],
                         ],
                 ]

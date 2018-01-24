@@ -19,7 +19,7 @@ class ThumbAction extends Action
     public function run()
     {
         /** @var Image[] $images */
-        $images = Image::findAll(['group' => 'photos']);
+        $images = Image::findAll(['group_code' => 'photos']);
 
         $links = [];
 
