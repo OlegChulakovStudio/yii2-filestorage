@@ -55,7 +55,7 @@ class ImageBehavior extends Behavior
      *
      * @var string|ImageComponent
      */
-    public $imageComponent = 'chulakov\filestorage\ImageComponent';
+    public $imageComponent = 'imageComponent';
     /**
      * Проверка прав на доступ к файлу
      *
@@ -357,6 +357,7 @@ class ImageBehavior extends Behavior
      *
      * @param string $path
      * @return string
+     * @throws \yii\base\InvalidParamException
      */
     protected function convertToUrl($path)
     {

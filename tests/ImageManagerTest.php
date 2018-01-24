@@ -54,7 +54,7 @@ class ImageManagerTest extends TestCase
                     'quality' => 100, // в процентах
                     'watermarkPath' => \Yii::getAlias('@tests/data') . '/images/watermark/watermark.png',
                     'watermarkPosition' => Position::CENTER,
-                    'imageClass' => ImageComponent::className()
+                    'imageComponent' => 'imageComponent'
                 ]
             ]
         ];

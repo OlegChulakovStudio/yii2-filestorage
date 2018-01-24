@@ -65,7 +65,7 @@ class FileFormTest extends Model
                                 'quality' => 80,
                                 'watermarkPath' => $watermarkPath,
                                 'watermarkPosition' => Position::CENTER,
-                                'imageClass' => ImageComponent::className(),
+                                'imageComponent' => 'imageComponent',
                             ],
                             [
                                 'class' => ImageManager::className(),
@@ -75,7 +75,7 @@ class FileFormTest extends Model
                                 'quality' => 100,
                                 'watermarkPath' => $watermarkPath,
                                 'watermarkPosition' => Position::CENTER,
-                                'imageClass' => ImageComponent::className(),
+                                'imageComponent' => 'imageComponent',
                             ]
                         ],
                 ]

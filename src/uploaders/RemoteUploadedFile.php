@@ -11,7 +11,6 @@ namespace chulakov\filestorage\uploaders;
 use Exception;
 use yii\base\Model;
 use yii\base\BaseObject;
-use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\observer\ObserverTrait;
 use chulakov\filestorage\observer\ObserverInterface;
@@ -20,7 +19,6 @@ use chulakov\filestorage\exceptions\NotUploadFileException;
 /**
  * Class RemoteUploadedFile
  * @package chulakov\filestorage\uploaders
- * @property ImageComponent $imageManager
  */
 class RemoteUploadedFile extends BaseObject implements UploadInterface, ObserverInterface
 {

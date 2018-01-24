@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\tests;
 
+use chulakov\filestorage\ImageComponent;
 use yii\helpers\FileHelper;
 use yii\helpers\ArrayHelper;
 use chulakov\filestorage\FileStorage;
@@ -37,6 +38,10 @@ class TestCase extends BaseTestCase
                     'storagePath' => '@tests/runtime',
                     'storageDir' => 'images',
                 ],
+                'imageComponent' => [
+                    'class' => ImageComponent::className(),
+                    'driver' => ImageComponent::DRIVER_GD
+                ]
             ],
             'vendorPath' => $this->getVendorPath(),
         ], $config));

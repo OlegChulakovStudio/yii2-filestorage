@@ -44,7 +44,7 @@ class ThumbManagerTest extends TestCase
                     'quality' => 80,
                     'watermarkPath' => '/Users/vladimir.pogarsky/Desktop/sky/watermark.png',
                     'watermarkPosition' => Position::CENTER,
-                    'imageClass' => ImageComponent::className(),
+                    'imageComponent' => 'imageComponent',
                 ]
             ]
         ];

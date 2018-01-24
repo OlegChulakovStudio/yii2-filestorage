@@ -8,10 +8,10 @@
 
 namespace chulakov\filestorage\uploaders;
 
+use Exception;
 use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\observer\ObserverTrait;
 use chulakov\filestorage\observer\ObserverInterface;
-use Exception;
 
 /**
  * Class UploadedFile

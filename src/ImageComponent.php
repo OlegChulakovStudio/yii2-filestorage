@@ -31,6 +31,7 @@ class ImageComponent extends Component
     /**
      * @var array Конфигурация драйвера
      */
+
     public $driver = self::DRIVER_GD;
 
     /**

@@ -76,17 +76,11 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     public $watermarkPosition = Position::CENTER;
     /**
-     * Название компонента для работы с изображениями
-     *
-     * @var string
-     */
-    public $imageClass;
-    /**
      * Компонент обработки изображений
      *
      * @var ImageComponent
      */
-    public $imageComponent;
+    public $imageComponent = 'imageComponent';
     /**
      * Класс параметрической модели информации об изменении изображения
      *
@@ -304,11 +298,7 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     protected function getImageManager()
     {
-        if (empty($this->imageComponent)) {
-            $this->imageComponent = $this->imageClass;
-            if (is_array($this->imageComponent) && empty($this->imageComponent['class'])) {
-                $this->imageComponent['class'] = $this->imageComponent;
-            }
+        if (is_string($this->imageComponent)) {
             $this->imageComponent = Instance::ensure($this->imageComponent);
         }
         return $this->imageComponent;
