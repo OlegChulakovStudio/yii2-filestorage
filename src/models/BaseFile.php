@@ -14,20 +14,23 @@ use yii\behaviors\TimestampBehavior;
 use chulakov\filestorage\behaviors\StorageBehavior;
 
 /**
- * Class File
+ * Базовая модель информации о загруженном файле
  *
- * @property $mime
- * @property $ori_extension
- * @property $ori_name
- * @property $sys_file
- * @property $size
- * @property $group_code
- * @property $object_id
+ * @property integer $id
+ * @property string $group_code
+ * @property string $object_id
+ * @property string $ori_name
+ * @property string $ori_extension
+ * @property string $sys_file
+ * @property string $mime
+ * @property integer $size
+ * @property integer $created_at
+ * @property integer $updated_at
  *
- * @method string getUrl(bool $isAbsolute, Item $role = null) Возвращает абсолютный или относительный URL-адрес к файлу
- * @method string getPath(Item $role = null)                  Возвращает полный путь к файлу в файловой системе
- * @method string getUploadUrl(bool $isAbsolute)       Возвращает URL-адрес до директории нахождения файлов определенного типа
- * @method string getUploadPath()                      Возвращает абсолютный путь к директории хранения файлов определенного типа
+ * @method string getUrl(bool $isAbsolute, Item $role = null)   Возвращает абсолютный или относительный URL-адрес к файлу
+ * @method string getPath(Item $role = null)                    Возвращает полный путь к файлу в файловой системе
+ * @method string getUploadUrl(bool $isAbsolute)                Возвращает URL-адрес до директории нахождения файлов определенного типа
+ * @method string getUploadPath()                               Возвращает абсолютный путь к директории хранения файлов определенного типа
  */
 abstract class BaseFile extends ActiveRecord
 {
@@ -37,6 +40,31 @@ abstract class BaseFile extends ActiveRecord
     public static function tableName()
     {
         return 'file';
+    }
+
+    /**
+     * Инициализация корректной модели файла
+     *
+     * @param array $row
+     * @return File|Image|static
+     */
+    public static function instantiate($row)
+    {
+        if (static::checkIsImage($row['mime'])) {
+            return new Image();
+        }
+        return new File();
+    }
+
+    /**
+     * Проверка mime типа на изображение
+     *
+     * @param string $mime
+     * @return bool
+     */
+    public static function checkIsImage($mime)
+    {
+        return strpos($mime, 'image') === 0;
     }
 
     /**
@@ -104,6 +132,6 @@ abstract class BaseFile extends ActiveRecord
      */
     public function isImage()
     {
-        return strpos($this->mime, 'image') === 0;
+        return static::checkIsImage($this->mime);
     }
 }

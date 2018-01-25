@@ -48,6 +48,8 @@ class Event
      */
     public $savedPath;
     /**
+     * Причина вызова события
+     *
      * @var \Exception
      */
     public $exception;

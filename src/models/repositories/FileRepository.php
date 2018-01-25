@@ -12,10 +12,12 @@ use Exception;
 use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\exceptions\DBModelException;
 use chulakov\filestorage\exceptions\NotFoundModelException;
 
 /**
- * Class FileRepository
+ * Репозиторий обработки моделей по работе с файлами
+ *
  * @package chulakov\filestorage\models\repositories
  */
 class FileRepository
@@ -59,12 +61,12 @@ class FileRepository
      *
      * @param BaseFile $file
      * @return bool
-     * @throws Exception
+     * @throws DBModelException
      */
     public function save(BaseFile $file)
     {
         if (!$file->save()) {
-            throw new Exception('Модель ' . get_class($file) . ' не сохранена.');
+            throw new DBModelException('Не удалось сохранить модель ' . get_class($file) . ' в базу данных.');
         }
         return true;
     }
@@ -74,14 +76,18 @@ class FileRepository
      *
      * @param BaseFile $file
      * @return bool
-     * @throws Exception
-     * @throws \Throwable
-     * @throws \yii\db\StaleObjectException
+     * @throws DBModelException
      */
     public function delete(BaseFile $file)
     {
-        if (!$file->delete()) {
-            throw  new Exception('Модель ' . get_class($file) . ' не удалена.');
+        try {
+            if (!$file->delete()) {
+                throw new Exception('Не удалось удалить модель ' . get_class($file) . '::' . $file->id . ' из базы данных.');
+            }
+        } catch (Exception $e) {
+            throw new DBModelException($e->getMessage(), 0, $e);
+        } catch (\Throwable $t) {
+            throw new DBModelException($t->getMessage(), 0, $t);
         }
         return true;
     }

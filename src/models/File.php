@@ -9,7 +9,8 @@
 namespace chulakov\filestorage\models;
 
 /**
- * Class File
+ * Псевдоним базовой модели файла
+ *
  * @package chulakov\filestorage\models
  */
 class File extends BaseFile

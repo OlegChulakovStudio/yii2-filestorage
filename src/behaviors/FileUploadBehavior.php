@@ -13,13 +13,15 @@ use yii\base\Model;
 use yii\di\Instance;
 use yii\base\Behavior;
 use chulakov\filestorage\FileStorage;
+use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\exceptions\NotUploadFileException;
 
 /**
- * Class FileUploadBehavior
+ * Поведение автоматической инициализации файла и загрузки его согласно настроек
+ *
  * @package chulakov\filestorage\behaviors
  */
 class FileUploadBehavior extends Behavior
@@ -31,7 +33,7 @@ class FileUploadBehavior extends Behavior
     /**
      * @var string
      */
-    public $attribute;
+    public $attribute = 'file';
     /**
      * @var string
      */
@@ -39,19 +41,19 @@ class FileUploadBehavior extends Behavior
     /**
      * @var string|UploadInterface
      */
-    public $repository;
+    public $repository = 'chulakov\filestorage\uploaders\UploadedFile';
     /**
      * @var array
      */
-    public $repositoryOptions;
+    public $repositoryOptions = [];
     /**
      * @var string|array|FileStorage
      */
-    public $fileStorage;
+    public $fileStorage = 'fileStorage';
     /**
      * @var string|Item
      */
-    public $accessRole;
+    public $accessRole = null;
 
     /**
      * @throws \yii\base\InvalidConfigException
@@ -130,9 +132,10 @@ class FileUploadBehavior extends Behavior
     /**
      * Загрузка и сохранение файлов
      *
-     * @return mixed
-     * @throws NotUploadFileException
+     * @return BaseFile|BaseFile[]
      * @throws NoAccessException
+     * @throws NotUploadFileException
+     * @throws \Exception
      */
     public function upload()
     {

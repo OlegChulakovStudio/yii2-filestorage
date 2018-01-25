@@ -11,7 +11,8 @@ namespace chulakov\filestorage\behaviors;
 use chulakov\filestorage\uploaders\UploadInterface;
 
 /**
- * Class FilesUploadBehavior
+ * Поведение для массовой загрузки файлов
+ *
  * @package chulakov\filestorage\behaviors
  */
 class FilesUploadBehavior extends FileUploadBehavior

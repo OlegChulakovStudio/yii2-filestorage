@@ -12,17 +12,19 @@ use yii\helpers\ArrayHelper;
 use chulakov\filestorage\behaviors\ImageBehavior;
 
 /**
- * Class Image
+ * Модель представления загруженного файла изображения
+ *
+ * @method string thumb($w = 195, $h = 144, $q = 80, $p = null)
+ *
+ * @method string contain($w, $h, $q = 80)          Вписывание изображения в область путем пропорционального масштабирования без обрезки
+ * @method string cover($w, $h, $q = 80, $p = null) Заполнение обаласти частью изображения с обрезкой исходного, отталкиваясь от точки позиционировани
+ * @method string widen($w, $q = 80)                Масштабирование по ширине без обрезки краев
+ * @method string heighten($h, $q = 80)             Масштабирование по высоте без обрезки краев
+ *
+ * @method bool removeAllThumbs()                   Удаление всех превью данной модели
+ * @method bool removeAllImages()                   Удаление всех превью данной мод
+ *
  * @package chulakov\filestorage\models
- *
- * @method string thumb($w = 0, $h = 0, $q = 0, $p = null)
- * @method bool removeAllThumbs()                           Удаление всех превью данной модели
- * @method bool removeAllImages()                           Удаление всех превью данной мод
- *
- * @method bool contain($width, $height, $quality)          Вписывание изображения в область путем пропорционального масштабирования без обрезки
- * @method bool cover($width, $height, $quality, $position) Заполнение обаласти частью изображения с обрезкой исходного, отталкиваясь от точки позиционировани
- * @method bool widen($width, $quality)                     Масштабирование по ширине без обрезки краев
- * @method bool heighten($height, $quality)                 Масштабирование по высоте без обрезки краев
  */
 class Image extends BaseFile
 {

@@ -78,7 +78,7 @@ trait ObserverTrait
      * @param string $savePath
      * @param boolean $needSave
      * @param boolean $needDelete
-     * @param \Exception $exception
+     * @param \Exception|null $exception
      * @return Event
      */
     public function createEvent($savePath, $needSave, $needDelete, $exception = null)

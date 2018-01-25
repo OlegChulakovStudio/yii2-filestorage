@@ -161,8 +161,8 @@ interface UploadInterface
      * Удаление зависимостей файла
      *
      * @param string $savedPath
-     * @param Exception $exception
+     * @param Exception|null $exception
      * @return bool|mixed
      */
-    public function deleteFile($savedPath, Exception $exception);
+    public function deleteFile($savedPath, $exception = null);
 }
