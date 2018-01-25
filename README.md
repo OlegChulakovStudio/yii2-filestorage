@@ -193,7 +193,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
                                 'quality' => 100, // Качество в процентах
                                 'watermarkPath' => '/path/to/image/watermark.png', // Наложенная водяная метка
                                 'watermarkPosition' => Position::CENTER, // Позиция водяной метки
-                                'imageComponent' => 'imageComponent' // Имя компонента для работы изображениями
+                                'imageComponent' => 'imageComponent', // Имя компонента для работы изображениями
                             ],
                             [
                                 'class' => ImageManager::className(), // Класс слушателя
@@ -203,7 +203,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
                                 'quality' => 100, // Качество в процентах
                                 'watermarkPath' => '/path/to/image/watermark.png', // Наложенная водяная метка
                                 'watermarkPosition' => Position::CENTER, // Позиция водяной метки
-                                'imageComponent' => 'imageComponent' // Имя компонента для работы изображениями
+                                'imageComponent' => 'imageComponent', // Имя компонента для работы изображениями
                                 'accessRole' => 'role_example', // Роль разрешенная для работы с изображениями
                             ]
                         ],
