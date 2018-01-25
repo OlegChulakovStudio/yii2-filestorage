@@ -229,12 +229,12 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
      */
     public function actionIndex()
     {
-        $form = new FileForm(); // инициализация формы
+        $form = new FileForm(); // Инициализация формы
 
         $request = \Yii::$app->request;
 
         if ($request->isPost) {
-            $form->load(\Yii::$app->request->post(), ''); // Загрузка параментов
+            $form->load(\Yii::$app->request->post(), ''); // Загрузка параметров
             if ($form->validate() && $form->upload()) { // Валидация и загрузка файлов
                 return json_encode(['success' => true]); // Выдача сообщения о успешной загрузки
             }
