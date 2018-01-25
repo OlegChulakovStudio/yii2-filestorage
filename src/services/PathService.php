@@ -214,6 +214,7 @@ class PathService
      */
     public function convertToUrl($path, $isAbsolute = false)
     {
+        $path = $this->cutPath($path);
         $url = '/' . $this->storageDir . '/' . trim(str_replace('\\', '/', $path), '/');
         if ($this->storageBaseUrl !== false) {
             $url = Url::to($this->storageBaseUrl . $url, true);
@@ -221,6 +222,20 @@ class PathService
             $url = Url::base(true) . $url;
         }
         return $url;
+    }
+
+    /**
+     * Получить сокращенный путь из абсолютного
+     *
+     * @param string $path
+     * @return mixed
+     */
+    public function cutPath($path)
+    {
+        if (file_exists($path)) {
+            return str_replace($this->getAbsolute(), '', $path);
+        }
+        return $path;
     }
 
     /**

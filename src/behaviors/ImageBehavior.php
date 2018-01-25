@@ -37,13 +37,13 @@ class ImageBehavior extends Behavior
      *
      * @var string
      */
-    public $thumbParamsClass = ThumbParams::class;
+    public $thumbParamsClass = 'chulakov\filestorage\params\ThumbParams';
     /**
      * Класс параметрической модели обработки изображений
      *
      * @var string
      */
-    public $imageParamsClass = ImageParams::class;
+    public $imageParamsClass = 'chulakov\filestorage\params\ImageParams';
     /**
      * Название компонента для работы сохранением файлов
      *
