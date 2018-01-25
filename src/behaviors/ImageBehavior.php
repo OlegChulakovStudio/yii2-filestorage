@@ -320,7 +320,6 @@ class ImageBehavior extends Behavior
      *
      * @param string $path
      * @return string
-     * @throws \yii\base\InvalidParamException
      */
     protected function convertToUrl($path)
     {
@@ -355,7 +354,6 @@ class ImageBehavior extends Behavior
      * Получить полный путь системного файла
      *
      * @return string
-     * @throws \yii\base\InvalidParamException
      */
     protected function getFullSysPath()
     {

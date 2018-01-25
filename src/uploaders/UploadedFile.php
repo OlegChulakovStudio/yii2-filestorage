@@ -77,10 +77,10 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
      * Удаление файла
      *
      * @param string $filePath
-     * @param Exception $exception
+     * @param Exception|null $exception
      * @return bool
      */
-    public function deleteFile($filePath, Exception $exception = null)
+    public function deleteFile($filePath, $exception = null)
     {
         if ($this->beforeDelete($filePath, $exception)) {
             if (file_exists($filePath)) {
@@ -94,10 +94,10 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
      * Событие удаления файлов
      *
      * @param string $filePath
-     * @param Exception $exception
+     * @param Exception|null $exception
      * @return bool
      */
-    protected function beforeDelete($filePath, $exception)
+    protected function beforeDelete($filePath, $exception = null)
     {
         $event = $this->createEvent(
             $filePath, false, true, $exception

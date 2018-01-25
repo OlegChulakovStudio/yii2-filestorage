@@ -8,6 +8,7 @@
 
 namespace chulakov\filestorage\services;
 
+use chulakov\filestorage\exceptions\DBModelException;
 use yii\base\UnknownClassException;
 use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\Image;
@@ -71,7 +72,7 @@ class FileService
      *
      * @param BaseFile $model
      * @return bool
-     * @throws \Exception
+     * @throws DBModelException
      */
     public function save($model)
     {

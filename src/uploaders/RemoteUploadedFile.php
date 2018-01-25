@@ -201,10 +201,10 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      * Удаление файла
      *
      * @param string $filePath
-     * @param Exception $exception
+     * @param Exception|null $exception
      * @return bool
      */
-    public function deleteFile($filePath, Exception $exception = null)
+    public function deleteFile($filePath, $exception = null)
     {
         return $this->beforeDelete($filePath, $exception);
     }
@@ -213,10 +213,10 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      * Событие удаления файлов
      *
      * @param string $filePath
-     * @param Exception $exception
+     * @param Exception|null $exception
      * @return bool
      */
-    protected function beforeDelete($filePath, $exception)
+    protected function beforeDelete($filePath, $exception = null)
     {
         $event = $this->createEvent(
             $filePath, false, true, $exception

@@ -92,7 +92,6 @@ class PathService
      * @param string $path
      * @param PathParams $params
      * @return array
-     * @throws \yii\base\InvalidParamException
      */
     public function searchAllFiles($path, PathParams $params)
     {
@@ -147,7 +146,6 @@ class PathService
      * @param string $file
      * @param string $uploadPath
      * @return null|string
-     * @throws \yii\base\InvalidParamException
      * @throws NotFoundFileException
      */
     public function findPath($file, $uploadPath)
@@ -168,7 +166,6 @@ class PathService
      * @param $uploadPath
      * @param bool $isAbsolute
      * @return string
-     * @throws \yii\base\InvalidParamException
      * @throws NotFoundFileException
      */
     public function findUrl($file, $uploadPath, $isAbsolute = false)
@@ -181,7 +178,6 @@ class PathService
      *
      * @param string $path
      * @return string
-     * @throws \yii\base\InvalidParamException
      */
     public function getAbsolutePath($path)
     {
@@ -210,7 +206,6 @@ class PathService
      * @param string $path
      * @param bool $isAbsolute
      * @return string
-     * @throws \yii\base\InvalidParamException
      */
     public function convertToUrl($path, $isAbsolute = false)
     {
@@ -247,9 +242,7 @@ class PathService
     public function filterConfig($config)
     {
         return array_filter($config, function ($value) {
-            if ($value !== null && $value !== '') {
-                return true;
-            }
+            return $value !== null && $value !== '';
         });
     }
 
@@ -284,7 +277,6 @@ class PathService
      *
      * @param string $file
      * @return string
-     * @throws \yii\base\InvalidParamException
      */
     protected function checkSystemPath($file)
     {
@@ -297,7 +289,6 @@ class PathService
      * @param string $file
      * @param string $uploadPath
      * @return string|null
-     * @throws \yii\base\InvalidParamException
      */
     protected function checkMovedPath($file, $uploadPath)
     {

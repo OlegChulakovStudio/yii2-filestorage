@@ -20,6 +20,7 @@ use chulakov\filestorage\services\PathService;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\observer\ObserverInterface;
+use chulakov\filestorage\exceptions\DBModelException;
 use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\exceptions\NotFoundFileException;
 use chulakov\filestorage\exceptions\NotUploadFileException;
@@ -89,7 +90,6 @@ class FileStorage extends Component
     /**
      * При инициализации проверяем необходимые конфигурационные переменные
      *
-     * @throws \yii\base\InvalidParamException
      * @throws InvalidConfigException
      */
     public function init()
@@ -118,10 +118,8 @@ class FileStorage extends Component
      * @param UploadInterface|UploadInterface[] $files
      * @param UploadParams $params
      * @return array|BaseFile|null
-     * @throws \yii\base\InvalidParamException
      * @throws NoAccessException
      * @throws NotUploadFileException
-     * @throws \Exception
      */
     public function uploadFile($files, UploadParams $params)
     {
@@ -209,8 +207,6 @@ class FileStorage extends Component
      *
      * @param string $path
      * @return string
-     *
-     * @throws \yii\base\InvalidParamException
      */
     public function getAbsolutePath($path)
     {
@@ -221,8 +217,6 @@ class FileStorage extends Component
      * Удаление модели и сохраненого файла
      *
      * @param BaseFile $model
-     * @throws \Exception
-     * @throws \Throwable
      */
     public function removeFile($model)
     {
@@ -247,7 +241,6 @@ class FileStorage extends Component
      * @param string $path
      * @param PathParams $params
      * @return array
-     * @throws \yii\base\InvalidParamException
      */
     public function searchAllFiles($path, PathParams $params)
     {
@@ -260,8 +253,6 @@ class FileStorage extends Component
      * @param string $path
      * @param bool $isAbsolute
      * @return string
-     *
-     * @throws \yii\base\InvalidParamException
      */
     public function convertToUrl($path, $isAbsolute = false)
     {
@@ -273,7 +264,6 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @return string
-     * @throws \yii\base\InvalidParamException
      */
     public function getFullSysPath($model)
     {
@@ -309,9 +299,8 @@ class FileStorage extends Component
      * @param UploadInterface $file
      * @param UploadParams $params
      * @return BaseFile|null
-     * @throws \yii\base\InvalidParamException
      * @throws NotUploadFileException
-     * @throws \Exception
+     * @throws DBModelException
      */
     protected function saveFile(UploadInterface $file, UploadParams $params)
     {
@@ -319,10 +308,6 @@ class FileStorage extends Component
         $path = $this->getSavePath($params);
         $full = $this->getAbsolutePath($path);
         // Сохранение файла и создание модели с данными о файле
-
-        // /tmp/upload/jfnkwjefvkwkck/img_00239eqwe0.jpg
-        // /frontend/web/upload/group/45/uniqename.jpg
-
         $file->saveAs($full . DIRECTORY_SEPARATOR . $file->getSysName());
         if ($model = $this->createModel($file, $params)) {
             $model->setSystemFile($file->getSysName(), $path);
@@ -402,11 +387,9 @@ class FileStorage extends Component
      *
      * @param UploadInterface[]|ObserverInterface[] $files
      * @param UploadParams $params
-     * @param \Exception $e
-     * @throws \yii\base\InvalidParamException
-     * @throws \Exception
+     * @param \Exception|null $e
      */
-    protected function clearFiles($files, $params, \Exception $e)
+    protected function clearFiles($files, $params, $e = null)
     {
         $path = $this->getAbsolutePath($this->getSavePath($params));
         foreach ($files as $file) {
