@@ -192,7 +192,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
                                 'encode' => 'jpg', // Расширение
                                 'quality' => 100, // Качество в процентах
                                 'watermarkPath' => '/path/to/image/watermark.png', // Наложенная водяная метка
-                                'watermarkPosition' => ImageComponent::POSITION_CENTER, // Позиция водяной метки
+                                'watermarkPosition' => Position::CENTER, // Позиция водяной метки
                                 'imageComponent' => 'imageComponent' // Имя компонента для работы изображениями
                             ],
                             [
@@ -202,7 +202,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
                                 'encode' => 'jpg', // Расширение
                                 'quality' => 100, // Качество в процентах
                                 'watermarkPath' => '/path/to/image/watermark.png', // Наложенная водяная метка
-                                'watermarkPosition' => ImageComponent::POSITION_CENTER, // Позиция водяной метки
+                                'watermarkPosition' => Position::CENTER, // Позиция водяной метки
                                 'imageComponent' => 'imageComponent' // Имя компонента для работы изображениями
                                 'accessRole' => 'role_example', // Роль разрешенная для работы с изображениями
                             ]
