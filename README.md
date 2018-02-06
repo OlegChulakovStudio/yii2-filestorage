@@ -19,13 +19,13 @@
 1) Чтобы установить компонент, нужно в `composer.json` добавить следующие строки: 
 ```
 "require": {
-    "chulakov/yii2-filestorage": "dev-master"
+    "oleg-chulakov-studio/yii2-filestorage": "dev-master"
 },
 ...
 "repositories": [
     {
         "type": "vcs",
-        "url":  "git@bitbucket.org:OlegChulakovStudio/yii2-filestorage.git
+        "url":  "git@bitbucket.org:OlegChulakovStudio/yii2-filestorage.git"
     }
 ]
 ```
@@ -51,7 +51,7 @@ composer update
             'storagePattern' => '{group}/{id}', // Корневой шаблон генерации пути сохранения файлов
         ],
         'imageComponent' => [
-            'class' => '\chulakov\filestorage\ImageComponent::className(),
+            'class' => '\chulakov\filestorage\ImageComponent::className()',
             'driver' => 'gd', // Базовые драйвера: gd и imagick
         ]
 ```
