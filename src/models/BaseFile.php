@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл класса BaseFile.php
+ * Файл класса BaseFile
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -8,40 +8,64 @@
 
 namespace chulakov\filestorage\models;
 
+use yii\rbac\Item;
+use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
-use yii\web\UploadedFile;
+use chulakov\filestorage\behaviors\StorageBehavior;
 
 /**
- * Class File
+ * Базовая модель информации о загруженном файле
  *
- * @property $mime
- * @property $ori_extension
- * @property $ori_name
- * @property $sys_file
- * @property $size
- * @property $group_code
- * @property $object_id
+ * @property integer $id
+ * @property string $group_code
+ * @property string $object_id
+ * @property string $ori_name
+ * @property string $ori_extension
+ * @property string $sys_file
+ * @property string $mime
+ * @property integer $size
+ * @property integer $created_at
+ * @property integer $updated_at
+ *
+ * @method string getUrl(bool $isAbsolute, Item $role = null)   Возвращает абсолютный или относительный URL-адрес к файлу
+ * @method string getPath(Item $role = null)                    Возвращает полный путь к файлу в файловой системе
+ * @method string getUploadUrl(bool $isAbsolute)                Возвращает URL-адрес до директории нахождения файлов определенного типа
+ * @method string getUploadPath()                               Возвращает абсолютный путь к директории хранения файлов определенного типа
  */
-abstract class BaseFile extends \yii\db\ActiveRecord
+abstract class BaseFile extends ActiveRecord
 {
     /**
-     * Базовая структура для group_code объекта
-     *
-     * Группы:
-     *
-     * GROUP_FILE - файлы
-     * GROUP_IMAGE - картинки
+     * @inheritdoc
      */
-
-    const GROUP_FILE = 1;
-    const GROUP_IMAGE = 10;
+    public static function tableName()
+    {
+        return 'file';
+    }
 
     /**
-     * Загруженный файл
+     * Инициализация корректной модели файла
      *
-     * @var $file \yii\web\UploadedFile
+     * @param array $row
+     * @return File|Image|static
      */
-    public $file;
+    public static function instantiate($row)
+    {
+        if (static::checkIsImage($row['mime'])) {
+            return new Image();
+        }
+        return new File();
+    }
+
+    /**
+     * Проверка mime типа на изображение
+     *
+     * @param string $mime
+     * @return bool
+     */
+    public static function checkIsImage($mime)
+    {
+        return strpos($mime, 'image') === 0;
+    }
 
     /**
      * @inheritdoc
@@ -49,27 +73,65 @@ abstract class BaseFile extends \yii\db\ActiveRecord
     public function behaviors()
     {
         return [
-            [
-                'class' => TimestampBehavior::className()
-            ]
+            TimestampBehavior::className(),
+            StorageBehavior::className(),
         ];
     }
 
     /**
-     * BaseFile constructor.
-     * @param UploadedFile $uploadedFile
-     * @param array $config
+     * @inheritdoc
      */
-    public function __construct(UploadedFile $uploadedFile, array $config = [])
+    public function rules()
     {
-        $this->file = $uploadedFile;
+        return [
+            [['group_code', 'ori_name', 'ori_extension', 'sys_file', 'mime'], 'required'],
+            [['created_at', 'updated_at', 'size'], 'integer'],
+            [['group_code', 'ori_extension'], 'string', 'max' => 16],
+            [['object_id'], 'string', 'max' => 11],
+            [['ori_name', 'sys_file', 'mime'], 'string', 'max' => 255],
+            [['sys_file'], 'unique'],
+        ];
+    }
 
-        $this->mime = $this->file->type;
-        $this->ori_extension = $this->file->extension;
-        $this->ori_name = $this->file->baseName;
-        $this->sys_file = uniqid() . '.' . $this->file->extension;
-        $this->size = $this->file->size;
+    /**
+     * Установка системного пути до сохраненого файла
+     *
+     * @param string $name
+     * @param string|null $path
+     */
+    public function setSystemFile($name, $path = null)
+    {
+        $this->sys_file = implode(DIRECTORY_SEPARATOR, array_filter([$path, $name]));
+    }
 
-        parent::__construct($config);
+    /**
+     * Получение информации об оригинальном именовании файла
+     *
+     * @return string
+     */
+    public function getBaseName()
+    {
+        $pathInfo = pathinfo('_' . basename($this->sys_file), PATHINFO_FILENAME);
+        return mb_substr($pathInfo, 1, mb_strlen($pathInfo, '8bit'), '8bit');
+    }
+
+    /**
+     * Расширение сохраненного файла
+     *
+     * @return string
+     */
+    public function getExtension()
+    {
+        return strtolower(pathinfo($this->sys_file, PATHINFO_EXTENSION));
+    }
+
+    /**
+     * Проверка файла на изображение
+     *
+     * @return bool
+     */
+    public function isImage()
+    {
+        return static::checkIsImage($this->mime);
     }
 }

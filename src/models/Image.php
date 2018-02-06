@@ -1,6 +1,6 @@
 <?php
 /**
- * Файл класса Image.php
+ * Файл класса Image
  *
  * @copyright Copyright (c) 2017, Oleg Chulakov Studio
  * @link http://chulakov.com/
@@ -8,19 +8,33 @@
 
 namespace chulakov\filestorage\models;
 
-use yii\web\UploadedFile;
+use yii\helpers\ArrayHelper;
+use chulakov\filestorage\behaviors\ImageBehavior;
 
+/**
+ * Модель представления загруженного файла изображения
+ *
+ * @method string thumb($w = 195, $h = 144, $q = 80, $p = null)
+ *
+ * @method string contain($w, $h, $q = 80)          Вписывание изображения в область путем пропорционального масштабирования без обрезки
+ * @method string cover($w, $h, $q = 80, $p = null) Заполнение обаласти частью изображения с обрезкой исходного, отталкиваясь от точки позиционировани
+ * @method string widen($w, $q = 80)                Масштабирование по ширине без обрезки краев
+ * @method string heighten($h, $q = 80)             Масштабирование по высоте без обрезки краев
+ *
+ * @method bool removeAllThumbs()                   Удаление всех превью данной модели
+ * @method bool removeAllImages()                   Удаление всех превью данной мод
+ *
+ * @package chulakov\filestorage\models
+ */
 class Image extends BaseFile
 {
-    protected $imageManager;
-
     /**
-     * Image constructor.
-     * @param UploadedFile $uploadedFile
-     * @param array $config
+     * @inheritdoc
      */
-    public function __construct(UploadedFile $uploadedFile, array $config = [])
+    public function behaviors()
     {
-        parent::__construct($uploadedFile, $config);
+        return ArrayHelper::merge(parent::behaviors(), [
+            ImageBehavior::className(),
+        ]);
     }
 }
