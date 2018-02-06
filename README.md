@@ -51,7 +51,7 @@ composer update
             'storagePattern' => '{group}/{id}', // Корневой шаблон генерации пути сохранения файлов
         ],
         'imageComponent' => [
-            'class' => '\chulakov\filestorage\ImageComponent::className()',
+            'class' => \chulakov\filestorage\ImageComponent::className(),
             'driver' => 'gd', // Базовые драйвера: gd и imagick
         ]
 ```
