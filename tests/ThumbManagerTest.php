@@ -42,7 +42,7 @@ class ThumbManagerTest extends TestCase
                     'class' => ThumbsManager::className(),
                     'encode' => 'jpg',
                     'quality' => 80,
-                    'watermarkPath' => '/Users/vladimir.pogarsky/Desktop/sky/watermark.png',
+                    'watermarkPath' => \Yii::getAlias('@tests/data') . '/images/watermark/watermark.png',
                     'watermarkPosition' => Position::CENTER,
                     'imageComponent' => 'imageComponent',
                 ]

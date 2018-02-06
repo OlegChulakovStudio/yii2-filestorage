@@ -8,8 +8,6 @@
 
 namespace chulakov\filestorage\image;
 
-use chulakov\filestorage\ImageComponent;
-
 interface ImageInterface
 {
     /**
@@ -53,7 +51,7 @@ interface ImageInterface
      * @param string $watermarkPath
      * @param string $position
      */
-    public function watermark($watermarkPath, $position = ImageComponent::POSITION_CENTER);
+    public function watermark($watermarkPath, $position = Position::CENTER);
 
     /**
      * Изменить размер изображения
