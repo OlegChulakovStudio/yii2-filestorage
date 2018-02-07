@@ -1,5 +1,7 @@
 <?php
 
+namespace chulakov\filestorage\migrations;
+
 use yii\db\Migration;
 
 /**
