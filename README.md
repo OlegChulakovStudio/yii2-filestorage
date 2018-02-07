@@ -60,7 +60,7 @@ composer update
 
 Чтобы выполнить миграции нужно вызвать следующую комманду из корня приложения:
 ```bash
-php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
+php yii migrate/up --migrationNamespaces='chulakov\filestorage\migrations'
 ```
 
 При выполнении миграции будет создана таблица `file` со следующим содержимым:
@@ -71,7 +71,8 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 +---------------+------------------+------+-----+---------+----------------+
 | id            | int(11)          | NO   | PRI | NULL    | auto_increment |
 | group_code    | varchar(16)      | NO   | MUL | NULL    |                |
-| object_id     | varchar(11)      | YES  | MUL | NULL    |                |
+| object_id     | int(11)          | YES  | MUL | NULL    |                |
+| object_type   | varchar(16)      | YES  |     | NULL    |                |
 | ori_name      | varchar(255)     | NO   |     | NULL    |                |
 | ori_extension | varchar(16)      | NO   |     | NULL    |                |
 | sys_file      | varchar(255)     | NO   | UNI | NULL    |                |
@@ -84,6 +85,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
 ####, где 
 - `group_code` - код группы;
 - `object_id` - ID прикрепленного объекта;
+- `object_type` - Тип прикрепленного объекта;
 - `ori_name` - оригинальное название файла;
 - `ori_extension` - оригинальное расширение файла;
 - `sys_file` - системное название файла;
@@ -110,6 +112,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
                 'class' => FileUploadBehavior::className(), // Поведение
                 'attribute' => 'image', // Атрибут модели
                 'group' => 'photos', // Сохраняемая группа
+                'type' => 'detail', // Тип файла в группе объектов
                 'storage' => 'fileStorage', // Компонент хранения файлов 
                 'repository' => UploadedFile::class, // Репозиторий
             ],
@@ -180,6 +183,7 @@ php yii migrate --migrationPath=vendor/chulakov/filestorage/src/migration/
                 'class' => FileUploadBehavior::className(), // подключаемое поведение
                 'attribute' => 'image', // атрибут, куда будет помещен файл
                 'group' => 'photos', // группа сохраняемого изображения
+                'type' => 'detail', // тип сохраняемого изображения в группе
                 'storage' => 'fileStorage', // компонент хранения
                 'repository' => UploadedFile::class, // выбранный загрузчик
                 'repositoryOptions' => [ // опции репозитория
