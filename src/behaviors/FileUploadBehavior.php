@@ -13,7 +13,7 @@ use yii\base\Model;
 use yii\di\Instance;
 use yii\base\Behavior;
 use chulakov\filestorage\FileStorage;
-use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\observer\UploadEvent;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\exceptions\NoAccessException;
@@ -39,6 +39,10 @@ class FileUploadBehavior extends Behavior
      */
     public $group = 'default';
     /**
+     * @var string
+     */
+    public $type = null;
+    /**
      * @var string|UploadInterface
      */
     public $repository = 'chulakov\filestorage\uploaders\UploadedFile';
@@ -56,6 +60,11 @@ class FileUploadBehavior extends Behavior
     public $accessRole = null;
 
     /**
+     * @var bool
+     */
+    protected $isUploaded = false;
+
+    /**
      * @throws \yii\base\InvalidConfigException
      */
     public function init()
@@ -71,7 +80,24 @@ class FileUploadBehavior extends Behavior
     {
         return [
             Model::EVENT_BEFORE_VALIDATE => 'beforeValidate',
+            UploadEvent::UPLOAD_EVENT => 'onUpload',
         ];
+    }
+
+    /**
+     * Загрузка файлов через вызов события загрузки
+     */
+    public function upload()
+    {
+        $event = new UploadEvent();
+        $this->owner->trigger(UploadEvent::UPLOAD_EVENT, $event);
+        if (!empty($event->uploadedFiles)) {
+            if (count($event->uploadedFiles) > 1) {
+                return $event->uploadedFiles;
+            }
+            return array_shift($event->uploadedFiles);
+        }
+        return null;
     }
 
     /**
@@ -89,6 +115,33 @@ class FileUploadBehavior extends Behavior
                 $this->owner->{$this->attribute} = $files;
             }
         }
+    }
+
+    /**
+     * Загрузка и сохранение файлов
+     *
+     * @param UploadEvent $event
+     * @throws NoAccessException
+     * @throws NotUploadFileException
+     */
+    public function onUpload($event)
+    {
+        if ($this->isUploaded) {
+            return;
+        }
+        /** @var UploadInterface $files */
+        $files = $this->owner->{$this->attribute};
+        if (!$this->isInstances($files)) {
+            throw new NotUploadFileException('Нет файлов для сохранения.');
+        }
+        $params = new UploadParams($this->group);
+        $params->accessRole = $this->accessRole;
+        $params->object_type = $this->type;
+        if (method_exists($this->owner, 'getPrimaryKey')) {
+            $params->object_id = $this->owner->getPrimaryKey();
+        }
+        $event->addUploadedFile($this->fileStorage->uploadFile($files, $params));
+        $this->isUploaded = true;
     }
 
     /**
@@ -127,28 +180,5 @@ class FileUploadBehavior extends Behavior
         if (!empty($this->repositoryOptions)) {
             $file->configure($this->repositoryOptions);
         }
-    }
-
-    /**
-     * Загрузка и сохранение файлов
-     *
-     * @return BaseFile|BaseFile[]
-     * @throws NoAccessException
-     * @throws NotUploadFileException
-     * @throws \Exception
-     */
-    public function upload()
-    {
-        /** @var UploadInterface $files */
-        $files = $this->owner->{$this->attribute};
-        if (!$this->isInstances($files)) {
-            throw new NotUploadFileException('Нет файлов для сохранения.');
-        }
-        $params = new UploadParams($this->group);
-        $params->accessRole = $this->accessRole;
-        if (method_exists($this->owner, 'getPrimaryKey')) {
-            $params->object_id = $this->owner->getPrimaryKey();
-        }
-        return $this->fileStorage->uploadFile($files, $params);
     }
 }
