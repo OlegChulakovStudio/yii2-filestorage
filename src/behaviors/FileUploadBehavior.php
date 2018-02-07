@@ -39,6 +39,10 @@ class FileUploadBehavior extends Behavior
      */
     public $group = 'default';
     /**
+     * @var string
+     */
+    public $type = null;
+    /**
      * @var string|UploadInterface
      */
     public $repository = 'chulakov\filestorage\uploaders\UploadedFile';
@@ -132,6 +136,7 @@ class FileUploadBehavior extends Behavior
         }
         $params = new UploadParams($this->group);
         $params->accessRole = $this->accessRole;
+        $params->object_type = $this->type;
         if (method_exists($this->owner, 'getPrimaryKey')) {
             $params->object_id = $this->owner->getPrimaryKey();
         }

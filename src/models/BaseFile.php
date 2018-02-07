@@ -19,6 +19,7 @@ use chulakov\filestorage\behaviors\StorageBehavior;
  * @property integer $id
  * @property string $group_code
  * @property string $object_id
+ * @property string $object_type
  * @property string $ori_name
  * @property string $ori_extension
  * @property string $sys_file
@@ -87,7 +88,8 @@ abstract class BaseFile extends ActiveRecord
             [['group_code', 'ori_name', 'ori_extension', 'sys_file', 'mime'], 'required'],
             [['created_at', 'updated_at', 'size'], 'integer'],
             [['group_code', 'ori_extension'], 'string', 'max' => 16],
-            [['object_id'], 'string', 'max' => 11],
+            [['object_id'], 'integer'],
+            [['object_type'], 'string', 'max' => 16],
             [['ori_name', 'sys_file', 'mime'], 'string', 'max' => 255],
             [['sys_file'], 'unique'],
         ];

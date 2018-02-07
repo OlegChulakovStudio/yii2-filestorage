@@ -8,7 +8,6 @@
 
 namespace chulakov\filestorage\services;
 
-use chulakov\filestorage\exceptions\DBModelException;
 use yii\base\UnknownClassException;
 use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\Image;
@@ -17,6 +16,7 @@ use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\models\repositories\FileRepository;
 use chulakov\filestorage\exceptions\NotFoundModelException;
+use chulakov\filestorage\exceptions\DBModelException;
 
 /**
  * Class FileService
@@ -136,6 +136,9 @@ class FileService
         $model->group_code = $params->group_code;
         if (!empty($params->object_id)) {
             $model->object_id = $params->object_id;
+        }
+        if (!empty($params->object_type)) {
+            $model->object_type = $params->object_type;
         }
         $model->ori_extension = $file->getExtension();
         $model->ori_name = $file->getName();
