@@ -27,6 +27,12 @@ class UploadParams
      */
     public $object_id = 0;
     /**
+     * Тип объекта
+     *
+     * @var string
+     */
+    public $object_type = null;
+    /**
      * Роль доступа
      *
      * @var integer

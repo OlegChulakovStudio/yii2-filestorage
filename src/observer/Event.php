@@ -9,10 +9,11 @@
 namespace chulakov\filestorage\observer;
 
 /**
- * Class Event
+ * Событие загрузки и обработки файлов
+ *
  * @package chulakov\filestorage\observer
  */
-class Event
+class Event extends \yii\base\Event
 {
     /**
      * Событие сохранения
@@ -23,12 +24,6 @@ class Event
      */
     const DELETE_EVENT = 'eventUploadDelete';
 
-    /**
-     * Отправитель
-     *
-     * @var object
-     */
-    public $sender;
     /**
      * Нужно ли сохранить
      *
@@ -58,9 +53,11 @@ class Event
      * Конструктор события
      *
      * @param object $sender
+     * @param array $config
      */
-    public function __construct($sender)
+    public function __construct($sender, $config = [])
     {
         $this->sender = $sender;
+        parent::__construct($config);
     }
 }
