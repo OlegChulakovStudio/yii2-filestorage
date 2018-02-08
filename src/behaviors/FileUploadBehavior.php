@@ -132,7 +132,10 @@ class FileUploadBehavior extends Behavior
         /** @var UploadInterface $files */
         $files = $this->owner->{$this->attribute};
         if (!$this->isInstances($files)) {
-            throw new NotUploadFileException('Нет файлов для сохранения.');
+            if (empty($files)) {
+                throw new NotUploadFileException('Нет файлов для сохранения.');
+            }
+            return;
         }
         $params = new UploadParams($this->group);
         $params->accessRole = $this->accessRole;

@@ -1,7 +1,5 @@
 <?php
 
-namespace chulakov\filestorage\migrations;
-
 use yii\db\Migration;
 
 class m180207_132010_extend_file_table extends Migration

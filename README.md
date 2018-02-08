@@ -60,7 +60,7 @@ composer update
 
 Чтобы выполнить миграции нужно вызвать следующую комманду из корня приложения:
 ```bash
-php yii migrate/up --migrationNamespaces='chulakov\filestorage\migrations'
+php yii migrate/up --migrationPath=@vendor/chulakov/filestorage/src/migration
 ```
 
 При выполнении миграции будет создана таблица `file` со следующим содержимым:
