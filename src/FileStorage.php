@@ -307,6 +307,9 @@ class FileStorage extends Component
         // Генерация всех необходимых частей для сохранения файла
         $path = $this->getSavePath($params);
         $full = $this->getAbsolutePath($path);
+        if (!$this->pathService->checkPath($full)) {
+            throw new NotUploadFileException('Недостаточно прав для сохранения файла.');
+        }
         // Сохранение файла и создание модели с данными о файле
         $file->saveAs($full . DIRECTORY_SEPARATOR . $file->getSysName());
         if ($model = $this->createModel($file, $params)) {

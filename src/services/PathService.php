@@ -253,12 +253,15 @@ class PathService
      * @return boolean
      * @throws \yii\base\Exception
      */
-    protected function checkPath($full)
+    public function checkPath($full)
     {
         if (is_file($full)) {
             $full = dirname($full);
         }
-        return is_dir($full) ? true : FileHelper::createDirectory($full, $this->fileMode);
+        if (!is_dir($full)) {
+            return FileHelper::createDirectory($full, $this->fileMode);
+        }
+        return true;
     }
 
     /**
