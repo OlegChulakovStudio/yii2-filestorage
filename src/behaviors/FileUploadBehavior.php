@@ -12,6 +12,7 @@ use yii\rbac\Item;
 use yii\base\Model;
 use yii\di\Instance;
 use yii\base\Behavior;
+use yii\db\ActiveRecord;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\observer\UploadEvent;
 use chulakov\filestorage\params\UploadParams;
@@ -27,7 +28,7 @@ use chulakov\filestorage\exceptions\NotUploadFileException;
 class FileUploadBehavior extends Behavior
 {
     /**
-     * @var Model
+     * @var Model|ActiveRecord
      */
     public $owner;
     /**
@@ -140,7 +141,7 @@ class FileUploadBehavior extends Behavior
         $params = new UploadParams($this->group);
         $params->accessRole = $this->accessRole;
         $params->object_type = $this->type;
-        if (method_exists($this->owner, 'getPrimaryKey')) {
+        if (is_callable([$this->owner, 'getPrimaryKey'])) {
             $params->object_id = $this->owner->getPrimaryKey();
         }
         $event->addUploadedFile($this->fileStorage->uploadFile($files, $params));
