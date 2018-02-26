@@ -141,7 +141,7 @@ class FileUploadBehavior extends Behavior
         $params = new UploadParams($this->group);
         $params->accessRole = $this->accessRole;
         $params->object_type = $this->type;
-        if (is_callable([$this->owner, 'getPrimaryKey'])) {
+        if ($this->owner->hasMethod('getPrimaryKey')) {
             $params->object_id = $this->owner->getPrimaryKey();
         }
         $event->addUploadedFile($this->fileStorage->uploadFile($files, $params));
