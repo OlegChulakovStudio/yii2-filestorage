@@ -99,7 +99,6 @@ class ImageBehavior extends Behavior
      * @param string $p
      * @return string
      * @throws NoAccessException
-     * @throws NotFoundFileException
      */
     public function thumb($w = 195, $h = 144, $q = 80, $p = null)
     {
@@ -116,7 +115,6 @@ class ImageBehavior extends Behavior
      * @param integer $q
      * @return string
      * @throws NoAccessException
-     * @throws NotFoundFileException
      */
     public function widen($w, $q = 80)
     {
@@ -133,7 +131,6 @@ class ImageBehavior extends Behavior
      * @param integer $q
      * @return string
      * @throws NoAccessException
-     * @throws NotFoundFileException
      */
     public function heighten($h, $q = 80)
     {
@@ -151,7 +148,6 @@ class ImageBehavior extends Behavior
      * @param integer $q
      * @return string
      * @throws NoAccessException
-     * @throws NotFoundFileException
      */
     public function contain($w, $h, $q = 80)
     {
@@ -171,7 +167,6 @@ class ImageBehavior extends Behavior
      * @param string|null $p
      * @return string
      * @throws NoAccessException
-     * @throws NotFoundFileException
      */
     public function cover($w, $h, $q = 80, $p = null)
     {
@@ -290,8 +285,7 @@ class ImageBehavior extends Behavior
      * @param string $method
      * @param ImageParams $params
      * @return string
-     * @throws NoAccessException
-     * @throws NotFoundFileException
+     * @throws
      */
     protected function makeImage($method, ImageParams $params)
     {
@@ -300,19 +294,24 @@ class ImageBehavior extends Behavior
         if (!$model->isImage()) {
             return '';
         }
-        $path = $this->getFilePath();
-        $params->addOption('type', $method);
-        $savePath = $this->fileStorage->getAbsolutePath(
-            $this->makePath($path, $params)
-        );
-        if (!is_file($savePath)) {
-            $image = $this->imageComponent->make($path);
-            if (!method_exists($image, $method)) {
-                return '';
+
+        try {
+            $path = $this->getFilePath();
+            $params->addOption('type', $method);
+            $savePath = $this->fileStorage->getAbsolutePath(
+                $this->makePath($path, $params)
+            );
+            if (!is_file($savePath)) {
+                $image = $this->imageComponent->make($path);
+                if (!method_exists($image, $method)) {
+                    return '';
+                }
+                $image->{$method}($savePath, $params);
             }
-            $image->{$method}($savePath, $params);
+            return $this->convertToUrl($savePath);
+        } catch (\Exception $e) {
+            return $this->fileStorage->getNoImage();
         }
-        return $this->convertToUrl($savePath);
     }
 
     /**
