@@ -28,7 +28,7 @@ use chulakov\filestorage\behaviors\StorageBehavior;
  * @property integer $created_at
  * @property integer $updated_at
  *
- * @method string getUrl(bool $isAbsolute, Item $role = null)   Возвращает абсолютный или относительный URL-адрес к файлу
+ * @method string getUrl(bool $isAbsolute = false, Item $role = null)   Возвращает абсолютный или относительный URL-адрес к файлу
  * @method string getPath(Item $role = null)                    Возвращает полный путь к файлу в файловой системе
  * @method string getUploadUrl(bool $isAbsolute)                Возвращает URL-адрес до директории нахождения файлов определенного типа
  * @method string getUploadPath()                               Возвращает абсолютный путь к директории хранения файлов определенного типа

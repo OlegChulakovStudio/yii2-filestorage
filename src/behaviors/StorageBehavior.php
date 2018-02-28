@@ -60,12 +60,14 @@ class StorageBehavior extends Behavior
      * @param bool $isAbsolute
      * @param string|Item|null $role
      * @return string
-     * @throws NoAccessException
-     * @throws NotFoundFileException
      */
     public function getUrl($isAbsolute = false, $role = null)
     {
-        return $this->fileStorage->getFileUrl($this->owner, $isAbsolute, $role);
+        try {
+            return $this->fileStorage->getFileUrl($this->owner, $isAbsolute, $role);
+        } catch (\Exception $notFoundFileException) {
+            return $this->owner->isImage() ? $this->fileStorage->getNoImage() : '';
+        }
     }
 
     /**
@@ -73,12 +75,14 @@ class StorageBehavior extends Behavior
      *
      * @param string|Item|null $role
      * @return string
-     * @throws NoAccessException
-     * @throws NotFoundFileException
      */
     public function getPath($role = null)
     {
-        return $this->fileStorage->getFilePath($this->owner, $role);
+        try {
+            return $this->fileStorage->getFilePath($this->owner, $role);
+        } catch (\Exception $notFoundFileException) {
+            return $this->owner->isImage() ? $this->fileStorage->getNoImage() : '';
+        }
     }
 
     /**
