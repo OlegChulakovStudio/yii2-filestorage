@@ -52,6 +52,12 @@ class FileStorage extends Component
      */
     public $storageDir = 'upload';
     /**
+     * Изображение залушка, на тот случай если изображение не найдено
+     *
+     * @var string
+     */
+    public $imageNotFound = '';
+    /**
      * Если заданы права, то после создания файла они будут принудительно назначены
      *
      * @var number|null
