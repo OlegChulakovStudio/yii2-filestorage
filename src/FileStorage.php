@@ -277,6 +277,32 @@ class FileStorage extends Component
     }
 
     /**
+     * Выдача ошибочного изображения с информацией о отсутствии оригинального
+     *
+     * @return bool|string
+     */
+    public function getNoImage()
+    {
+        $path = $this->imageNotFound;
+        if (!empty($path)) {
+            if (strstr($path, 'http://') || strstr($path, 'https://')) {
+                return $path;
+            }
+            // Пытаемся получить полный путь, если указано примерно так @webroot/path/to/file/image.png
+            $path = \Yii::getAlias($path);
+            if (file_exists($path)) {
+                return str_replace(\Yii::getAlias('@webroot'), '', $path);
+            }
+            // Пытаемся получить путь, если он был указан просто относительно /path/to/file/image.png
+            $path = $this->storagePath . DIRECTORY_SEPARATOR . $path;
+            if (file_exists($path)) {
+                return str_replace(\Yii::getAlias('@webroot'), '', $path);
+            }
+        }
+        return '';
+    }
+
+    /**
      * Проверка прав доступа к файлу
      *
      * @param Item $role
