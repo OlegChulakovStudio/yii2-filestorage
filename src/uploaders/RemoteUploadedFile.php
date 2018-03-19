@@ -431,8 +431,9 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
         if (empty($this->headers) && $headers = get_headers($this->link)) {
             foreach ($headers as $header) {
                 $items = explode(':', $header);
-                if (count($items) >= 2) {
-                    $this->headers[array_shift($items)] = array_pop($items);
+                if (count($items) == 2) {
+                    list($name, $value) = explode(':', $header);
+                    $this->headers[$name] = trim($value);
                 }
             }
         }
