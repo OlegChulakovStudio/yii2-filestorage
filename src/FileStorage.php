@@ -52,6 +52,12 @@ class FileStorage extends Component
      */
     public $storageDir = 'upload';
     /**
+     * Изображение залушка, на тот случай если изображение не найдено
+     *
+     * @var string
+     */
+    public $imageNotFound = '';
+    /**
      * Если заданы права, то после создания файла они будут принудительно назначены
      *
      * @var number|null
@@ -268,6 +274,32 @@ class FileStorage extends Component
     public function getFullSysPath($model)
     {
         return $this->getAbsolutePath($model->sys_file);
+    }
+
+    /**
+     * Выдача ошибочного изображения с информацией о отсутствии оригинального
+     *
+     * @return bool|string
+     */
+    public function getNoImage()
+    {
+        $path = $this->imageNotFound;
+        if (!empty($path)) {
+            if (strstr($path, 'http://') || strstr($path, 'https://')) {
+                return $path;
+            }
+            // Пытаемся получить полный путь, если указано примерно так @webroot/path/to/file/image.png
+            $path = \Yii::getAlias($path);
+            if (file_exists($path)) {
+                return str_replace(\Yii::getAlias('@webroot'), '', $path);
+            }
+            // Пытаемся получить путь, если он был указан просто относительно /path/to/file/image.png
+            $path = $this->storagePath . DIRECTORY_SEPARATOR . $path;
+            if (file_exists($path)) {
+                return str_replace(\Yii::getAlias('@webroot'), '', $path);
+            }
+        }
+        return '';
     }
 
     /**
