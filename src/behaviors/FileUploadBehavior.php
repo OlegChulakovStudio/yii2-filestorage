@@ -156,7 +156,7 @@ class FileUploadBehavior extends Behavior
      */
     protected function isInstances($model)
     {
-        return $model instanceof $this->repository;
+        return $model instanceof UploadInterface;
     }
 
     /**
