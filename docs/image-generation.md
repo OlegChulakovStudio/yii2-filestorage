@@ -7,7 +7,6 @@
 
 Поведение подключается к модели следующим образом. 
 ```php
-
     public function behaviors()
     {
         return ArrayHelper::merge(parent::behaviors(),
@@ -17,7 +16,6 @@
                 ]
             ]);
     }
-    
 ```
 В тоже время модель должна реализовывать стандартную схему таблицы(из миграции) для компонента `filestorage`, 
 подробнее смотрите в [readme.md](/README.md).
@@ -27,9 +25,7 @@
 ```php
 
     /**
-     * Генерирование кеша
-     *
-     * @return string
+     * Генерирование кешированых файлов
      */
     public function actionPhotos()
     {

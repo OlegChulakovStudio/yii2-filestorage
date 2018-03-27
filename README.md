@@ -225,10 +225,6 @@ php yii migrate/up --migrationPath=@vendor/oleg-chulakov-studio/yii2-filestorage
 ```php
     /**
      * Загрузка изображения
-     *
-     * @return string
-     * @throws \yii\base\InvalidParamException
-     * @throws NotUploadFileException
      */
     public function actionIndex()
     {
@@ -251,9 +247,6 @@ php yii migrate/up --migrationPath=@vendor/oleg-chulakov-studio/yii2-filestorage
 В момент обновления файла возникают проблемы с проверками на наличие загружаемого и ранее загруженного файла. Для решения данной проблемы был разработан FileValidator, в котором можно указать атрибут где лежит вероятный ранее загруженный файл. Данный валидатор подключается как и любое другое правило:
 
 ```php
-    /**
-     * @inheritdoc
-     */
     public function rules()
     {
         return [
@@ -270,9 +263,6 @@ php yii migrate/up --migrationPath=@vendor/oleg-chulakov-studio/yii2-filestorage
 При разработке проектов часто приходится создавать новые миграции с таблицами к которым должен быть прикреплен файл. Помимо того, что нужно создать саму таблицу для удобства загружают сразу исходные изображения, то есть нужно осуществить загрузку файла прямиком через миграцию. Для решения данной задачи нами был разработан класс Migration. Для использования нужно от него отнаследоваться. Прямиком в миграции у нас появляется дополнительная функция ```$this->upload();```, данная функция позволяет указать исходный путь к файлу и передать параметры вроде группы, идентификатора объекта и типа объекта. 
 
 ```php
-    /**
-     * {@inheritdoc}
-     */
     public function safeUp()
     {
         $params = new UploadParams('sky');

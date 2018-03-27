@@ -6,28 +6,31 @@
  * @link http://chulakov.com/
  */
 
+use yii\web\Controller;
 use yii\web\BadRequestHttpException;
 
 /**
  * Класс контроллер для загрузки файла
  */
-class LoadController extends \yii\web\Controller
+class LoadController extends Controller
 {
     /**
+     * Загрузка изображения
+     *
      * @return string
      * @throws BadRequestHttpException
      */
     public function actionIndex()
     {
-        $form = new \backend\models\ImageForm();
+        $form = new ImageForm();
 
         if (\Yii::$app->request->isPost) {
             $form->load(\Yii::$app->request->post(), ''); // Загрузка параметров
             if ($form->validate() && $form->upload()) { // Валидация и загрузка файлов
-                return json_encode(['success' => true]); // Выдача сообщения о успешной загрузки
+                return json_encode(['success' => true]); // Выдача сообщения о успешной загрузке
             }
         }
 
-        throw new BadRequestHttpException("Ошибка при загрузки файла.");
+        throw new BadRequestHttpException("Ошибка при загрузке файла.");
     }
 }

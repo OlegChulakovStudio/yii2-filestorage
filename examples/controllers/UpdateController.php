@@ -6,17 +6,20 @@
  * @link http://chulakov.com/
  */
 
+use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\BadRequestHttpException;
 use chulakov\filestorage\models\Image;
 use chulakov\filestorage\uploaders\UploadInterface;
 
 /**
- * Class UpdateController
+ * Класс контроллер для обновления файла
  */
-class UpdateController extends \yii\web\Controller
+class UpdateController extends Controller
 {
     /**
+     * Обновление изображения
+     *
      * @param integer $id
      * @return string
      * @throws Exception
@@ -27,10 +30,10 @@ class UpdateController extends \yii\web\Controller
     public function actionUpdate($id)
     {
         /** @var BasicModel $model */
-        $model = \BasicModel::find()->andWhere(['id' => $id])->one();
+        $model = BasicModel::find()->andWhere(['id' => $id])->one();
 
         if (!$model) {
-            throw new NotFoundHttpException('Не найдена страна!');
+            throw new NotFoundHttpException('Модель не найдена!');
         }
 
         $form = new FileValidatorForm($model);
@@ -48,6 +51,6 @@ class UpdateController extends \yii\web\Controller
             return json_encode(['success' => true]); // Выдача сообщения о успешной загрузке
         }
 
-        throw new BadRequestHttpException("Ошибка при загрузки файла.");
+        throw new BadRequestHttpException("Ошибка при загрузке файла.");
     }
 }
