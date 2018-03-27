@@ -54,6 +54,7 @@ class FileFormTest extends Model
                 'class' => FileUploadBehavior::className(),
                 'attribute' => 'image',
                 'group' => 'photos',
+                'type' => 'animal',
                 'fileStorage' => 'fileStorage',
                 'repository' => UploadedFile::class,
                 'repositoryOptions' => [

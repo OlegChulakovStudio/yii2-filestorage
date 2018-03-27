@@ -19,6 +19,7 @@ class FileModelTest extends Model
     public $id;
     public $group_code;
     public $object_id;
+    public $object_type;
     public $ori_name;
     public $ori_extension;
     public $sys_file;
