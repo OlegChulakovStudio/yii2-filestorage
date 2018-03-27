@@ -12,6 +12,7 @@ use yii\rbac\Item;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
 use chulakov\filestorage\behaviors\StorageBehavior;
+use chulakov\filestorage\models\scopes\BaseFileQuery;
 
 /**
  * Базовая модель информации о загруженном файле
@@ -135,5 +136,14 @@ abstract class BaseFile extends ActiveRecord
     public function isImage()
     {
         return static::checkIsImage($this->mime);
+    }
+
+    /**
+     * @return BaseFileQuery|object
+     * @throws \yii\base\InvalidConfigException
+     */
+    public static function find()
+    {
+        return \Yii::createObject(BaseFileQuery::className(), [get_called_class()]);
     }
 }
