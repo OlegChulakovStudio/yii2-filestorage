@@ -331,8 +331,9 @@ class FileStorage extends Component
      * @param UploadInterface $file
      * @param UploadParams $params
      * @return BaseFile|null
-     * @throws NotUploadFileException
      * @throws DBModelException
+     * @throws NotUploadFileException
+     * @throws \yii\base\Exception
      */
     protected function saveFile(UploadInterface $file, UploadParams $params)
     {

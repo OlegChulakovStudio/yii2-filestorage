@@ -14,9 +14,9 @@ use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\uploaders\UploadInterface;
-use chulakov\filestorage\models\repositories\FileRepository;
-use chulakov\filestorage\exceptions\NotFoundModelException;
 use chulakov\filestorage\exceptions\DBModelException;
+use chulakov\filestorage\exceptions\NotFoundModelException;
+use chulakov\filestorage\models\repositories\FileRepository;
 
 /**
  * Class FileService
