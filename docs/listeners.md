@@ -18,9 +18,6 @@ interface ListenerInterface
 {
     /**
      * Присоединение к Observer
-     *
-     * @param ObserverInterface $observer
-     * @return mixed
      */
     public function attach(ObserverInterface $observer);
 }
@@ -34,9 +31,6 @@ class Manager implements ListenerInterface {
 
     /**
      * Событие на сохранение
-     *
-     * @param Event $event
-     * @throws \Exception
      */
     public function handle(Event $event)
     {
@@ -79,9 +73,6 @@ class Manager implements ListenerInterface {
 ```php
     /**
      * Конфигурирование загрузчика
-     *
-     * @param array $config
-     * @return mixed
      */
     public function configure($config);
 ```

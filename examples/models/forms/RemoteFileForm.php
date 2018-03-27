@@ -6,11 +6,8 @@
  * @link http://chulakov.com/
  */
 
-namespace backend\models;
-
 use yii\base\Model;
 use chulakov\filestorage\image\Position;
-use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\managers\ImageManager;
 use chulakov\filestorage\managers\ThumbsManager;

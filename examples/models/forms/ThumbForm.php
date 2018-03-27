@@ -1,31 +1,28 @@
 <?php
 /**
- * Файл класса ImageForm
+ * Файл класса ThumbForm
  *
  * @copyright Copyright (c) 2018, Oleg Chulakov Studio
  * @link http://chulakov.com/
  */
 
-namespace backend\models;
-
 use yii\base\Model;
 use chulakov\filestorage\image\Position;
-use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
-use chulakov\filestorage\managers\ImageManager;
+use chulakov\filestorage\managers\ThumbsManager;
 use chulakov\filestorage\uploaders\UploadedFile;
 use chulakov\filestorage\behaviors\FileUploadBehavior;
 
 /**
- * Class ImageForm
+ * Class ThumbForm
  * @package backend\models
  *
  * @method BaseFile[] upload()
  */
-class ImageForm extends Model
+class ThumbForm extends Model
 {
     /**
-     * Загружаемое изображение
+     * Загружаемый файл
      *
      * @var array
      */
@@ -57,16 +54,15 @@ class ImageForm extends Model
                     'listeners' =>
                         [
                             [
-                                'class' => ImageManager::className(), // Класс менеджера
-                                'width' => 640, // Ширина
-                                'height' => 480, // Высота
+                                'class' => ThumbsManager::className(), // Класс менеджера
                                 'encode' => 'jpg', // Расширение файла
-                                'quality' => 100, // Качество изображений
-                                'watermarkPath' => '/path/to/watermark/watermark.png', // Путь к водяной метке
+                                'quality' => 80, // Качество
+                                'width' => 192, // Ширина
+                                'height' => 192, // Высота
+                                'watermarkPath' => '/path/to/file/watermark.png', // Путь к водяной метке
                                 'watermarkPosition' => Position::CENTER, // Позиция водяной метки
                                 'imageComponent' => 'imageComponent', // Компонент для работы с изображениями
-                                'accessRole' => 'role_example', // Роль для RBAC
-                            ]
+                            ],
                         ],
                 ]
             ],
