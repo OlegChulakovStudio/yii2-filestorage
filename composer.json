@@ -1,7 +1,7 @@
 {
     "name": "oleg-chulakov-studio/yii2-filestorage",
     "description": "Upload and storage files.",
-    "license": "BSD 3-Clause",
+    "license": "BSD-3-Clause",
     "type": "yii2-components",
     "require": {
         "php": ">=5.6.0",
