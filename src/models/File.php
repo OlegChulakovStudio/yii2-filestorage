@@ -15,4 +15,14 @@ namespace chulakov\filestorage\models;
  */
 class File extends BaseFile
 {
+    /**
+     * Инициализация корректной модели файла
+     *
+     * @param array $row
+     * @return static
+     */
+    public static function instantiate($row)
+    {
+        return new static();
+    }
 }

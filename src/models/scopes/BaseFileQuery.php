@@ -13,7 +13,7 @@ use yii\db\ActiveQuery;
 /**
  * Класс выборка для модели файлов
  *
- * @package backend\models\scopes
+ * @package chulakov\filestorage\models\scopes
  */
 class BaseFileQuery extends ActiveQuery
 {

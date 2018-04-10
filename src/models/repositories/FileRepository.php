@@ -27,7 +27,6 @@ class FileRepository
      * @param integer $id
      * @return File|\yii\db\ActiveRecord
      * @throws NotFoundModelException
-     * @throws \yii\base\InvalidConfigException
      */
     public function getFile($id)
     {
@@ -44,7 +43,6 @@ class FileRepository
      * @param integer $id
      * @return File|\yii\db\ActiveRecord
      * @throws NotFoundModelException
-     * @throws \yii\base\InvalidConfigException
      */
     public function getImage($id)
     {

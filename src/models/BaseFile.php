@@ -29,10 +29,10 @@ use chulakov\filestorage\models\scopes\BaseFileQuery;
  * @property integer $created_at
  * @property integer $updated_at
  *
- * @method string getUrl(bool $isAbsolute = false, Item $role = null)   Возвращает абсолютный или относительный URL-адрес к файлу
- * @method string getPath(Item $role = null)                    Возвращает полный путь к файлу в файловой системе
- * @method string getUploadUrl(bool $isAbsolute)                Возвращает URL-адрес до директории нахождения файлов определенного типа
- * @method string getUploadPath()                               Возвращает абсолютный путь к директории хранения файлов определенного типа
+ * @method string getUrl(bool $isAbsolute = false, Item $role = null) Возвращает абсолютный или относительный URL-адрес к файлу
+ * @method string getPath(Item $role = null)     Возвращает полный путь к файлу в файловой системе
+ * @method string getUploadUrl(bool $isAbsolute) Возвращает URL-адрес до директории нахождения файлов определенного типа
+ * @method string getUploadPath()                Возвращает абсолютный путь к директории хранения файлов определенного типа
  */
 abstract class BaseFile extends ActiveRecord
 {
@@ -75,8 +75,8 @@ abstract class BaseFile extends ActiveRecord
     public function behaviors()
     {
         return [
-            TimestampBehavior::className(),
-            StorageBehavior::className(),
+            TimestampBehavior::class,
+            StorageBehavior::class,
         ];
     }
 
@@ -139,11 +139,12 @@ abstract class BaseFile extends ActiveRecord
     }
 
     /**
-     * @return BaseFileQuery|object
-     * @throws \yii\base\InvalidConfigException
+     * Модель поиска файла
+     *
+     * @return BaseFileQuery
      */
     public static function find()
     {
-        return \Yii::createObject(BaseFileQuery::className(), [get_called_class()]);
+        return new BaseFileQuery(get_called_class());
     }
 }
