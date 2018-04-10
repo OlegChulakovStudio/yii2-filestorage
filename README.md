@@ -25,42 +25,23 @@ FileStorage - загрузка и хранение файлов
 
 ```
 "require": {
-    "oleg-chulakov-studio/yii2-filestorage": "dev-master"
-},
-...
-"repositories": [
-    {
-        "type": "vcs",
-        "url":  "git@bitbucket.org:OlegChulakovStudio/yii2-filestorage.git"
-    }
-]
+    "oleg-chulakov-studio/yii2-filestorage": "~1.0.11"
+}
+```
+
+Или набрать команду:
+
+```
+composer require oleg-chulakov-studio/yii2-filestorage
 ```
 
 Настройка
 ---------
 
-**1) Подключение компонента хранилища**
-
-В `config/main.php` нужно настроить компоненты:
-
-```php
-'fileStorage' => [
-    'class' => \chulakov\filestorage\FileStorage::class,
-    'storageBaseUrl' => false, // Базовый url
-    'storagePath' => '@webroot', // Путь сохранения
-    'storageDir' => 'uploaded',  // Папка с сохраняемыми файлами
-    'fileMode' => 0755, // Уровень доступа к сохраняемым файлам
-    'storagePattern' => '{group}/{id}', // Корневой шаблон генерации пути сохранения файлов
-],
-'imageComponent' => [
-    'class' => \chulakov\filestorage\ImageComponent::class,
-    'driver' => 'gd', // Базовые драйвера: gd и imagick
-]
-```
-
-**2) Выполнить миграции**
+**1) Выполнить миграции**
 
 Чтобы выполнить миграции нужно вызвать следующую комманду из корня приложения:
+
 ```bash
 php yii migrate/up --migrationPath=@vendor/oleg-chulakov-studio/yii2-filestorage/src/migrations
 ```
@@ -97,6 +78,25 @@ php yii migrate/up --migrationPath=@vendor/oleg-chulakov-studio/yii2-filestorage
 - `size` - размер файла
 - `created_at` - дата создания файла
 - `updated_at` - дата обновления файла
+
+**2) Подключение компонента хранилища**
+
+В `config/main.php` нужно настроить компоненты:
+
+```php
+'fileStorage' => [
+    'class' => \chulakov\filestorage\FileStorage::class,
+    'storageBaseUrl' => false, // Базовый url
+    'storagePath' => '@webroot', // Путь сохранения
+    'storageDir' => 'uploaded',  // Папка с сохраняемыми файлами
+    'fileMode' => 0755, // Уровень доступа к сохраняемым файлам
+    'storagePattern' => '{group}/{id}', // Корневой шаблон генерации пути сохранения файлов
+],
+'imageComponent' => [
+    'class' => \chulakov\filestorage\ImageComponent::class,
+    'driver' => 'gd', // Базовые драйвера: gd и imagick
+]
+```
 
 **3) Подключение поведения модели**
 
