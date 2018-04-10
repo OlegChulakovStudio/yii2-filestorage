@@ -119,7 +119,7 @@ public function behaviors()
             'attribute' => 'image', // Атрибут модели
             'group' => 'photos', // Сохраняемая группа
             'type' => 'detail', // Тип файла в группе объектов
-            'storage' => 'fileStorage', // Компонент хранения файлов 
+            'fileStorage' => 'fileStorage', // Компонент хранения файлов
             'repository' => \chulakov\filestorage\uploaders\UploadedFile::class, // Репозиторий
         ],
     ];
@@ -205,7 +205,7 @@ public function behaviors()
             'attribute' => 'image', // атрибут, куда будет помещен файл
             'group' => 'photos', // группа сохраняемого изображения
             'type' => 'detail', // тип сохраняемого изображения в группе
-            'storage' => 'fileStorage', // компонент хранения
+            'fileStorage' => 'fileStorage', // компонент хранения
             'repository' => \chulakov\filestorage\uploaders\UploadedFile::class, // выбранный загрузчик
             'repositoryOptions' => [ // опции репозитория
                 'listeners' => [ // список слушателей
