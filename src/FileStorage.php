@@ -285,21 +285,18 @@ class FileStorage extends Component
     {
         $path = $this->imageNotFound;
         if (!empty($path)) {
-            if (strstr($path, 'http://') || strstr($path, 'https://')) {
-                return $path;
-            }
             // Пытаемся получить полный путь, если указано примерно так @webroot/path/to/file/image.png
             $path = \Yii::getAlias($path);
-            if (file_exists($path)) {
-                return str_replace(\Yii::getAlias('@webroot'), '', $path);
+            // Проверяем, является путь готовым URL
+            if (preg_match('/^https?:/ui', $path)) {
+                return $path;
             }
-            // Пытаемся получить путь, если он был указан просто относительно /path/to/file/image.png
-            $path = $this->storagePath . DIRECTORY_SEPARATOR . $path;
+            // Если файл существует, то очищаем из него полный путь до web папки
             if (file_exists($path)) {
-                return str_replace(\Yii::getAlias('@webroot'), '', $path);
+                $path = str_replace(\Yii::getAlias('@webroot'), '', $path);
             }
         }
-        return '';
+        return $this->storageBaseUrl . '/' . trim($path, '\\\/');
     }
 
     /**
