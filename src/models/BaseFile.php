@@ -12,6 +12,7 @@ use yii\rbac\Item;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
 use chulakov\filestorage\behaviors\StorageBehavior;
+use chulakov\filestorage\models\scopes\BaseFileQuery;
 
 /**
  * Базовая модель информации о загруженном файле
@@ -28,10 +29,10 @@ use chulakov\filestorage\behaviors\StorageBehavior;
  * @property integer $created_at
  * @property integer $updated_at
  *
- * @method string getUrl(bool $isAbsolute = false, Item $role = null)   Возвращает абсолютный или относительный URL-адрес к файлу
- * @method string getPath(Item $role = null)                    Возвращает полный путь к файлу в файловой системе
- * @method string getUploadUrl(bool $isAbsolute)                Возвращает URL-адрес до директории нахождения файлов определенного типа
- * @method string getUploadPath()                               Возвращает абсолютный путь к директории хранения файлов определенного типа
+ * @method string getUrl(bool $isAbsolute = false, Item $role = null) Возвращает абсолютный или относительный URL-адрес к файлу
+ * @method string getPath(Item $role = null)     Возвращает полный путь к файлу в файловой системе
+ * @method string getUploadUrl(bool $isAbsolute) Возвращает URL-адрес до директории нахождения файлов определенного типа
+ * @method string getUploadPath()                Возвращает абсолютный путь к директории хранения файлов определенного типа
  */
 abstract class BaseFile extends ActiveRecord
 {
@@ -74,8 +75,8 @@ abstract class BaseFile extends ActiveRecord
     public function behaviors()
     {
         return [
-            TimestampBehavior::className(),
-            StorageBehavior::className(),
+            TimestampBehavior::class,
+            StorageBehavior::class,
         ];
     }
 
@@ -135,5 +136,15 @@ abstract class BaseFile extends ActiveRecord
     public function isImage()
     {
         return static::checkIsImage($this->mime);
+    }
+
+    /**
+     * Модель поиска файла
+     *
+     * @return BaseFileQuery
+     */
+    public static function find()
+    {
+        return new BaseFileQuery(get_called_class());
     }
 }

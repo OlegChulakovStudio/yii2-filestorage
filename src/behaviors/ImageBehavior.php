@@ -13,6 +13,7 @@ use yii\di\Instance;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\helpers\FileHelper;
+use yii\base\ErrorException;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
@@ -102,10 +103,7 @@ class ImageBehavior extends Behavior
      */
     public function thumb($w = 195, $h = 144, $q = 80, $p = null)
     {
-        return $this->makeImage(
-            __FUNCTION__,
-            $this->buildThumbParams($w, $h, $q, $p)
-        );
+        return $this->makeImage(__FUNCTION__, $this->buildThumbParams($w, $h, $q, $p));
     }
 
     /**
@@ -118,10 +116,7 @@ class ImageBehavior extends Behavior
      */
     public function widen($w, $q = 80)
     {
-        return $this->makeImage(
-            __FUNCTION__,
-            $this->buildImageParams($w, 0, $q)
-        );
+        return $this->makeImage(__FUNCTION__, $this->buildImageParams($w, 0, $q));
     }
 
     /**
@@ -134,10 +129,7 @@ class ImageBehavior extends Behavior
      */
     public function heighten($h, $q = 80)
     {
-        return $this->makeImage(
-            __FUNCTION__,
-            $this->buildImageParams(0, $h, $q)
-        );
+        return $this->makeImage(__FUNCTION__, $this->buildImageParams(0, $h, $q));
     }
 
     /**
@@ -151,10 +143,7 @@ class ImageBehavior extends Behavior
      */
     public function contain($w, $h, $q = 80)
     {
-        return $this->makeImage(
-            __FUNCTION__,
-            $this->buildImageParams($w, $h, $q)
-        );
+        return $this->makeImage(__FUNCTION__, $this->buildImageParams($w, $h, $q));
     }
 
     /**
@@ -170,16 +159,24 @@ class ImageBehavior extends Behavior
      */
     public function cover($w, $h, $q = 80, $p = null)
     {
-        return $this->makeImage(
-            __FUNCTION__,
-            $this->buildImageParams($w, $h, $q, $p)
-        );
+        return $this->makeImage(__FUNCTION__, $this->buildImageParams($w, $h, $q, $p));
+    }
+
+    /**
+     * Удаление файлов
+     *
+     * @throws ErrorException
+     */
+    public function deleteFile()
+    {
+        $this->removeAllThumbs();
+        $this->removeAllImages();
     }
 
     /**
      * Удалить все thumbnails текущего изображения
      *
-     * @throws \yii\base\ErrorException
+     * @throws ErrorException
      */
     public function removeAllThumbs()
     {
@@ -189,7 +186,7 @@ class ImageBehavior extends Behavior
     /**
      * Удалить все дубли текущего изображения
      *
-     * @throws \yii\base\ErrorException
+     * @throws ErrorException
      */
     public function removeAllImages()
     {
@@ -201,7 +198,7 @@ class ImageBehavior extends Behavior
      *
      * @param PathParams $params
      * @return bool
-     * @throws \yii\base\ErrorException
+     * @throws ErrorException
      */
     public function removeAllFiles(PathParams $params)
     {
@@ -216,17 +213,6 @@ class ImageBehavior extends Behavior
             }
         }
         return true;
-    }
-
-    /**
-     * Удаление файлов
-     *
-     * @throws \yii\base\ErrorException
-     */
-    public function deleteFile()
-    {
-        $this->removeAllThumbs();
-        $this->removeAllImages();
     }
 
     /**
@@ -292,7 +278,7 @@ class ImageBehavior extends Behavior
         /** @var BaseFile $model */
         $model = $this->owner;
         if (!$model->isImage()) {
-            return '';
+            return $this->getNoImage();
         }
 
         try {
@@ -304,13 +290,13 @@ class ImageBehavior extends Behavior
             if (!is_file($savePath)) {
                 $image = $this->imageComponent->make($path);
                 if (!method_exists($image, $method)) {
-                    return '';
+                    return $this->getNoImage();
                 }
                 $image->{$method}($savePath, $params);
             }
             return $this->convertToUrl($savePath);
         } catch (\Exception $e) {
-            return $this->fileStorage->getNoImage();
+            return $this->getNoImage();
         }
     }
 
@@ -357,5 +343,15 @@ class ImageBehavior extends Behavior
     protected function getFullSysPath()
     {
         return $this->fileStorage->getFullSysPath($this->owner);
+    }
+
+    /**
+     * Получение No Image файла
+     *
+     * @return bool|string
+     */
+    protected function getNoImage()
+    {
+        return $this->fileStorage->getNoImage();
     }
 }

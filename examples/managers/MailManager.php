@@ -16,7 +16,8 @@ use chulakov\filestorage\observer\ListenerInterface;
 use chulakov\filestorage\observer\ObserverInterface;
 
 /**
- * Class MailManager
+ * Класс(пример) майл-менеджера для оповещения пользователя о новом файле
+ *
  * @package backend\managers
  */
 class MailManager extends BaseObject implements ListenerInterface

@@ -8,7 +8,6 @@
 
 namespace chulakov\filestorage\models\repositories;
 
-use Exception;
 use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
@@ -32,7 +31,7 @@ class FileRepository
     public function getFile($id)
     {
         /** @var File $model */
-        if ($model = File::find()->andWhere(['id' => $id])->limit(1)->one()) {
+        if ($model = File::find()->findById($id)->one()) {
             return $model;
         }
         throw new NotFoundModelException("Не удалось найти файл: {$id}.");
@@ -48,7 +47,7 @@ class FileRepository
     public function getImage($id)
     {
         /** @var Image $model */
-        if ($model = Image::find()->andWhere(['id' => $id])->limit(1)->one()) {
+        if ($model = Image::find()->findById($id)->one()) {
             if ($model->isImage()) {
                 return $model;
             }
@@ -82,9 +81,9 @@ class FileRepository
     {
         try {
             if (!$file->delete()) {
-                throw new Exception('Не удалось удалить модель ' . get_class($file) . '::' . $file->id . ' из базы данных.');
+                throw new \Exception('Не удалось удалить модель ' . get_class($file) . '::' . $file->id . ' из базы данных.');
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new DBModelException($e->getMessage(), 0, $e);
         } catch (\Throwable $t) {
             throw new DBModelException($t->getMessage(), 0, $t);

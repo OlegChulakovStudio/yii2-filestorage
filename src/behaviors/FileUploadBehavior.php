@@ -14,8 +14,8 @@ use yii\di\Instance;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use chulakov\filestorage\FileStorage;
-use chulakov\filestorage\observer\UploadEvent;
 use chulakov\filestorage\params\UploadParams;
+use chulakov\filestorage\observer\UploadEvent;
 use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\exceptions\NotUploadFileException;
@@ -64,6 +64,10 @@ class FileUploadBehavior extends Behavior
      * @var bool
      */
     protected $isUploaded = false;
+    /**
+     * @var bool
+     */
+    protected $isMultiple = false;
 
     /**
      * @throws \yii\base\InvalidConfigException
@@ -93,7 +97,7 @@ class FileUploadBehavior extends Behavior
         $event = new UploadEvent();
         $this->owner->trigger(UploadEvent::UPLOAD_EVENT, $event);
         if (!empty($event->uploadedFiles)) {
-            if (count($event->uploadedFiles) > 1) {
+            if ($this->isMultiple) {
                 return $event->uploadedFiles;
             }
             return array_shift($event->uploadedFiles);

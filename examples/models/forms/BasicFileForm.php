@@ -6,8 +6,6 @@
  * @link http://chulakov.com/
  */
 
-namespace backend\models;
-
 use yii\base\Model;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\UploadedFile;

@@ -7,8 +7,6 @@
  * @link http://chulakov.com/
  */
 
-namespace backend\models;
-
 use yii\base\Model;
 use backend\managers\MailManager;
 use chulakov\filestorage\models\BaseFile;
