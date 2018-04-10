@@ -29,12 +29,23 @@ use chulakov\filestorage\behaviors\ImageBehavior;
 class Image extends BaseFile
 {
     /**
+     * Инициализация корректной модели файла
+     *
+     * @param array $row
+     * @return static
+     */
+    public static function instantiate($row)
+    {
+        return new static();
+    }
+
+    /**
      * @inheritdoc
      */
     public function behaviors()
     {
         return ArrayHelper::merge(parent::behaviors(), [
-            ImageBehavior::className(),
+            ImageBehavior::class,
         ]);
     }
 }

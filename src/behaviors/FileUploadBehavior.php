@@ -64,6 +64,10 @@ class FileUploadBehavior extends Behavior
      * @var bool
      */
     protected $isUploaded = false;
+    /**
+     * @var bool
+     */
+    protected $isMultiple = false;
 
     /**
      * @throws \yii\base\InvalidConfigException
@@ -93,7 +97,7 @@ class FileUploadBehavior extends Behavior
         $event = new UploadEvent();
         $this->owner->trigger(UploadEvent::UPLOAD_EVENT, $event);
         if (!empty($event->uploadedFiles)) {
-            if (count($event->uploadedFiles) > 1) {
+            if ($this->isMultiple) {
                 return $event->uploadedFiles;
             }
             return array_shift($event->uploadedFiles);

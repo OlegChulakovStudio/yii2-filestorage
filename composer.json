@@ -1,22 +1,22 @@
 {
-  "name": "oleg-chulakov-studio/yii2-filestorage",
-  "description": "Upload and storage files.",
-  "license": "BSD 3-Clause",
-  "type": "yii2-components",
-  "require": {
-    "php": ">=5.6.0",
-    "yiisoft/yii2": "~2.0.13",
-    "intervention/image": "^2.4"
-  },
-  "authors": [
-    {
-      "name": "Chulakov Studio",
-      "email": "hello@chulakov.ru"
+    "name": "oleg-chulakov-studio/yii2-filestorage",
+    "description": "Upload and storage files.",
+    "license": "BSD 3-Clause",
+    "type": "yii2-components",
+    "require": {
+        "php": ">=5.6.0",
+        "yiisoft/yii2": "~2.0.13",
+        "intervention/image": "^2.4"
+    },
+    "authors": [
+        {
+            "name": "Chulakov Studio",
+            "email": "hello@chulakov.ru"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "chulakov\\filestorage\\": "src/"
+        }
     }
-  ],
-  "autoload": {
-    "psr-4": {
-      "chulakov\\filestorage\\": "src/"
-    }
-  }
 }
