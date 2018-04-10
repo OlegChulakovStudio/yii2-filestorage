@@ -25,7 +25,12 @@ class FilesUploadBehavior extends FileUploadBehavior
      */
     protected function isInstances($model)
     {
-        return !empty($model);
+        foreach ($model as $item) {
+            if (parent::isInstances($item)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
