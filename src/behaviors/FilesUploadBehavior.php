@@ -18,6 +18,11 @@ use chulakov\filestorage\uploaders\UploadInterface;
 class FilesUploadBehavior extends FileUploadBehavior
 {
     /**
+     * @var bool
+     */
+    protected $isMultiple = true;
+
+    /**
      * Проверка, инициализированы ли данные в массиве модели
      *
      * @param mixed $model
