@@ -25,7 +25,7 @@ class BaseFileQuery extends ActiveQuery
      */
     public function findById($id)
     {
-        return $this->andWhere([$this->getPrimaryTableName() . '[[id]]' => $id]);
+        return $this->andWhere([$this->getPrimaryTableName() . '.[[id]]' => $id]);
     }
 
     /**
@@ -36,7 +36,7 @@ class BaseFileQuery extends ActiveQuery
      */
     public function findByGroup($group)
     {
-        return $this->andWhere([$this->getPrimaryTableName() . '[[group_code]]' => $group]);
+        return $this->andWhere([$this->getPrimaryTableName() . '.[[group_code]]' => $group]);
     }
 
     /**
@@ -47,7 +47,7 @@ class BaseFileQuery extends ActiveQuery
      */
     public function findByObjectId($objectId)
     {
-        return $this->andWhere([$this->getPrimaryTableName() . '[[object_id]]' => $objectId]);
+        return $this->andWhere([$this->getPrimaryTableName() . '.[[object_id]]' => $objectId]);
     }
 
     /**
@@ -58,7 +58,7 @@ class BaseFileQuery extends ActiveQuery
      */
     public function findByObjectType($objectType)
     {
-        return $this->andWhere([$this->getPrimaryTableName() . '[[object_type]]' => $objectType]);
+        return $this->andWhere([$this->getPrimaryTableName() . '.[[object_type]]' => $objectType]);
     }
 
     /**
