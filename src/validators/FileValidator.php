@@ -53,14 +53,37 @@ class FileValidator extends Validator
      */
     public function validateAttribute($model, $attribute)
     {
-        $value = $model->{$attribute};
-        if (($this->strict && $value instanceof UploadInterface) || !empty($value)) {
+        if ($this->validateFile($model->{$attribute}, UploadInterface::class)) {
             return;
         }
-        $targetValue = $model->{$this->targetAttribute};
-        if (($this->strict && $targetValue instanceof BaseFile) || !empty($targetValue)) {
+        if ($this->validateFile($model->{$this->targetAttribute}, BaseFile::class)) {
             return;
         }
         $this->addError($model, $attribute, $this->message);
+    }
+
+    /**
+     * Валидация атрибута на соответствие интерфейсу
+     *
+     * @param object|object[] $value
+     * @param string $className
+     * @return bool
+     */
+    protected function validateFile($value, $className)
+    {
+        if (empty($value)) {
+            return false;
+        }
+        if ($this->strict) {
+            if (!is_array($value)) {
+                $value = [$value];
+            }
+            foreach ($value as $file) {
+                if (!is_a($file, $className)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
