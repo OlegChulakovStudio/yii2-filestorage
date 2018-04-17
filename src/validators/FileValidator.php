@@ -26,6 +26,10 @@ class FileValidator extends Validator
      * @var BaseFile Модель с файлом
      */
     public $targetAttribute;
+    /**
+     * @var bool
+     */
+    public $skipOnEmpty = false;
 
     /**
      * @inheritdoc
