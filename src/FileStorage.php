@@ -18,6 +18,7 @@ use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\services\PathService;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\observer\SaveModelEvent;
 use chulakov\filestorage\observer\ObserverInterface;
 use chulakov\filestorage\exceptions\DBModelException;
 use chulakov\filestorage\exceptions\NoAccessException;
@@ -299,6 +300,36 @@ class FileStorage extends Component
     }
 
     /**
+     * Событие перед сохранением модели в базу данных
+     *
+     * @param UploadInterface $file
+     * @param BaseFile $model
+     */
+    public function beforeModelSave(UploadInterface $file, $model)
+    {
+        $event = new SaveModelEvent(['model' => $model]);
+        if ($file instanceof ObserverInterface) {
+            $file->trigger(SaveModelEvent::BEFORE_MODEL_SAVE, $event);
+        }
+        $this->trigger(SaveModelEvent::BEFORE_MODEL_SAVE, $event);
+    }
+
+    /**
+     * Событие после сохранения модели в базу данных
+     *
+     * @param UploadInterface $file
+     * @param BaseFile $model
+     */
+    public function afterModelSave(UploadInterface $file, $model)
+    {
+        $event = new SaveModelEvent(['model' => $model]);
+        if ($file instanceof ObserverInterface) {
+            $file->trigger(SaveModelEvent::AFTER_MODEL_SAVE, $event);
+        }
+        $this->trigger(SaveModelEvent::AFTER_MODEL_SAVE, $event);
+    }
+
+    /**
      * Проверка прав доступа к файлу
      *
      * @param string $role
@@ -343,7 +374,9 @@ class FileStorage extends Component
         $file->saveAs($full . DIRECTORY_SEPARATOR . $file->getSysName());
         if ($model = $this->createModel($file, $params)) {
             $model->setSystemFile($file->getSysName(), $path);
+            $this->beforeModelSave($file, $model);
             if ($this->service->save($model)) {
+                $this->afterModelSave($file, $model);
                 return $model;
             }
         }
