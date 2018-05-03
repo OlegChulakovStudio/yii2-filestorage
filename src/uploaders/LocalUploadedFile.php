@@ -16,11 +16,6 @@ namespace chulakov\filestorage\uploaders;
 class LocalUploadedFile extends UploadedFile
 {
     /**
-     * @var string Путь к файлу
-     */
-    public $tempName;
-
-    /**
      * Конструктор класса для работы с загрузкой локальных файлов
      *
      * @param string $filePath
@@ -30,8 +25,18 @@ class LocalUploadedFile extends UploadedFile
     {
         $this->tempName = $filePath;
         parent::__construct($config);
+    }
 
-        $this->getFileInfo();
+    /**
+     * Инициализация базовых параметров файла
+     */
+    public function init()
+    {
+        parent::init();
+        $this->error = UPLOAD_ERR_OK;
+        $this->setName(basename($this->tempName));
+        $this->setType(mime_content_type($this->tempName));
+        $this->setSize(filesize($this->tempName));
     }
 
     /**
@@ -39,22 +44,21 @@ class LocalUploadedFile extends UploadedFile
      */
     public function saveAs($file, $deleteFile = false)
     {
-        if ($this->error !== UPLOAD_ERR_OK) {
-            return false;
+        if ($this->beforeSave($file, $deleteFile)) {
+            return copy($this->getFile(), $file);
         }
-        return $deleteFile
-            ? move_uploaded_file($this->tempName, $file)
-            : copy($this->tempName, $file);
+        return false;
     }
 
     /**
-     * Получение информации о файле
+     * Удаление файла
+     *
+     * @param string $filePath
+     * @param \Exception|null $exception
+     * @return bool
      */
-    protected function getFileInfo()
+    public function deleteFile($filePath, $exception = null)
     {
-        $this->name = basename($this->tempName);
-        $this->size = filesize($this->tempName);
-        $this->type = mime_content_type($this->tempName);
-        $this->error = UPLOAD_ERR_OK;
+        return $this->beforeDelete($filePath, $exception);
     }
 }

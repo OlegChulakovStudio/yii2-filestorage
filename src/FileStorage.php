@@ -8,9 +8,8 @@
 
 namespace chulakov\filestorage;
 
-use Yii;
-use yii\rbac\Item;
 use yii\base\Component;
+use yii\base\Exception;
 use yii\base\UnknownClassException;
 use yii\base\InvalidConfigException;
 use chulakov\filestorage\models\BaseFile;
@@ -19,6 +18,7 @@ use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\services\PathService;
 use chulakov\filestorage\services\FileService;
 use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\observer\SaveModelEvent;
 use chulakov\filestorage\observer\ObserverInterface;
 use chulakov\filestorage\exceptions\DBModelException;
 use chulakov\filestorage\exceptions\NoAccessException;
@@ -107,7 +107,7 @@ class FileStorage extends Component
         if (!$this->storagePath) {
             throw new InvalidConfigException("Параметр 'storagePath' должен быть указан");
         }
-        $this->storagePath = Yii::getAlias($this->storagePath);
+        $this->storagePath = \Yii::getAlias($this->storagePath);
 
         if (!$this->storageDir) {
             throw new InvalidConfigException("Параметр 'storageDir' должен быть указан");
@@ -123,7 +123,7 @@ class FileStorage extends Component
      *
      * @param UploadInterface|UploadInterface[] $files
      * @param UploadParams $params
-     * @return array|BaseFile|null
+     * @return BaseFile|BaseFile[]
      * @throws NoAccessException
      * @throws NotUploadFileException
      */
@@ -180,7 +180,7 @@ class FileStorage extends Component
      * Возвращает полный путь к файлу в файловой системе
      *
      * @param BaseFile $model
-     * @param Item $role
+     * @param string $role
      * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
@@ -198,7 +198,7 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @param bool $isAbsolute
-     * @param string|Item $role
+     * @param string $role
      * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
@@ -300,9 +300,39 @@ class FileStorage extends Component
     }
 
     /**
+     * Событие перед сохранением модели в базу данных
+     *
+     * @param UploadInterface $file
+     * @param BaseFile $model
+     */
+    public function beforeModelSave(UploadInterface $file, $model)
+    {
+        $event = new SaveModelEvent(['model' => $model]);
+        if ($file instanceof ObserverInterface) {
+            $file->trigger(SaveModelEvent::BEFORE_MODEL_SAVE, $event);
+        }
+        $this->trigger(SaveModelEvent::BEFORE_MODEL_SAVE, $event);
+    }
+
+    /**
+     * Событие после сохранения модели в базу данных
+     *
+     * @param UploadInterface $file
+     * @param BaseFile $model
+     */
+    public function afterModelSave(UploadInterface $file, $model)
+    {
+        $event = new SaveModelEvent(['model' => $model]);
+        if ($file instanceof ObserverInterface) {
+            $file->trigger(SaveModelEvent::AFTER_MODEL_SAVE, $event);
+        }
+        $this->trigger(SaveModelEvent::AFTER_MODEL_SAVE, $event);
+    }
+
+    /**
      * Проверка прав доступа к файлу
      *
-     * @param Item $role
+     * @param string $role
      * @param BaseFile $model
      * @return bool
      * @throws NoAccessException
@@ -330,7 +360,7 @@ class FileStorage extends Component
      * @return BaseFile|null
      * @throws DBModelException
      * @throws NotUploadFileException
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
     protected function saveFile(UploadInterface $file, UploadParams $params)
     {
@@ -344,7 +374,9 @@ class FileStorage extends Component
         $file->saveAs($full . DIRECTORY_SEPARATOR . $file->getSysName());
         if ($model = $this->createModel($file, $params)) {
             $model->setSystemFile($file->getSysName(), $path);
+            $this->beforeModelSave($file, $model);
             if ($this->service->save($model)) {
+                $this->afterModelSave($file, $model);
                 return $model;
             }
         }
@@ -377,24 +409,17 @@ class FileStorage extends Component
     protected function createModel(UploadInterface $file, UploadParams $params)
     {
         try {
-            if ($this->isImage($file->getType())) {
+            if (!empty($params->modelClass)) {
+                return $this->service->createUpload($params->modelClass, $file, $params);
+            }
+            if (BaseFile::checkIsImage($file->getType())) {
                 return $this->service->createImage($file, $params);
             }
             return $this->service->createFile($file, $params);
         } catch (UnknownClassException $e) {
+            \Yii::error($e);
             return null;
         }
-    }
-
-    /**
-     * Проверка файла на изображение
-     *
-     * @param string $mime
-     * @return bool
-     */
-    protected function isImage($mime)
-    {
-        return strpos($mime, 'image') !== false;
     }
 
     /**
@@ -408,9 +433,9 @@ class FileStorage extends Component
             try {
                 $model->delete();
             } catch (\Exception $e) {
-                Yii::error($e);
+                \Yii::error($e);
             } catch (\Throwable $t) {
-                Yii::error($t);
+                \Yii::error($t);
             }
         }
     }
@@ -418,7 +443,7 @@ class FileStorage extends Component
     /**
      * Зачистка файлов
      *
-     * @param UploadInterface[]|ObserverInterface[] $files
+     * @param UploadInterface[] $files
      * @param UploadParams $params
      * @param \Exception|null $e
      */
@@ -429,7 +454,7 @@ class FileStorage extends Component
             try {
                 $file->deleteFile($path . DIRECTORY_SEPARATOR . $file->getSysName(), $e);
             } catch (\Exception $e) {
-                Yii::error($e);
+                \Yii::error($e);
             }
         }
     }

@@ -286,7 +286,7 @@ public function behaviors()
 и `BaseFile` - у ранее загруженного), отключена, но ее можно легко включить добавив
 в правила подключенного валидатора `'strict' => true`.
 
-**9) Разработка собственных миграций**
+**9) Миграции с загрузкой файлов**
 
 При разработке проектов порой приходится создавать новые миграции с таблицами
 к которым должен быть прикреплен файл. Помимо того, что нужно создать саму таблицу
@@ -308,6 +308,46 @@ public function behaviors()
 
         $this->upload('/path/to/file.png', $params);
     }
+```
+
+**10) Расширение таблицы файла**
+
+Если в таблицу к файлу необходимо добавить дополнительные поля, такие как комментарий
+к каждому файлу, можно смело расширять исходную таблицу и внедрять в нее необходимые поля.
+Но в силу того, что компонент по умолчанию работает с базовым файлом и знает о модели
+только те данные, что он может получить из самого файла, то для реализации сохранения
+расширенных полей можно воспользоваться событием, которое сработает до или после сохранения
+модели в базу данных и, если это необходимо, указать собственный класс модели файла.
+
+```php
+public function behaviors()
+{
+    return [
+        [
+            'class' => \chulakov\filestorage\behaviors\FileUploadBehavior::class,
+            'attribute' => 'image',
+            'group' => 'photos',
+            'modelClass' => \common\model\MyFileModel::class,
+            'repositoryOptions' => [
+                'events' => [
+                    SaveModelEvent::BEFORE_MODEL_SAVE => [
+                        [$this, 'fillModel'],
+                    ],
+                ],
+            ]
+        ],
+    ];
+}
+public function fillModel(SaveModelEvent $event)
+{
+    /** @var \common\model\MyFileModel $model **/
+    $model = $event->model;
+    $model->comment = $this->comment;
+    // или более безопасный способо
+    if ($event->model->hasAttribute('comment')) {
+        $event->model->setAttribute('comment', $this->comment);
+    }
+}
 ```
 
 Все остальные примеры можно посмотреть в [папке с примерами](examples).
