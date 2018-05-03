@@ -9,7 +9,6 @@
 namespace chulakov\filestorage\uploaders;
 
 use Exception;
-use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\observer\ObserverTrait;
 use chulakov\filestorage\observer\ObserverInterface;
 
@@ -51,26 +50,14 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
      */
     public function saveAs($file, $deleteFile = true)
     {
+        $result = true;
         if ($this->beforeSave($file, $deleteFile)) {
-            parent::saveAs($file, false);
+            $result = parent::saveAs($file, false);
         }
         if ($deleteFile) {
             unlink($this->getFile());
         }
-    }
-
-    /**
-     * Псевдособытие сохранения
-     *
-     * @param $savedPath
-     * @param bool $deleteFile
-     * @return bool
-     */
-    protected function beforeSave($savedPath, $deleteFile = true)
-    {
-        $event = $this->createEvent($savedPath, true, $deleteFile);
-        $this->trigger(Event::SAVE_EVENT, $event);
-        return $event->needSave;
+        return $result;
     }
 
     /**
@@ -88,22 +75,6 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
             }
         }
         return true;
-    }
-
-    /**
-     * Событие удаления файлов
-     *
-     * @param string $filePath
-     * @param Exception|null $exception
-     * @return bool
-     */
-    protected function beforeDelete($filePath, $exception = null)
-    {
-        $event = $this->createEvent(
-            $filePath, false, true, $exception
-        );
-        $this->trigger(Event::DELETE_EVENT, $event);
-        return $event->needDelete;
     }
 
     /**

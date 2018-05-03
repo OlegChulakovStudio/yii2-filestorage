@@ -11,7 +11,6 @@ namespace chulakov\filestorage\uploaders;
 use Exception;
 use yii\base\Model;
 use yii\base\BaseObject;
-use chulakov\filestorage\observer\Event;
 use chulakov\filestorage\observer\ObserverTrait;
 use chulakov\filestorage\observer\ObserverInterface;
 use chulakov\filestorage\exceptions\NotUploadFileException;
@@ -173,28 +172,15 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
      *
      * @param string $file
      * @param bool $deleteFile
-     * @return mixed|void
+     * @return boolean
      * @throws NotUploadFileException
      */
     public function saveAs($file, $deleteFile = false)
     {
         if ($this->beforeSave($file, $deleteFile)) {
-            file_put_contents($file, $this->getContent());
+            return file_put_contents($file, $this->getContent());
         }
-    }
-
-    /**
-     * Псевдособытие сохранения
-     *
-     * @param string $filePath
-     * @param bool $deleteFile
-     * @return bool
-     */
-    protected function beforeSave($filePath, $deleteFile = false)
-    {
-        $event = $this->createEvent($filePath, true, $deleteFile);
-        $this->trigger(Event::SAVE_EVENT, $event);
-        return $event->needSave;
+        return false;
     }
 
     /**
@@ -207,22 +193,6 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
     public function deleteFile($filePath, $exception = null)
     {
         return $this->beforeDelete($filePath, $exception);
-    }
-
-    /**
-     * Событие удаления файлов
-     *
-     * @param string $filePath
-     * @param Exception|null $exception
-     * @return bool
-     */
-    protected function beforeDelete($filePath, $exception = null)
-    {
-        $event = $this->createEvent(
-            $filePath, false, true, $exception
-        );
-        $this->trigger(Event::DELETE_EVENT, $event);
-        return $event->needDelete;
     }
 
     /**
