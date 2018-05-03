@@ -33,9 +33,15 @@ class UploadParams
      */
     public $object_type = null;
     /**
+     * Класс модели, который необходимо создать при сохранении информации о файле
+     *
+     * @var string
+     */
+    public $modelClass = null;
+    /**
      * Роль доступа
      *
-     * @var integer
+     * @var string
      */
     public $accessRole = null;
 

@@ -270,8 +270,8 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      */
     protected function saveImage($savedPath)
     {
-        return $this->image ?
-            $this->image->save($savedPath, $this->quality)
+        return $this->image
+            ? $this->image->save($savedPath, $this->quality)
             : false;
     }
 

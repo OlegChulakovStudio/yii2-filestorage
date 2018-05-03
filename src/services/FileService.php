@@ -125,7 +125,7 @@ class FileService
      * @return BaseFile
      * @throws UnknownClassException
      */
-    protected function createUpload($class, UploadInterface $file, UploadParams $params)
+    public function createUpload($class, UploadInterface $file, UploadParams $params)
     {
         if (!class_exists($class)) {
             throw new UnknownClassException('Класс для создания файла не найден.');

@@ -59,6 +59,10 @@ class FileUploadBehavior extends Behavior
      * @var string|Item
      */
     public $accessRole = null;
+    /**
+     * @var string Класс модели, который необходимо создать при сохранении информации о файле
+     */
+    public $modelClass = null;
 
     /**
      * @var bool
@@ -144,6 +148,7 @@ class FileUploadBehavior extends Behavior
         }
         $params = new UploadParams($this->group);
         $params->accessRole = $this->accessRole;
+        $params->modelClass = $this->modelClass;
         $params->object_type = $this->type;
         if ($this->owner->hasMethod('getPrimaryKey')) {
             $params->object_id = $this->owner->getPrimaryKey();
