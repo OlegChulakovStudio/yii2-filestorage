@@ -11,6 +11,7 @@ namespace chulakov\filestorage\uploaders;
 use Exception;
 use yii\base\Model;
 use yii\base\BaseObject;
+use yii\helpers\FileHelper;
 use chulakov\filestorage\observer\ObserverTrait;
 use chulakov\filestorage\observer\ObserverInterface;
 use chulakov\filestorage\exceptions\NotUploadFileException;
@@ -96,6 +97,10 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
         $this->setName($this->getFileNameFromLink());
         $this->setType($this->getMimeTypeFromLink());
         $this->setSize($this->getFileSizeFormLink());
+        if (!$ext = $this->getExtension()) {
+            $ext = FileHelper::getExtensionsByMimeType($this->getType());
+            $this->setName($this->getName() . '.' . array_pop($ext));
+        }
     }
 
     /**
@@ -387,7 +392,11 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
         if (preg_match('/filename=\"([^\"]*)\";/sui', $header, $match)) {
             return trim($match[1]);
         }
-        return basename($this->link);
+        $info = parse_url($this->link);
+        if (!empty($info['path'])) {
+            return basename($info['path']);
+        }
+        return uniqid();
     }
 
     /**
