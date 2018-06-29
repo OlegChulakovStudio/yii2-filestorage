@@ -62,13 +62,15 @@ class PathService
      * Формирование относительного пути для сохранения файла
      *
      * @param PathParams $params
-     * @param array $options
+     * @param array $extra
      * @return string
      */
-    public function savedPath(PathParams $params, $options = [])
+    public function savedPath(PathParams $params, $extra = [])
     {
+        $config  = $this->filterConfig($params->config());
+        $options = $this->filterConfig($params->options());
         return $this->parsePattern($params->pathPattern, array_merge(
-            array_filter($params->config()), $options
+            $config, $options, $extra
         ));
     }
 
