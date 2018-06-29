@@ -17,6 +17,7 @@ use yii\base\ErrorException;
 use yii\base\InvalidConfigException;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\PathParams;
 use chulakov\filestorage\params\ThumbParams;
@@ -32,7 +33,7 @@ use chulakov\filestorage\exceptions\NotFoundFileException;
 class ImageBehavior extends Behavior
 {
     /**
-     * @var BaseFile
+     * @var Image
      */
     public $owner;
     /**
@@ -274,7 +275,7 @@ class ImageBehavior extends Behavior
         /** @var BaseFile $model */
         $model = $this->owner;
         if (!$model->isImage()) {
-            return $this->getNoImage();
+            return $this->getNoImage($params->width, $params->height);
         }
 
         try {
@@ -286,13 +287,13 @@ class ImageBehavior extends Behavior
             if (!is_file($savePath)) {
                 $image = $this->imageComponent->make($path);
                 if (!method_exists($image, $method)) {
-                    return $this->getNoImage();
+                    return $this->getNoImage($params->width, $params->height);
                 }
                 $image->{$method}($savePath, $params);
             }
             return $this->convertToUrl($savePath);
         } catch (\Exception $e) {
-            return $this->getNoImage();
+            return $this->getNoImage($params->width, $params->height);
         }
     }
 
@@ -345,10 +346,15 @@ class ImageBehavior extends Behavior
     /**
      * Получение No Image файла
      *
+     * @param integer $width
+     * @param integer $height
      * @return bool|string
      */
-    protected function getNoImage()
+    protected function getNoImage($width = 50, $height = 50)
     {
-        return $this->fileStorage->getNoImage();
+        if ($this->owner->isImage()) {
+            list($width, $height) = $this->owner->resolveSize($width, $height);
+        }
+        return $this->fileStorage->getNoImage($width, $height);
     }
 }

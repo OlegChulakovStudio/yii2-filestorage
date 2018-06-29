@@ -290,9 +290,11 @@ class FileStorage extends Component
     /**
      * Выдача ошибочного изображения с информацией о отсутствии оригинального
      *
+     * @param int $w
+     * @param int $h
      * @return bool|string
      */
-    public function getNoImage()
+    public function getNoImage($w = 50, $h = 50)
     {
         $path = $this->imageNotFound;
         if (!empty($path)) {
@@ -307,7 +309,10 @@ class FileStorage extends Component
                 $path = str_replace(\Yii::getAlias('@webroot'), '', $path);
             }
         }
-        return $this->storageBaseUrl . '/' . trim($path, '\\\/');
+        if (!empty($path)) {
+            return $this->storageBaseUrl . '/' . trim($path, '\\\/');
+        }
+        return "http://placehold.it/{$w}x{$h}?text=no-image";
     }
 
     /**
