@@ -14,6 +14,7 @@ use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\helpers\FileHelper;
 use yii\base\ErrorException;
+use yii\base\InvalidConfigException;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\BaseFile;
@@ -68,7 +69,7 @@ class ImageBehavior extends Behavior
     /**
      * Инициализация
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function init()
     {
@@ -99,7 +100,6 @@ class ImageBehavior extends Behavior
      * @param integer $q
      * @param string $p
      * @return string
-     * @throws NoAccessException
      */
     public function thumb($w = 195, $h = 144, $q = 80, $p = null)
     {
@@ -112,7 +112,6 @@ class ImageBehavior extends Behavior
      * @param integer $w
      * @param integer $q
      * @return string
-     * @throws NoAccessException
      */
     public function widen($w, $q = 80)
     {
@@ -125,7 +124,6 @@ class ImageBehavior extends Behavior
      * @param integer $h
      * @param integer $q
      * @return string
-     * @throws NoAccessException
      */
     public function heighten($h, $q = 80)
     {
@@ -139,7 +137,6 @@ class ImageBehavior extends Behavior
      * @param integer $h
      * @param integer $q
      * @return string
-     * @throws NoAccessException
      */
     public function contain($w, $h, $q = 80)
     {
@@ -155,7 +152,6 @@ class ImageBehavior extends Behavior
      * @param integer $q
      * @param string|null $p
      * @return string
-     * @throws NoAccessException
      */
     public function cover($w, $h, $q = 80, $p = null)
     {
@@ -329,6 +325,7 @@ class ImageBehavior extends Behavior
      * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
+     * @throws InvalidConfigException
      */
     protected function getFilePath()
     {
