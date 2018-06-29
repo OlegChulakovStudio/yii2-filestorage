@@ -14,6 +14,9 @@ use chulakov\filestorage\behaviors\ImageBehavior;
 /**
  * Модель представления загруженного файла изображения
  *
+ * @property integer $width
+ * @property integer $height
+ *
  * @method string thumb($w = 195, $h = 144, $q = 80, $p = null)
  *
  * @method string contain($w, $h, $q = 80)          Вписывание изображения в область путем пропорционального масштабирования без обрезки
@@ -28,6 +31,11 @@ use chulakov\filestorage\behaviors\ImageBehavior;
  */
 class Image extends BaseFile
 {
+    /**
+     * @var array Сохраненный размер изображения
+     */
+    protected $imageSize;
+
     /**
      * Инициализация корректной модели файла
      *
@@ -47,5 +55,59 @@ class Image extends BaseFile
         return ArrayHelper::merge(parent::behaviors(), [
             ImageBehavior::class,
         ]);
+    }
+
+    /**
+     * Получение информации о размерах от исходного изображения
+     *
+     * @return array
+     */
+    public function getSize()
+    {
+        if (empty($this->imageSize)) {
+            list($width, $height) = getimagesize($this->getPath());
+            $this->imageSize = [
+                'width' => $width,
+                'height' => $height,
+            ];
+        }
+        return $this->imageSize;
+    }
+
+    /**
+     * Получение информации о ширине изображения
+     *
+     * @return integer
+     */
+    public function getWidth()
+    {
+        return $this->getSize()['width'];
+    }
+
+    /**
+     * Получение информации о высоте изображения
+     *
+     * @return integer
+     */
+    public function getHeight()
+    {
+        return $this->getSize()['height'];
+    }
+
+    /**
+     * Корректировка размера изображения при изменении размеров
+     *
+     * @param int $width
+     * @param int $height
+     * @return array
+     */
+    public function resolveSize($width = 0, $height = 0)
+    {
+        $rw = $this->width  * ($height / $this->height);
+        $rh = $this->height * ($width  / $this->width);
+        return [
+            $width  ?: $rw,
+            $height ?: $rh,
+        ];
     }
 }

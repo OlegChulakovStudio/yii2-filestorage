@@ -8,6 +8,8 @@
 
 namespace chulakov\filestorage\params;
 
+use yii\base\UnknownPropertyException;
+
 /**
  * Class PathParams
  * @package chulakov\filestorage\params
@@ -63,7 +65,7 @@ class PathParams
     }
 
     /**
-     * Переопределение токенов генерации пути
+     * Назначение токена для генерации пути
      *
      * @param string $name
      * @param string $value
@@ -71,6 +73,18 @@ class PathParams
     public function addOption($name, $value)
     {
         $this->options['{' . $name . '}'] = $value;
+    }
+
+    /**
+     * Массовое назначение токенов для генерации пути
+     *
+     * @param $options
+     */
+    public function setOptions($options)
+    {
+        foreach ((array)$options as $name => $option) {
+            $this->addOption($name, $option);
+        }
     }
 
     /**
@@ -82,6 +96,23 @@ class PathParams
     {
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
+        }
+    }
+
+    /**
+     * Установка значения через функцию сеттера
+     *
+     * @param string $name
+     * @param mixed $value
+     * @throws UnknownPropertyException
+     */
+    public function __set($name, $value)
+    {
+        $setter = 'set' . $name;
+        if (method_exists($this, $setter)) {
+            $this->$setter($value);
+        } else {
+            throw new UnknownPropertyException('Setting unknown property: ' . get_class($this) . '::' . $name);
         }
     }
 }

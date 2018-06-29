@@ -73,6 +73,12 @@ class FileStorage extends Component
      */
     public $storagePattern = '{group}/{id}';
     /**
+     * Объект для генерации пути сохранения файлов
+     *
+     * @var string|array
+     */
+    public $storagePropertyClass = 'chulakov\filestorage\params\PathParams';
+    /**
      * @var FileService
      */
     protected $service;
@@ -126,6 +132,7 @@ class FileStorage extends Component
      * @return BaseFile|BaseFile[]
      * @throws NoAccessException
      * @throws NotUploadFileException
+     * @throws InvalidConfigException
      */
     public function uploadFile($files, UploadParams $params)
     {
@@ -156,6 +163,7 @@ class FileStorage extends Component
      * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
+     * @throws InvalidConfigException
      */
     public function getUploadPath($model)
     {
@@ -170,6 +178,7 @@ class FileStorage extends Component
      * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
+     * @throws InvalidConfigException
      */
     public function getUploadUrl($model, $isAbsolute = false)
     {
@@ -184,6 +193,7 @@ class FileStorage extends Component
      * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
+     * @throws InvalidConfigException
      */
     public function getFilePath($model, $role = null)
     {
@@ -202,6 +212,7 @@ class FileStorage extends Component
      * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
+     * @throws InvalidConfigException
      */
     public function getFileUrl($model, $isAbsolute = false, $role = null)
     {
@@ -279,9 +290,11 @@ class FileStorage extends Component
     /**
      * Выдача ошибочного изображения с информацией о отсутствии оригинального
      *
+     * @param int $w
+     * @param int $h
      * @return bool|string
      */
-    public function getNoImage()
+    public function getNoImage($w = 50, $h = 50)
     {
         $path = $this->imageNotFound;
         if (!empty($path)) {
@@ -296,7 +309,10 @@ class FileStorage extends Component
                 $path = str_replace(\Yii::getAlias('@webroot'), '', $path);
             }
         }
-        return $this->storageBaseUrl . '/' . trim($path, '\\\/');
+        if (!empty($path)) {
+            return $this->storageBaseUrl . '/' . trim($path, '\\\/');
+        }
+        return "http://placehold.it/{$w}x{$h}?text=no-image";
     }
 
     /**
@@ -388,15 +404,21 @@ class FileStorage extends Component
      *
      * @param UploadParams $params
      * @return string
+     * @throws InvalidConfigException
      */
     protected function getSavePath(UploadParams $params)
     {
-        $pathParams = new PathParams();
+        $pathParams = \Yii::createObject($this->storagePropertyClass);
+        if (!$pathParams instanceof PathParams) {
+            throw new InvalidConfigException('Некорректная настройка "storagePropertyClass".');
+        }
         $pathParams->group = $params->group_code;
-        $pathParams->pathPattern = $this->storagePattern;
-        return $this->pathService->savedPath($pathParams, [
-            '{id}' => $params->object_id,
-        ]);
+        if ($params->pathPattern) {
+            $pathParams->pathPattern = $params->pathPattern;
+        } else {
+            $pathParams->pathPattern = $this->storagePattern;
+        }
+        return $this->pathService->savedPath($pathParams, $params->options());
     }
 
     /**
@@ -446,6 +468,7 @@ class FileStorage extends Component
      * @param UploadInterface[] $files
      * @param UploadParams $params
      * @param \Exception|null $e
+     * @throws InvalidConfigException
      */
     protected function clearFiles($files, $params, $e = null)
     {
@@ -464,6 +487,7 @@ class FileStorage extends Component
      *
      * @param BaseFile $model
      * @return string
+     * @throws InvalidConfigException
      */
     protected function getPathFromModel($model)
     {

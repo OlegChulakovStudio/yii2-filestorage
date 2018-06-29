@@ -44,6 +44,19 @@ class UploadParams
      * @var string
      */
     public $accessRole = null;
+    /**
+     * Шаблон сохранения thumbnails файлов
+     *
+     * @var string
+     */
+    public $pathPattern;
+    /**
+     * Расширенные опции.
+     * Добавлюяются последними и переопределяют все вышестоящие токены
+     *
+     * @var array
+     */
+    public $options = [];
 
     /**
      * Базовый конструктор параметров генерации пути
@@ -53,5 +66,22 @@ class UploadParams
     public function __construct($group = 'default')
     {
         $this->group_code = $group;
+    }
+
+    /**
+     * Получение всех настроек для формирования пути
+     *
+     * @return array
+     */
+    public function options()
+    {
+        $options = [];
+        foreach ($this->options as $name => $value) {
+            $options['{' . $name . '}'] = $value;
+        }
+        return array_merge([
+            '{id}' => $this->object_id,
+            '{type}' => $this->object_type,
+        ], $options);
     }
 }

@@ -14,8 +14,10 @@ use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\helpers\FileHelper;
 use yii\base\ErrorException;
+use yii\base\InvalidConfigException;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\models\Image;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\params\PathParams;
 use chulakov\filestorage\params\ThumbParams;
@@ -31,7 +33,7 @@ use chulakov\filestorage\exceptions\NotFoundFileException;
 class ImageBehavior extends Behavior
 {
     /**
-     * @var BaseFile
+     * @var Image
      */
     public $owner;
     /**
@@ -68,7 +70,7 @@ class ImageBehavior extends Behavior
     /**
      * Инициализация
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function init()
     {
@@ -99,7 +101,6 @@ class ImageBehavior extends Behavior
      * @param integer $q
      * @param string $p
      * @return string
-     * @throws NoAccessException
      */
     public function thumb($w = 195, $h = 144, $q = 80, $p = null)
     {
@@ -112,7 +113,6 @@ class ImageBehavior extends Behavior
      * @param integer $w
      * @param integer $q
      * @return string
-     * @throws NoAccessException
      */
     public function widen($w, $q = 80)
     {
@@ -125,7 +125,6 @@ class ImageBehavior extends Behavior
      * @param integer $h
      * @param integer $q
      * @return string
-     * @throws NoAccessException
      */
     public function heighten($h, $q = 80)
     {
@@ -139,7 +138,6 @@ class ImageBehavior extends Behavior
      * @param integer $h
      * @param integer $q
      * @return string
-     * @throws NoAccessException
      */
     public function contain($w, $h, $q = 80)
     {
@@ -155,7 +153,6 @@ class ImageBehavior extends Behavior
      * @param integer $q
      * @param string|null $p
      * @return string
-     * @throws NoAccessException
      */
     public function cover($w, $h, $q = 80, $p = null)
     {
@@ -278,7 +275,7 @@ class ImageBehavior extends Behavior
         /** @var BaseFile $model */
         $model = $this->owner;
         if (!$model->isImage()) {
-            return $this->getNoImage();
+            return $this->getNoImage($params->width, $params->height);
         }
 
         try {
@@ -290,13 +287,13 @@ class ImageBehavior extends Behavior
             if (!is_file($savePath)) {
                 $image = $this->imageComponent->make($path);
                 if (!method_exists($image, $method)) {
-                    return $this->getNoImage();
+                    return $this->getNoImage($params->width, $params->height);
                 }
                 $image->{$method}($savePath, $params);
             }
             return $this->convertToUrl($savePath);
         } catch (\Exception $e) {
-            return $this->getNoImage();
+            return $this->getNoImage($params->width, $params->height);
         }
     }
 
@@ -329,6 +326,7 @@ class ImageBehavior extends Behavior
      * @return string
      * @throws NoAccessException
      * @throws NotFoundFileException
+     * @throws InvalidConfigException
      */
     protected function getFilePath()
     {
@@ -348,10 +346,15 @@ class ImageBehavior extends Behavior
     /**
      * Получение No Image файла
      *
+     * @param integer $width
+     * @param integer $height
      * @return bool|string
      */
-    protected function getNoImage()
+    protected function getNoImage($width = 50, $height = 50)
     {
-        return $this->fileStorage->getNoImage();
+        if ($this->owner->isImage()) {
+            list($width, $height) = $this->owner->resolveSize($width, $height);
+        }
+        return $this->fileStorage->getNoImage($width, $height);
     }
 }
