@@ -13,6 +13,7 @@ use yii\base\Model;
 use yii\di\Instance;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
+use yii\base\InvalidConfigException;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\params\UploadParams;
 use chulakov\filestorage\observer\UploadEvent;
@@ -44,6 +45,18 @@ class FileUploadBehavior extends Behavior
      */
     public $type = null;
     /**
+     * @var string
+     */
+    public $uploadClass = 'chulakov\filestorage\params\UploadParams';
+    /**
+     * @var string
+     */
+    public $uploadPattern;
+    /**
+     * @var array|callable
+     */
+    public $uploadOptions;
+    /**
      * @var string|UploadInterface
      */
     public $repository = 'chulakov\filestorage\uploaders\UploadedFile';
@@ -74,7 +87,7 @@ class FileUploadBehavior extends Behavior
     protected $isMultiple = false;
 
     /**
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
     public function init()
     {
@@ -132,6 +145,7 @@ class FileUploadBehavior extends Behavior
      * @param UploadEvent $event
      * @throws NoAccessException
      * @throws NotUploadFileException
+     * @throws InvalidConfigException
      */
     public function onUpload($event)
     {
@@ -146,15 +160,47 @@ class FileUploadBehavior extends Behavior
             }
             return;
         }
-        $params = new UploadParams($this->group);
-        $params->accessRole = $this->accessRole;
-        $params->modelClass = $this->modelClass;
-        $params->object_type = $this->type;
-        if ($this->owner->hasMethod('getPrimaryKey')) {
-            $params->object_id = $this->owner->getPrimaryKey();
+        try {
+            /** @var UploadParams $params */
+            $params = \Yii::$container->get(
+                $this->uploadClass, [$this->group], $this->getUploadProperties()
+            );
+        } catch (\Exception $e) {
+            throw new NotUploadFileException('Не удалось инициализировать DTO.', 0, $e);
         }
         $event->addUploadedFile($this->fileStorage->uploadFile($files, $params));
         $this->isUploaded = true;
+    }
+
+    /**
+     * Формирование параметров для загрузки файла
+     *
+     * @return array
+     */
+    protected function getUploadProperties()
+    {
+        $properties = [
+            'object_type' => $this->type,
+            'accessRole'  => $this->accessRole,
+            'modelClass'  => $this->modelClass,
+            'pathPattern' => $this->uploadPattern,
+        ];
+        // Идентификатор связки с моделью
+        if ($this->owner->hasMethod('getPrimaryKey')) {
+            $primaryKeys = $this->owner->getPrimaryKey();
+            if (is_array($primaryKeys)) {
+                $primaryKeys = implode('-', $primaryKeys);
+            }
+            $properties['object_id'] = $primaryKeys;
+        }
+        // Расширенные параметры для формирования пути сохранения
+        if ($extraProperties = $this->uploadOptions) {
+            if ($extraProperties instanceof \Closure) {
+                $extraProperties = call_user_func($extraProperties, $properties);
+            }
+            $properties['options'] = (array)$extraProperties;
+        }
+        return $properties;
     }
 
     /**
