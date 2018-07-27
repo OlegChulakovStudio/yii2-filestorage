@@ -45,6 +45,10 @@ class FileUploadBehavior extends Behavior
      */
     public $type = null;
     /**
+     * @var bool
+     */
+    public $skipOnEmpty = false;
+    /**
      * @var string
      */
     public $uploadClass = 'chulakov\filestorage\params\UploadParams';
@@ -155,7 +159,7 @@ class FileUploadBehavior extends Behavior
         /** @var UploadInterface $files */
         $files = $this->owner->{$this->attribute};
         if (!$this->isInstances($files)) {
-            if (empty($files)) {
+            if (empty($files) && !$this->skipOnEmpty) {
                 throw new NotUploadFileException('Нет файлов для сохранения.');
             }
             return;
