@@ -277,6 +277,9 @@ class ImageBehavior extends Behavior
         if (!$model->isImage()) {
             return $this->getNoImage($params->width, $params->height);
         }
+        if ($model->getExtension() == 'svg') {
+            return $model->getUrl();
+        }
 
         try {
             $path = $this->getFilePath();
