@@ -235,7 +235,7 @@ class ImageContainer implements ImageInterface
         if (!$this->image) {
             return false;
         }
-        $this->image->fit($params->width, $params->height);
+        $this->image->fit($params->width, $params->height, null, $params->coverPosition);
         return $this->save($savePath, $params->quality);
     }
 

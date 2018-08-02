@@ -99,12 +99,11 @@ class ImageBehavior extends Behavior
      * @param integer $w
      * @param integer $h
      * @param integer $q
-     * @param string $p
      * @return string
      */
-    public function thumb($w = 195, $h = 144, $q = 80, $p = null)
+    public function thumb($w = 195, $h = 144, $q = 80)
     {
-        return $this->makeImage(__FUNCTION__, $this->buildThumbParams($w, $h, $q, $p));
+        return $this->makeImage(__FUNCTION__, $this->buildThumbParams($w, $h, $q));
     }
 
     /**
@@ -218,12 +217,11 @@ class ImageBehavior extends Behavior
      * @param integer $w
      * @param integer $h
      * @param integer $q
-     * @param string|null $p
      * @return ThumbParams
      */
-    protected function buildThumbParams($w, $h, $q = 0, $p = null)
+    protected function buildThumbParams($w, $h, $q = 0)
     {
-        return $this->buildParams($this->thumbParamsClass, $w, $h, $q, $p);
+        return $this->buildParams($this->thumbParamsClass, $w, $h, $q);
     }
 
     /**
