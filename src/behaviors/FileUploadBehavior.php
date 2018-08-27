@@ -49,6 +49,10 @@ class FileUploadBehavior extends Behavior
      */
     public $skipOnEmpty = false;
     /**
+     * @var bool Устанавливать ошибку вместо исключения
+     */
+    public $setErrors = false;
+    /**
      * @var string
      */
     public $uploadClass = 'chulakov\filestorage\params\UploadParams';
@@ -172,7 +176,15 @@ class FileUploadBehavior extends Behavior
         } catch (\Exception $e) {
             throw new NotUploadFileException('Не удалось инициализировать DTO.', 0, $e);
         }
-        $event->addUploadedFile($this->fileStorage->uploadFile($files, $params));
+        try {
+            $event->addUploadedFile($this->fileStorage->uploadFile($files, $params));
+        } catch (NotUploadFileException $e) {
+            if ($this->setErrors) {
+                $this->owner->addError($this->attribute, $e->getMessage());
+            } else {
+                throw $e;
+            }
+        }
         $this->isUploaded = true;
     }
 
