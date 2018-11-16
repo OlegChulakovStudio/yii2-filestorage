@@ -39,6 +39,10 @@ class FileUploadBehavior extends Behavior
     /**
      * @var string
      */
+    public $name;
+    /**
+     * @var string
+     */
     public $group = 'default';
     /**
      * @var string
@@ -100,6 +104,12 @@ class FileUploadBehavior extends Behavior
     public function init()
     {
         parent::init();
+        if (empty($this->attribute)) {
+            throw new InvalidConfigException('Необходимо заполнить поле attribute!');
+        }
+        if (empty($this->name)) {
+            $this->name = $this->attribute;
+        }
         $this->fileStorage = Instance::ensure($this->fileStorage);
     }
 
@@ -238,9 +248,9 @@ class FileUploadBehavior extends Behavior
     protected function getInstances()
     {
         $repository = $this->repository;
-        $file = $repository::getInstance($this->owner, $this->attribute);
+        $file = $repository::getInstance($this->owner, $this->name);
         if (empty($file)) {
-            $file = $repository::getInstanceByName($this->attribute);
+            $file = $repository::getInstanceByName($this->name);
         }
         return $file;
     }
