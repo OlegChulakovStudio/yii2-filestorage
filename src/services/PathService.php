@@ -217,9 +217,9 @@ class PathService
             $this->storageDir, trim($path, '/'),
         ]), '/');
         if ($this->storageBaseUrl !== false) {
-            $url = Url::to($this->storageBaseUrl . $url, true);
+            $url = Url::to($this->storageBaseUrl . '/' . $url, true);
         } elseif ($isAbsolute) {
-            $url = Url::base(true) . $url;
+            $url = Url::base(true) . '/' . $url;
         }
         return $url;
     }
