@@ -97,10 +97,10 @@ class PathService
      */
     public function searchAllFiles($path, PathParams $params)
     {
-        $patternPath = $this->getAbsolutePath($this->parsePattern($params->searchPattern,
-            $this->parseConfig($path, $params)
+        $patternPath = $this->getAbsolutePath($this->parsePattern(
+            $params->searchPattern, $this->parseConfig($path, $params)
         ));
-        return glob($patternPath, GLOB_BRACE & GLOB_ERR);
+        return glob($patternPath, GLOB_ERR);
     }
 
     /**
