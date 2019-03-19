@@ -14,7 +14,8 @@ use chulakov\filestorage\params\PathParams;
 use chulakov\filestorage\exceptions\NotFoundFileException;
 
 /**
- * Class PathService
+ * Сервис управления путями хранения файлов
+ *
  * @package chulakov\filestorage\services
  */
 class PathService
@@ -83,8 +84,8 @@ class PathService
      */
     public function makePath($path, PathParams $params)
     {
-        return $this->parsePattern($params->pathPattern,
-            $this->parseConfig($path, $params)
+        return $this->parsePattern(
+            $params->pathPattern, $this->parseConfig($path, $params)
         );
     }
 
@@ -118,7 +119,7 @@ class PathService
 
         $config = $this->filterConfig($params->config());
         $options = $this->filterConfig($params->options());
-        $relay = str_replace($this->getAbsolute(), '', $root);
+        $relay = $this->cutPath($root);
 
         return array_merge([
             '{relay}' => $relay,
@@ -138,7 +139,7 @@ class PathService
     public function parsePattern($pattern, $config)
     {
         $path = trim(strtr($pattern, $config));
-        $path = str_replace(['\\', '\/'], DIRECTORY_SEPARATOR, $path);
+        $path = $this->convertSlashes($path);
         return rtrim($path, DIRECTORY_SEPARATOR);
     }
 
@@ -212,7 +213,9 @@ class PathService
     public function convertToUrl($path, $isAbsolute = false)
     {
         $path = $this->cutPath($path);
-        $url = '/' . $this->storageDir . '/' . trim(str_replace('\\', '/', $path), '/');
+        $url = $this->convertSlashes(implode('/', [
+            $this->storageDir, trim($path, '/'),
+        ]), '/');
         if ($this->storageBaseUrl !== false) {
             $url = Url::to($this->storageBaseUrl . $url, true);
         } elseif ($isAbsolute) {
@@ -229,10 +232,11 @@ class PathService
      */
     public function cutPath($path)
     {
-        if (file_exists($path)) {
-            return str_replace($this->getAbsolute(), '', $path);
-        }
-        return $path;
+        return str_replace(
+            $this->getAbsolute(),
+            '',
+            $this->convertSlashes($path)
+        );
     }
 
     /**
@@ -309,9 +313,23 @@ class PathService
      */
     protected function getAbsolute()
     {
-        return implode(DIRECTORY_SEPARATOR, [
-            $this->storagePath,
-            $this->storageDir,
-        ]);
+        return $this->convertSlashes(
+            implode(DIRECTORY_SEPARATOR, [
+                $this->storagePath,
+                $this->storageDir,
+            ])
+        );
+    }
+
+    /**
+     * Конвертация пути в общий вид для ОС
+     *
+     * @param string $path
+     * @param string $slash
+     * @return string
+     */
+    protected function convertSlashes($path, $slash = DIRECTORY_SEPARATOR)
+    {
+        return str_replace(['\\', '\/'], $slash, $path);
     }
 }
