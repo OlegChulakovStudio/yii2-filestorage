@@ -101,7 +101,7 @@ class PathService
         $patternPath = $this->getAbsolutePath($this->parsePattern(
             $params->searchPattern, $this->parseConfig($path, $params)
         ));
-        return glob($patternPath, GLOB_ERR);
+        return glob($patternPath);
     }
 
     /**
