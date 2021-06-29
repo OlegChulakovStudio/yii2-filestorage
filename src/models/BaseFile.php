@@ -41,7 +41,7 @@ abstract class BaseFile extends ActiveRecord
      */
     public static function tableName()
     {
-        return 'file';
+        return '{{%file}}';
     }
 
     /**
