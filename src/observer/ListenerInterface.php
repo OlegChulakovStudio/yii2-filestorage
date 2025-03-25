@@ -16,9 +16,6 @@ interface ListenerInterface
 {
     /**
      * Присоединение к Observer
-     *
-     * @param ObserverInterface $observer
-     * @return mixed
      */
-    public function attach(ObserverInterface $observer);
+    public function attach(ObserverInterface $observer): void;
 }

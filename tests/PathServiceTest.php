@@ -8,13 +8,14 @@
 
 namespace chulakov\filestorage\tests;
 
-use yii\base\Exception;
-use yii\helpers\FileHelper;
+use chulakov\filestorage\exceptions\NotFoundFileException;
+use chulakov\filestorage\params\ImageParams;
 use chulakov\filestorage\params\PathParams;
 use chulakov\filestorage\params\ThumbParams;
-use chulakov\filestorage\params\ImageParams;
 use chulakov\filestorage\services\PathService;
-use chulakov\filestorage\exceptions\NotFoundFileException;
+use Yii;
+use yii\base\Exception;
+use yii\helpers\FileHelper;
 
 /**
  * Class PathServiceTest
@@ -36,29 +37,6 @@ class PathServiceTest extends TestCase
     protected static $simplePath;
 
     /**
-     * @inheritdoc
-     */
-    protected function setUp()
-    {
-        parent::setUp();
-        self::$simplePath = '/path/to/file/image.png';
-
-        if (empty(self::$pathService)) {
-            self::$pathService = $this->createService();
-        }
-    }
-
-    /**
-     * Создание сервиса для работы с путями
-     *
-     * @return PathService
-     */
-    protected function createService()
-    {
-        return new PathService(\Yii::getAlias('@tests/runtime'), 'images', false);
-    }
-
-    /**
      * Тестирование парсера шаблонов
      */
     public function testParsePattern()
@@ -71,7 +49,7 @@ class PathServiceTest extends TestCase
             '{type}' => 'thumb',
             '{width}' => 640,
             '{height}' => 480,
-            '{ext}' => 'png'
+            '{ext}' => 'png',
         ]);
 
         $this->assertEquals('upload/thumbs/image/thumb_640x480.png', $path);
@@ -86,12 +64,12 @@ class PathServiceTest extends TestCase
             'width' => 100,
             'height' => 0,
             'ext' => '',
-            'encode' => null
+            'encode' => null,
         ];
 
         $this->assertEquals(self::$pathService->filterConfig($config), [
             'width' => 100,
-            'height' => 0
+            'height' => 0,
         ]);
     }
 
@@ -103,8 +81,8 @@ class PathServiceTest extends TestCase
      */
     public function testFindPath()
     {
-        $path = \Yii::getAlias('@tests/data') . '/images/image.png';
-        $movePath = \Yii::getAlias('@tests/runtime') . '/images/img/image.png';
+        $path = Yii::getAlias('@tests/data') . '/images/image.png';
+        $movePath = Yii::getAlias('@tests/runtime') . '/images/img/image.png';
         $moveDir = dirname($movePath);
 
         if (!is_dir(dirname($movePath))) {
@@ -135,7 +113,7 @@ class PathServiceTest extends TestCase
             '{name}' => 'image.png',
             '{basename}' => 'image',
             '{ext}' => 'png',
-            '{group}' => 'cache'
+            '{group}' => 'cache',
         ];
 
         $this->assertEquals($config, self::$pathService->parseConfig(self::$simplePath, $pathParams));
@@ -181,5 +159,28 @@ class PathServiceTest extends TestCase
         ];
 
         $this->assertEquals($resultThumb, self::$pathService->parseConfig(self::$simplePath, $thumbParams));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::$simplePath = '/path/to/file/image.png';
+
+        if (empty(self::$pathService)) {
+            self::$pathService = $this->createService();
+        }
+    }
+
+    /**
+     * Создание сервиса для работы с путями
+     *
+     * @return PathService
+     */
+    protected function createService()
+    {
+        return new PathService(Yii::getAlias('@tests/runtime'), 'images', false);
     }
 }

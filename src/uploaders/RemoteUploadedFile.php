@@ -8,19 +8,19 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use Exception;
-use yii\base\Model;
-use yii\base\BaseObject;
-use yii\helpers\FileHelper;
-use chulakov\filestorage\observer\ObserverTrait;
-use chulakov\filestorage\observer\ObserverInterface;
 use chulakov\filestorage\exceptions\NotUploadFileException;
+use chulakov\filestorage\observer\ObserverInterface;
+use chulakov\filestorage\observer\ObserverTrait;
+use Throwable;
+use yii\base\BaseObject;
+use yii\base\InvalidConfigException;
+use yii\helpers\FileHelper;
 
 /**
  * Class RemoteUploadedFile
  * @package chulakov\filestorage\uploaders
  */
-class RemoteUploadedFile extends BaseObject implements UploadInterface, ObserverInterface
+final class RemoteUploadedFile extends BaseObject implements UploadInterface, ObserverInterface
 {
     /**
      * Подключение реализации функционала Observer
@@ -29,75 +29,58 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Ссылка на файл (UploadedFiles::tempName)
-     *
-     * @var string
      */
-    protected $link;
+    protected string $link;
     /**
      * Содержимое файла
-     *
-     * @var string
      */
-    protected $content;
+    protected string $content;
     /**
      * Размер файла
-     *
-     * @var integer
      */
-    public $size;
+    public int $size;
     /**
      * Mime тип файла
-     *
-     * @var string
      */
-    public $type;
+    public string $type;
     /**
      * Имя файла
-     *
-     * @var string
      */
-    public $name;
+    public string $name;
     /**
      * Оригинальное имя файла
-     *
-     * @var string
      */
-    protected $sysName;
+    protected string $sysName;
     /**
      * Расширение файла
-     *
-     * @var string
      */
-    protected $extension;
+    protected string $extension;
     /**
      * Http заголовки ссылки
-     *
-     * @var array
      */
-    protected $headers;
+    protected array $headers;
 
     /**
      * Конструктор файла по ссылке
-     *
-     * @param string $link
-     * @param array $config
      */
-    public function __construct($link, $config = [])
+    public function __construct(string $link, array $config = [])
     {
         $this->link = $link;
+
         parent::__construct($config);
     }
 
     /**
      * Инициализация базовых параметров файла
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
+
         $this->setName($this->getFileNameFromLink());
         $this->setType($this->getMimeTypeFromLink());
         $this->setSize($this->getFileSizeFormLink());
-        if (!$ext = $this->getExtension()) {
+        if (empty($this->getExtension())) {
             $ext = FileHelper::getExtensionsByMimeType($this->getType());
             $this->setName($this->getName() . '.' . array_pop($ext));
         }
@@ -106,11 +89,9 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
     /**
      * Конфигурация компонента
      *
-     * @param array $config
-     * @return mixed|void
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    public function configure($config)
+    public function configure($config): void
     {
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
@@ -120,12 +101,8 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Инициализация одной модели
-     *
-     * @param Model $model
-     * @param string $attribute
-     * @return mixed
      */
-    public static function getInstance($model, $attribute)
+    public static function getInstance($model, $attribute): UploadInterface
     {
         return self::getInstanceByName($model->{$attribute});
     }
@@ -133,56 +110,47 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
     /**
      * Инициализация массива моделей
      *
-     * @param Model $model
-     * @param string $attribute
-     * @return mixed
+     * @return UploadInterface[]
      */
-    public static function getInstances($model, $attribute)
+    public static function getInstances($model, $attribute): array
     {
-        return self::getInstanceByName($model->{$attribute});
+        if (is_string($attribute)) {
+            $attribute = [$attribute];
+        }
+
+        return array_map(static fn (string $attribute) => self::getInstance($model, $attribute), $attribute);
     }
 
     /**
      * Инициализация одной модели по имени атрибута
-     *
-     * @param string $link
-     * @return mixed|static
      */
-    public static function getInstanceByName($link)
+    public static function getInstanceByName($name): UploadInterface
     {
-        return new static($link);
+        return new self($name);
     }
 
     /**
      * Инициализация массива моделей по имени атрибута
      *
-     * @param string|array $names
-     * @return array
+     * @return UploadInterface[]
      */
-    public static function getInstancesByName($names)
+    public static function getInstancesByName($name): array
     {
-        if (!is_array($names)) {
-            return [new static($names)];
+        if (is_array($name) === false) {
+            return [new self($name)];
         }
-        $result = [];
-        /** @var array $names */
-        foreach ($names as $item) {
-            $result[] = new static($item);
-        }
-        return $result;
+
+        return array_map(static fn (string $link) => self::getInstancesByName($link), $name);
     }
 
     /**
      * Сохранение файла
      *
-     * @param string $file
-     * @param bool $deleteFile
-     * @return boolean
      * @throws NotUploadFileException
      */
-    public function saveAs($file, $deleteFile = false)
+    public function saveAs($file, $deleteTempFile = false): bool
     {
-        if ($this->beforeSave($file, $deleteFile)) {
+        if ($this->beforeSave($file, $deleteTempFile)) {
             return file_put_contents($file, $this->getContent());
         }
         return false;
@@ -190,22 +158,16 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Удаление файла
-     *
-     * @param string $filePath
-     * @param Exception|null $exception
-     * @return bool
      */
-    public function deleteFile($filePath, $exception = null)
+    public function deleteFile(string $filePath, ?Throwable $exception = null): bool
     {
         return $this->beforeDelete($filePath, $exception);
     }
 
     /**
      * Получить файл
-     *
-     * @return string
      */
-    public function getFile()
+    public function getFile(): string
     {
         return $this->link;
     }
@@ -213,10 +175,9 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
     /**
      * Получить файл
      *
-     * @return string
      * @throws NotUploadFileException
      */
-    public function getContent()
+    public function getContent(): string
     {
         if (empty($this->content)) {
             $this->content = file_get_contents($this->link);
@@ -229,10 +190,8 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Получение информации об оригинальном именовании файла
-     *
-     * @return string
      */
-    public function getBaseName()
+    public function getBaseName(): string
     {
         $pathInfo = pathinfo('_' . basename($this->getName()), PATHINFO_FILENAME);
         return mb_substr($pathInfo, 1, mb_strlen($pathInfo, '8bit'), '8bit');
@@ -240,50 +199,40 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Получение расширения файла
-     *
-     * @return string
      */
-    public function getExtension()
+    public function getExtension(): string
     {
         return strtolower(pathinfo(basename($this->getName()), PATHINFO_EXTENSION));
     }
 
     /**
      * Установить расширение файла
-     *
-     * @param string $extension
      */
-    public function setExtension($extension)
+    public function setExtension(string $extension): void
     {
         $this->setName($this->getBaseName() . '.' . $extension);
     }
 
     /**
      * Получение полного имени файла
-     *
-     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * Устанавка полного имени файла
-     *
-     * @param string $name
+     * Установка полного имени файла
      */
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->name = $name;
     }
 
     /**
      * Получение MIME типа файла
-     *
-     * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         if (!empty($this->type)) {
             return $this->type;
@@ -301,20 +250,16 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Установить mime тип файла
-     *
-     * @param string $mime
      */
-    public function setType($mime)
+    public function setType(string $mime): void
     {
         $this->type = $mime;
     }
 
     /**
      * Получение размера файла
-     *
-     * @return integer
      */
-    public function getSize()
+    public function getSize(): int
     {
         if (!empty($this->size)) {
             return $this->size;
@@ -330,20 +275,16 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Установить размер файла
-     *
-     * @param integer $size
      */
-    public function setSize($size)
+    public function setSize(int $size): void
     {
         $this->size = $size;
     }
 
     /**
-     *  Получить системное имя файла
-     *
-     * @return string
+     * Получить системное имя файла
      */
-    public function getSysName()
+    public function getSysName(): string
     {
         if (empty($this->sysName)) {
             $this->sysName = uniqid();
@@ -353,40 +294,32 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Установить системное имя
-     *
-     * @param string $sysName
      */
-    public function setSysName($sysName)
+    public function setSysName(string $sysName): void
     {
         $this->sysName = $sysName;
     }
 
     /**
      * Получить mime тип по ссылке
-     *
-     * @return string|null
      */
-    protected function getMimeTypeFromLink()
+    protected function getMimeTypeFromLink(): ?string
     {
         return $this->getHeaderContent('Content-Type');
     }
 
     /**
      * Получить размер файла по ссылке
-     *
-     * @return string|null
      */
-    protected function getFileSizeFormLink()
+    protected function getFileSizeFormLink(): ?string
     {
         return $this->getHeaderContent('Content-Length');
     }
 
     /**
      * Получить имя файла по ссылке
-     *
-     * @return string|null
      */
-    protected function getFileNameFromLink()
+    protected function getFileNameFromLink(): ?string
     {
         $header = $this->getHeaderContent('Content-Disposition');
         if (preg_match('/filename=\"([^\"]*)\";/sui', $header, $match)) {
@@ -401,17 +334,14 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
 
     /**
      * Получить содержимое нужного заголовка
-     *
-     * @param string $name
-     * @return string|null
      */
-    protected function getHeaderContent($name)
+    protected function getHeaderContent(string $name): ?string
     {
         if (empty($this->headers) && $headers = get_headers($this->link)) {
             foreach ($headers as $header) {
                 $items = explode(':', $header);
                 if (count($items) == 2) {
-                    list($name, $value) = explode(':', $header);
+                    [$name, $value] = explode(':', $header);
                     $this->headers[$name] = trim($value);
                 }
             }
@@ -420,5 +350,13 @@ class RemoteUploadedFile extends BaseObject implements UploadInterface, Observer
             return $this->headers[$name];
         }
         return null;
+    }
+
+    /**
+     * Необходимость удаление временного файла после загрузки
+     */
+    public function needDeleteTempFile(): bool
+    {
+        return false;
     }
 }

@@ -20,18 +20,9 @@ class UploadedFileTest extends TestCase
     use UploaderMockTrait;
 
     /**
-     * @inheritdoc
-     */
-    protected function setUp()
-    {
-        parent::setUp();
-        $this->mockApplication();
-    }
-
-    /**
      * Тестирование изменения данных объекта
      */
-    public function testMoveValue()
+    public function testMoveValue(): void
     {
         /** @var UploadInterface $uploader */
         $uploader = $this->createImageUploader();
@@ -46,7 +37,7 @@ class UploadedFileTest extends TestCase
     /**
      * Получение instance файла
      */
-    public function testGetInstance()
+    public function testGetInstance(): void
     {
         /** @var UploadedFile $image */
         $image = UploadedFile::getInstance(new ImageModelTest(), 'imageUploader');
@@ -56,7 +47,7 @@ class UploadedFileTest extends TestCase
     /**
      * Получение instance файлов
      */
-    public function testGetInstances()
+    public function testGetInstances(): void
     {
         /** @var UploadedFile[] $files */
         $files = UploadedFile::getInstances(new FileModelTest(), 'files');
@@ -66,5 +57,14 @@ class UploadedFileTest extends TestCase
         foreach ($files as $file) {
             $this->assertInstanceOf(UploadedFile::class, $file);
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->mockApplication();
     }
 }

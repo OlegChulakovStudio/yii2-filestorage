@@ -6,10 +6,10 @@
  * @link http://chulakov.com/
  */
 
-use yii\base\Model;
+use chulakov\filestorage\behaviors\FileUploadBehavior;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\UploadedFile;
-use chulakov\filestorage\behaviors\FileUploadBehavior;
+use yii\base\Model;
 
 /**
  * Class BasicFileForm
@@ -29,30 +29,36 @@ class BasicFileForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['file'], 'required']
+            [['file'], 'required'],
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                // Поведение загрузки. Два типа:
-                // FileUploadBehavior - для загрузки одного файла
-                // FileUploadBehavior - для загрузки множества файлов
-                'class' => FileUploadBehavior::className(),
-                'attribute' => 'file', // Атрибут формы, куда должен загрузиться файл
-                'group' => 'files', // Группа файлов, куда будет сохранен файл
-                'fileStorage' => 'fileStorage', // Файловое хранилище
-                // Репозитории. Два типа:
-                // UploadedFile - загрузка через POST запрос
-                // RemoteUploadedFile - загрузка по ссылке
+                /**
+                 * Поведение загрузки. Два типа:
+                 * FileUploadBehavior - для загрузки одного файла
+                 * FileUploadBehavior - для загрузки множества файлов
+                 */
+                'class' => FileUploadBehavior::class,
+                /** Атрибут формы, куда должен загрузиться файл */
+                'attribute' => 'file',
+                /** Группа файлов, куда будет сохранен файл */
+                'group' => 'files',
+                /** Файловое хранилище */
+                'fileStorage' => 'fileStorage',
+                /** Репозитории. Два типа:
+                 * UploadedFile - загрузка через POST запрос
+                 * RemoteUploadedFile - загрузка по ссылке
+                 */
                 'repository' => UploadedFile::class,
             ],
         ];

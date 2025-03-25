@@ -8,8 +8,8 @@
 
 namespace backend\controllers\actions;
 
-use yii\base\Action;
 use chulakov\filestorage\models\Image;
+use yii\base\Action;
 
 /**
  * Class RemoveImageAction
@@ -20,12 +20,10 @@ class RemoveImageAction extends Action
     /**
      * Удаление дочерних изображений модели
      */
-    public function run()
+    public function run(): void
     {
         $image = Image::findOne(['id' => 1]);
 
-        if ($image) {
-            $image->removeAllImages();
-        }
+        $image?->removeAllImages();
     }
 }

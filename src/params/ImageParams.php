@@ -17,80 +17,55 @@ use chulakov\filestorage\image\Position;
 class ImageParams extends PathParams
 {
     /**
-     *  Ширина
-     *
-     * @var integer
+     * Ширина
      */
-    public $width;
+    public int $width;
     /**
      * Высота
-     *
-     * @var integer
      */
-    public $height;
+    public int $height;
     /**
      * Расширение
-     *
-     * @var string
      */
-    public $extension;
+    public ?string $extension = null;
     /**
      * Желаемое расширение файла
-     *
-     * @var string
      */
-    public $encode;
+    public ?string $encode = null;
     /**
      * Качество
-     *
-     * @var int
      */
-    public $quality = 100;
+    public int $quality = 100;
     /**
      * Путь к файлу с watermark
-     *
-     * @var string
      */
-    public $watermarkPath;
+    public ?string $watermarkPath = null;
     /**
      * Позиция watermark
-     *
-     * @var integer
      */
-    public $watermarkPosition;
+    public ?string $watermarkPosition = null;
     /**
      * Позиция при cover
-     *
-     * @var string
      */
-    public $coverPosition = Position::CENTER;
+    public string $coverPosition = Position::CENTER;
     /**
      * Категория файлов
-     *
-     * @var string
      */
-    public $group = 'images';
+    public string $group = 'images';
     /**
      * Шаблон сохранения thumbnails файлов
-     *
-     * @var string
      */
-    public $pathPattern = '{relay}/{group}/{basename}/{type}_{width}x{height}.{ext}';
+    public string $pathPattern = '{relay}/{group}/{basename}/{type}_{width}x{height}.{ext}';
     /**
      * Шаблон удаления файлов.
-     * Испольует glob для поиска всех файлов.
-     *
-     * @var string
+     * Использует glob для поиска всех файлов.
      */
-    public $searchPattern = '{relay}/{group}/{basename}/*';
+    public string $searchPattern = '{relay}/{group}/{basename}/*';
 
     /**
      * Конструктор параметров
-     *
-     * @param integer $width
-     * @param integer $height
      */
-    public function __construct($width, $height)
+    public function __construct(int $width, int $height)
     {
         $this->width = $width;
         $this->height = $height;
@@ -98,11 +73,9 @@ class ImageParams extends PathParams
     }
 
     /**
-     * Выдача скомпанованных параметров
-     *
-     * @return array
+     * Выдача скомпонованных параметров
      */
-    public function config()
+    public function config(): array
     {
         return array_merge(parent::config(), [
             '{group}' => $this->group,

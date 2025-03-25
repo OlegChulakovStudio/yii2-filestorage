@@ -7,11 +7,11 @@
  * @link http://chulakov.com/
  */
 
-use yii\base\Model;
 use backend\managers\MailManager;
+use chulakov\filestorage\behaviors\FileUploadBehavior;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\UploadedFile;
-use chulakov\filestorage\behaviors\FileUploadBehavior;
+use yii\base\Model;
 
 /**
  * Class CustomForm
@@ -31,33 +31,32 @@ class CustomForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['file'], 'required']
+            [['file'], 'required'],
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                'class' => FileUploadBehavior::className(),
+                'class' => FileUploadBehavior::class,
                 'attribute' => 'file',
                 'group' => 'files',
                 'fileStorage' => 'fileStorage',
                 'repository' => UploadedFile::class,
                 'repositoryOptions' => [
-                    'listeners' =>
+                    'listeners' => [
                         [
-                            [
-                                'class' => MailManager::class,
-                            ]
+                            'class' => MailManager::class,
                         ],
-                ]
+                    ],
+                ],
             ],
         ];
     }

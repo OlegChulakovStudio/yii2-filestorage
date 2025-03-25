@@ -23,16 +23,6 @@ class ObserverTest extends TestCase
     use UploaderMockTrait;
 
     /**
-     * @inheritdoc
-     */
-    protected function setUp()
-    {
-        parent::setUp();
-        $this->mockApplication();
-        $this->generateFakeUploader();
-    }
-
-    /**
      * Тумблер для проверки срабатывания события
      *
      * @var bool
@@ -65,5 +55,15 @@ class ObserverTest extends TestCase
         $uploader->trigger(Event::SAVE_EVENT, $event);
 
         $this->assertTrue($this->tumbler);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->mockApplication();
+        $this->generateFakeUploader();
     }
 }

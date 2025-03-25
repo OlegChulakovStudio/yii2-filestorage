@@ -9,6 +9,7 @@
 namespace chulakov\filestorage\managers;
 
 use chulakov\filestorage\observer\Event;
+use Exception;
 
 /**
  * Class SaveManager
@@ -20,9 +21,9 @@ class ImageManager extends AbstractImageManager
      * Событие на сохранение
      *
      * @param Event $event
-     * @throws \Exception
+     * @throws Exception
      */
-    public function handle(Event $event)
+    public function handle(Event $event): void
     {
         // Проверка корректного типа отправителя
         if ($this->validate($event->sender)) {
@@ -37,29 +38,26 @@ class ImageManager extends AbstractImageManager
     }
 
     /**
-     * Событие на уладение
+     * Событие на удаление
      *
      * @param Event $event
-     * @throws \Exception
+     * @throws Exception
      */
-    public function handleDelete(Event $event)
+    public function handleDelete(Event $event): void
     {
         if ($this->validate($event->sender)) {
             $this->deleteFile(
-                $this->updatePath($event->savedPath)
+                $this->updatePath($event->savedPath),
             );
         }
     }
 
     /**
      * Удаление файла
-     *
-     * @param string $path
-     * @return bool
      */
-    protected function deleteFile($path)
+    protected function deleteFile(string $path): bool
     {
-        return file_exists($path) ? unlink($path) : false;
+        return file_exists($path) && unlink($path);
     }
 
     /**
@@ -67,14 +65,14 @@ class ImageManager extends AbstractImageManager
      *
      * @param string $savedPath
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function updatePath($savedPath)
+    protected function updatePath(string $savedPath): string
     {
         $root = dirname($savedPath);
         $name = strtok(basename($savedPath), '.');
         return implode(DIRECTORY_SEPARATOR, [
-            $root, $name . '.' . $this->getExtension()
+            $root, $name . '.' . $this->getExtension(),
         ]);
     }
 }

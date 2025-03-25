@@ -8,9 +8,11 @@
 
 namespace backend\controllers\actions;
 
-use yii\base\Action;
-use backend\models\BasicFileForm;
+use BasicFileForm;
 use chulakov\filestorage\exceptions\NotUploadFileException;
+use Yii;
+use yii\base\Action;
+use yii\base\InvalidParamException;
 
 /**
  * Class UploadAction
@@ -21,17 +23,17 @@ class UploadAction extends Action
     /**
      * Базовая загрузка файла
      *
-     * @throws \yii\base\InvalidParamException
+     * @throws InvalidParamException
      * @throws NotUploadFileException
      */
-    public function run()
+    public function run(): string
     {
         $form = new BasicFileForm();
 
-        $request = \Yii::$app->request;
+        $request = Yii::$app->request;
 
         if ($request->isPost) {
-            $form->load(\Yii::$app->request->post(), '');
+            $form->load(Yii::$app->request->post(), '');
             if ($form->validate() && $form->upload()) {
                 return json_encode(['success' => true]);
             }

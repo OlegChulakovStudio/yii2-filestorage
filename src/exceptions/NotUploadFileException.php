@@ -8,13 +8,14 @@
 
 namespace chulakov\filestorage\exceptions;
 
+use Exception;
+
 /**
  * Не удалось загрузить файл
  *
  * Class NotUploadFileException
  * @package chulakov\components\exceptions
  */
-class NotUploadFileException extends \Exception
+class NotUploadFileException extends Exception
 {
-
 }

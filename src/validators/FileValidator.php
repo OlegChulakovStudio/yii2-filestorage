@@ -8,10 +8,12 @@
 
 namespace chulakov\filestorage\validators;
 
-use yii\validators\Validator;
-use yii\base\InvalidConfigException;
 use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\UploadInterface;
+use Yii;
+use yii\base\InvalidConfigException;
+use yii\base\Model;
+use yii\validators\Validator;
 
 /**
  * Класс валидатора для проверки наличия файла у модели
@@ -40,15 +42,16 @@ class FileValidator extends Validator
             throw new InvalidConfigException("Некорректная настройка attachedFile.");
         }
         if ($this->message === null) {
-            $this->message = \Yii::t('yii', '{attribute} is invalid.');
+            $this->message = Yii::t('yii', '{attribute} is invalid.');
         }
+
         parent::init();
     }
 
     /**
      * Валидация
      *
-     * @param \yii\base\Model $model
+     * @param Model $model
      * @param string $attribute
      */
     public function validateAttribute($model, $attribute)

@@ -6,12 +6,12 @@
  * @link http://chulakov.com/
  */
 
-use yii\base\Model;
-use chulakov\filestorage\image\Position;
-use chulakov\filestorage\models\BaseFile;
-use chulakov\filestorage\managers\ThumbsManager;
-use chulakov\filestorage\uploaders\UploadedFile;
 use chulakov\filestorage\behaviors\FileUploadBehavior;
+use chulakov\filestorage\image\Position;
+use chulakov\filestorage\managers\ThumbsManager;
+use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\uploaders\UploadedFile;
+use yii\base\Model;
 
 /**
  * Class ThumbForm
@@ -31,40 +31,47 @@ class ThumbForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['image'], 'required']
+            [['image'], 'required'],
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                'class' => FileUploadBehavior::className(),
+                'class' => FileUploadBehavior::class,
                 'attribute' => 'image',
                 'group' => 'photos',
                 'fileStorage' => 'fileStorage',
                 'repository' => UploadedFile::class,
                 'repositoryOptions' => [
-                    'listeners' =>
+                    'listeners' => [
                         [
-                            [
-                                'class' => ThumbsManager::className(), // Класс менеджера
-                                'encode' => 'jpg', // Расширение файла
-                                'quality' => 80, // Качество
-                                'width' => 192, // Ширина
-                                'height' => 192, // Высота
-                                'watermarkPath' => '/path/to/file/watermark.png', // Путь к водяной метке
-                                'watermarkPosition' => Position::CENTER, // Позиция водяной метки
-                                'imageComponent' => 'imageComponent', // Компонент для работы с изображениями
-                            ],
+                            /** Класс менеджера */
+                            'class' => ThumbsManager::class,
+                            /** Расширение файла */
+                            'encode' => 'jpg',
+                            /** Качество */
+                            'quality' => 80,
+                            /** Ширина */
+                            'width' => 192,
+                            /** Высота */
+                            'height' => 192,
+                            /** Путь к водяной метке */
+                            'watermarkPath' => '/path/to/file/watermark.png',
+                            /** Позиция водяной метки */
+                            'watermarkPosition' => Position::CENTER,
+                            /** Компонент для работы с изображениями */
+                            'imageComponent' => 'imageComponent',
                         ],
-                ]
+                    ],
+                ],
             ],
         ];
     }

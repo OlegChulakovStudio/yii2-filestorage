@@ -8,16 +8,16 @@
 
 namespace backend\controllers;
 
-use yii\web\Controller as BaseController;
-use backend\controllers\actions\WidenAction;
-use backend\controllers\actions\CoverAction;
-use backend\controllers\actions\ThumbAction;
-use backend\controllers\actions\UploadAction;
 use backend\controllers\actions\ContainAction;
+use backend\controllers\actions\CoverAction;
 use backend\controllers\actions\HeightenAction;
 use backend\controllers\actions\RemoveImageAction;
 use backend\controllers\actions\RemoveModelAction;
 use backend\controllers\actions\RemoveThumbsAction;
+use backend\controllers\actions\ThumbAction;
+use backend\controllers\actions\UploadAction;
+use backend\controllers\actions\WidenAction;
+use yii\web\Controller as BaseController;
 
 /**
  * Class SiteController
@@ -28,7 +28,7 @@ class Controller extends BaseController
     /**
      * @inheritdoc
      */
-    public function actions()
+    public function actions(): array
     {
         return [
             'uploader' => UploadAction::class,

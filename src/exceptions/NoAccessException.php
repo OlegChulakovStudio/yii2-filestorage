@@ -8,13 +8,14 @@
 
 namespace chulakov\filestorage\exceptions;
 
+use Exception;
+
 /**
  * Недостаточно прав на действие
  *
  * Class NoAccessException
  * @package chulakov\filestorage\exceptions
  */
-class NoAccessException extends \Exception
+class NoAccessException extends Exception
 {
-
 }

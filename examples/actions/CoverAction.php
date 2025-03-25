@@ -8,9 +8,9 @@
 
 namespace backend\controllers\actions;
 
-use yii\base\Action;
-use chulakov\filestorage\models\Image;
 use chulakov\filestorage\image\Position;
+use chulakov\filestorage\models\Image;
+use yii\base\Action;
 
 /**
  * Class CoverAction
@@ -21,9 +21,8 @@ class CoverAction extends Action
     /**
      * Генерация изображения с действием cover
      */
-    public function run()
+    public function run(): string
     {
-        /** @var Image[] $images */
         $images = Image::findAll(['group_code' => 'photos']);
 
         $links = [];

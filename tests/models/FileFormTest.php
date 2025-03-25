@@ -8,14 +8,15 @@
 
 namespace chulakov\filestorage\tests;
 
-use yii\base\Model;
-use chulakov\filestorage\image\Position;
-use chulakov\filestorage\ImageComponent;
-use chulakov\filestorage\models\BaseFile;
-use chulakov\filestorage\managers\ImageManager;
-use chulakov\filestorage\uploaders\UploadedFile;
-use chulakov\filestorage\managers\ThumbsManager;
 use chulakov\filestorage\behaviors\FileUploadBehavior;
+use chulakov\filestorage\image\Position;
+use chulakov\filestorage\managers\ImageManager;
+use chulakov\filestorage\managers\ThumbsManager;
+use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\uploaders\UploadedFile;
+use chulakov\filestorage\uploaders\UploadInterface;
+use Yii;
+use yii\base\Model;
 
 /**
  * Class FileForm
@@ -27,31 +28,29 @@ class FileFormTest extends Model
 {
     /**
      * Загружаемый файл
-     *
-     * @var array
      */
-    public $image;
+    public ?UploadInterface $image = null;
 
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['image'], 'required']
+            [['image'], 'required'],
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
-        $watermarkPath = \Yii::getAlias('@tests/data') . '/images/watermark/watermark.png';
+        $watermarkPath = Yii::getAlias('@tests/data') . '/images/watermark/watermark.png';
 
         return [
             [
-                'class' => FileUploadBehavior::className(),
+                'class' => FileUploadBehavior::class,
                 'attribute' => 'image',
                 'group' => 'photos',
                 'type' => 'animal',
@@ -61,7 +60,7 @@ class FileFormTest extends Model
                     'listeners' =>
                         [
                             [
-                                'class' => ThumbsManager::className(),
+                                'class' => ThumbsManager::class,
                                 'encode' => 'jpg',
                                 'quality' => 80,
                                 'watermarkPath' => $watermarkPath,
@@ -69,7 +68,7 @@ class FileFormTest extends Model
                                 'imageComponent' => 'imageComponent',
                             ],
                             [
-                                'class' => ImageManager::className(),
+                                'class' => ImageManager::class,
                                 'width' => 640,
                                 'height' => 480,
                                 'encode' => 'jpg',
@@ -77,9 +76,9 @@ class FileFormTest extends Model
                                 'watermarkPath' => $watermarkPath,
                                 'watermarkPosition' => Position::CENTER,
                                 'imageComponent' => 'imageComponent',
-                            ]
+                            ],
                         ],
-                ]
+                ],
             ],
         ];
     }

@@ -8,18 +8,18 @@
 
 namespace chulakov\filestorage\models;
 
-use yii\rbac\Item;
-use yii\db\ActiveRecord;
-use yii\behaviors\TimestampBehavior;
 use chulakov\filestorage\behaviors\StorageBehavior;
 use chulakov\filestorage\models\scopes\BaseFileQuery;
+use yii\behaviors\TimestampBehavior;
+use yii\db\ActiveRecord;
+use yii\rbac\Item;
 
 /**
  * Базовая модель информации о загруженном файле
  *
  * @property integer $id
  * @property string $group_code
- * @property string $object_id
+ * @property int $object_id
  * @property string $object_type
  * @property string $ori_name
  * @property string $ori_extension
@@ -30,16 +30,16 @@ use chulakov\filestorage\models\scopes\BaseFileQuery;
  * @property integer $updated_at
  *
  * @method string getUrl(bool $isAbsolute = false, Item $role = null) Возвращает абсолютный или относительный URL-адрес к файлу
- * @method string getPath(Item $role = null)     Возвращает полный путь к файлу в файловой системе
+ * @method string getPath(Item $role = null) Возвращает полный путь к файлу в файловой системе
  * @method string getUploadUrl(bool $isAbsolute) Возвращает URL-адрес до директории нахождения файлов определенного типа
- * @method string getUploadPath()                Возвращает абсолютный путь к директории хранения файлов определенного типа
+ * @method string getUploadPath() Возвращает абсолютный путь к директории хранения файлов определенного типа
  */
 abstract class BaseFile extends ActiveRecord
 {
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return '{{%file}}';
     }
@@ -48,9 +48,8 @@ abstract class BaseFile extends ActiveRecord
      * Инициализация корректной модели файла
      *
      * @param array $row
-     * @return File|Image|static
      */
-    public static function instantiate($row)
+    public static function instantiate($row): static
     {
         if (static::checkIsImage($row['mime'])) {
             return new Image();
@@ -60,19 +59,16 @@ abstract class BaseFile extends ActiveRecord
 
     /**
      * Проверка mime типа на изображение
-     *
-     * @param string $mime
-     * @return bool
      */
-    public static function checkIsImage($mime)
+    public static function checkIsImage(string $mime): bool
     {
-        return strpos($mime, 'image') === 0;
+        return str_starts_with($mime, 'image');
     }
 
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             TimestampBehavior::class,
@@ -83,7 +79,7 @@ abstract class BaseFile extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['group_code', 'ori_name', 'ori_extension', 'sys_file', 'mime'], 'required'],
@@ -97,22 +93,17 @@ abstract class BaseFile extends ActiveRecord
     }
 
     /**
-     * Установка системного пути до сохраненого файла
-     *
-     * @param string $name
-     * @param string|null $path
+     * Установка системного пути до сохраненного файла
      */
-    public function setSystemFile($name, $path = null)
+    public function setSystemFile(string $name, ?string $path = null): void
     {
         $this->sys_file = implode(DIRECTORY_SEPARATOR, array_filter([$path, $name]));
     }
 
     /**
      * Получение информации об оригинальном именовании файла
-     *
-     * @return string
      */
-    public function getBaseName()
+    public function getBaseName(): string
     {
         $pathInfo = pathinfo('_' . basename($this->sys_file), PATHINFO_FILENAME);
         return mb_substr($pathInfo, 1, mb_strlen($pathInfo, '8bit'), '8bit');
@@ -120,30 +111,24 @@ abstract class BaseFile extends ActiveRecord
 
     /**
      * Расширение сохраненного файла
-     *
-     * @return string
      */
-    public function getExtension()
+    public function getExtension(): string
     {
         return strtolower(pathinfo($this->sys_file, PATHINFO_EXTENSION));
     }
 
     /**
      * Проверка файла на изображение
-     *
-     * @return bool
      */
-    public function isImage()
+    public function isImage(): bool
     {
         return static::checkIsImage($this->mime);
     }
 
     /**
      * Модель поиска файла
-     *
-     * @return BaseFileQuery
      */
-    public static function find()
+    public static function find(): BaseFileQuery
     {
         return new BaseFileQuery(get_called_class());
     }

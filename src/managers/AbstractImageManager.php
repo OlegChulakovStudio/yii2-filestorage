@@ -8,18 +8,20 @@
 
 namespace chulakov\filestorage\managers;
 
-use yii\di\Instance;
-use yii\base\BaseObject;
-use yii\helpers\FileHelper;
 use chulakov\filestorage\FileStorage;
+use chulakov\filestorage\image\ImageContainer;
+use chulakov\filestorage\image\Position;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\observer\Event;
-use chulakov\filestorage\params\ImageParams;
-use chulakov\filestorage\image\Position;
-use chulakov\filestorage\image\ImageContainer;
-use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\observer\ListenerInterface;
 use chulakov\filestorage\observer\ObserverInterface;
+use chulakov\filestorage\params\ImageParams;
+use chulakov\filestorage\uploaders\UploadInterface;
+use Exception;
+use yii\base\BaseObject;
+use yii\base\InvalidConfigException;
+use yii\di\Instance;
+use yii\helpers\FileHelper;
 
 /**
  * Class AbstractImageManager
@@ -29,16 +31,12 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
 {
     /**
      * Ширина
-     *
-     * @var integer
      */
-    public $width;
+    public int $width;
     /**
      * Высота
-     *
-     * @var integer
      */
-    public $height;
+    public int $height;
     /**
      * Кодировка картинки
      *
@@ -53,82 +51,50 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
      * psd — return Photoshop Document (PSD) encoded image data
      * webp — return WebP encoded image data
      * data-url — encode current image data in data URI scheme (RFC 2397)
-     *
-     * @var string
      */
-    public $encode;
+    public ?string $encode = null;
     /**
      * Качество изображения в процентах
-     *
-     * @var integer
      */
-    public $quality = 100;
+    public int $quality = 100;
     /**
      * Путь к картинке с водяной меткой
-     *
-     * @var string
      */
-    public $watermarkPath;
+    public ?string $watermarkPath = null;
     /**
      * Позиционирование
-     *
-     * @var string
      */
-    public $watermarkPosition = Position::CENTER;
+    public string $watermarkPosition = Position::CENTER;
     /**
      * Компонент обработки изображений
-     *
-     * @var ImageComponent
      */
-    public $imageComponent = 'imageComponent';
+    public ImageComponent|string $imageComponent = 'imageComponent';
     /**
      * Класс параметрической модели информации об изменении изображения
-     *
-     * @var string
      */
-    public $imageParamsClass = 'chulakov\filestorage\params\ImageParams';
+    public string $imageParamsClass = 'chulakov\filestorage\params\ImageParams';
     /**
      * Компонент работы с файлами
-     *
-     * @var FileStorage
      */
-    public $fileStorage = 'fileStorage';
-    /**
-     * @var UploadInterface
-     */
-    protected $uploader;
-    /**
-     * @var ImageContainer
-     */
-    protected $image;
-    /**
-     * @var ImageParams
-     */
-    protected $params;
+    public FileStorage|string $fileStorage = 'fileStorage';
+    protected UploadInterface $uploader;
+    protected ?ImageContainer $image = null;
+    protected ?ImageParams $params = null;
 
     /**
      * Обработка файла
-     *
-     * @param Event $event
-     * @return mixed
      */
-    abstract public function handle(Event $event);
+    abstract public function handle(Event $event): void;
 
     /**
      * Обработка события удаления
-     *
-     * @param Event $event
      */
-    public function handleDelete(Event $event)
-    {
-    }
+    public function handleDelete(Event $event): void {}
 
     /**
      * Присоединение к Observer
-     *
-     * @param ObserverInterface $observer
      */
-    public function attach(ObserverInterface $observer)
+    public function attach(ObserverInterface $observer): void
     {
         $observer->on(Event::SAVE_EVENT, [$this, 'handle']);
         $observer->on(Event::DELETE_EVENT, [$this, 'handleDelete']);
@@ -137,25 +103,24 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     /**
      * @inheritdoc
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
+
         $this->fileStorage = Instance::ensure($this->fileStorage);
     }
 
     /**
      * Валидация файла для обработки
      *
-     * @param object $uploader
-     * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function validate($uploader)
+    protected function validate(object $uploader): bool
     {
         // Проверка корректного типа отправителя
-        if (!($uploader instanceof UploadInterface)) {
+        if ($uploader instanceof UploadInterface === false) {
             return false;
         }
         // Проверка файла по типу изменяемого
@@ -166,21 +131,19 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     /**
      * Проверка файла на изображение
      *
-     * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
-    public function isImage()
+    public function isImage(): bool
     {
-        return strpos($this->getType(), 'image') !== false;
+        return str_contains($this->getType(), 'image');
     }
 
     /**
      * Получение MIME типа файла
      *
-     * @return string
-     * @throws \Exception
+     * @throws Exception
      */
-    public function getType()
+    public function getType(): string
     {
         if ($this->image) {
             if ($mime = $this->image->getMimeType()) {
@@ -196,10 +159,9 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     /**
      * Получить расширение файла
      *
-     * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
-    public function getExtension()
+    public function getExtension(): string
     {
         if ($this->image && $this->image->isSaved()) {
             if ($ext = $this->image->getExtension()) {
@@ -215,10 +177,9 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
     /**
      * Получение размера файла
      *
-     * @return integer
-     * @throws \Exception
+     * @throws Exception
      */
-    public function getSize()
+    public function getSize(): int
     {
         if ($this->image && $this->image->isSaved()) {
             return $this->image->getFileSize();
@@ -228,79 +189,78 @@ abstract class AbstractImageManager extends BaseObject implements ListenerInterf
 
     /**
      * Обработка файла
-     *
-     * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function processing()
+    protected function processing(): void
     {
-        $this->image = $this->getImageManager()
+        $this->image = $this
+            ->getImageManager()
             ->createImage(
                 $this->uploader->getFile(),
-                $this->getImageParams()
+                $this->getImageParams(),
             );
-        return !empty($this->image);
     }
 
     /**
      * Получение параметров обработки изображения
-     *
-     * @return ImageParams
-     * @throws \Exception
+     * @throws Exception
      */
-    public function getImageParams()
+    public function getImageParams(): ImageParams
     {
-        if (is_null($this->params)) {
-            $ext = !empty($this->encode) ? $this->encode : $this->getExtension();
-            $this->params = new $this->imageParamsClass($this->width, $this->height);
-            $this->params->extension = $ext;
-            $this->params->quality = $this->quality;
-            $this->params->watermarkPath = $this->watermarkPath;
-            $this->params->watermarkPosition = $this->watermarkPosition;
-        }
-        return $this->params;
+        return $this->params ??= $this->makeImageParams();
+    }
+
+    /**
+     * Получение параметров обработки изображения
+     * @throws Exception
+     */
+    public function makeImageParams(): ImageParams
+    {
+        $ext = $this->encode ?? $this->getExtension();
+        $params = new $this->imageParamsClass($this->width, $this->height);
+        $params->extension = $ext;
+        $params->quality = $this->quality;
+        $params->watermarkPath = $this->watermarkPath;
+        $params->watermarkPosition = $this->watermarkPosition;
+        return $params;
     }
 
     /**
      * Сохранение изображения
-     *
-     * @param string $savedPath
-     * @return boolean
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function saveImage($savedPath)
+    protected function saveImage(string $savedPath): bool
     {
-        return $this->image
-            ? $this->image->save($savedPath, $this->quality)
-            : false;
+        return (bool) $this->image?->save($savedPath, $this->quality);
+    }
+
+    /**
+     * Удаление изображения
+     * @throws Exception
+     */
+    protected function deleteImage(string $savedPath): void
+    {
+        $this->image?->delete($savedPath);
     }
 
     /**
      * Обновление пути сохранения файла
-     *
-     * @param string $savedPath
-     * @return string
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function updatePath($savedPath)
+    protected function updatePath(string $savedPath): string
     {
         return $this->fileStorage->getAbsolutePath(
-            $this->fileStorage->makePath($savedPath, $this->getImageParams())
+            $this->fileStorage->makePath($savedPath, $this->getImageParams()),
         );
     }
 
     /**
-     * Геттер для работы с imageComponent
      * Получить менеджер работы с изображениями
-     *
-     * @return ImageComponent
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function getImageManager()
+    protected function getImageManager(): ImageComponent
     {
-        if (is_string($this->imageComponent)) {
-            $this->imageComponent = Instance::ensure($this->imageComponent);
-        }
+        $this->imageComponent = Instance::ensure($this->imageComponent);
         return $this->imageComponent;
     }
 }

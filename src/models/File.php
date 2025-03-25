@@ -19,9 +19,8 @@ class File extends BaseFile
      * Инициализация корректной модели файла
      *
      * @param array $row
-     * @return static
      */
-    public static function instantiate($row)
+    public static function instantiate($row): static
     {
         return new static();
     }

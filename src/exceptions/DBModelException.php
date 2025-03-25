@@ -8,7 +8,9 @@
 
 namespace chulakov\filestorage\exceptions;
 
+use Exception;
 
-class DBModelException extends \Exception
+
+class DBModelException extends Exception
 {
 }

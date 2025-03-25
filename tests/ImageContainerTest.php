@@ -8,12 +8,13 @@
 
 namespace chulakov\filestorage\tests;
 
-use yii\di\Instance;
-use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\image\ImageContainer;
 use chulakov\filestorage\image\Position;
+use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\params\ImageParams;
 use chulakov\filestorage\params\ThumbParams;
-use chulakov\filestorage\image\ImageContainer;
+use Yii;
+use yii\di\Instance;
 
 /**
  * Class ImageContainerTest
@@ -22,51 +23,26 @@ use chulakov\filestorage\image\ImageContainer;
 class ImageContainerTest extends TestCase
 {
     /**
-     * Компонент для работы с изображениями
-     *
-     * @var ImageComponent
-     */
-    protected $imageComponent = ImageComponent::class;
-    /**
      * Класс ImageContainer с изображением
-     *
-     * @var ImageContainer
      */
-    protected static $image;
+    protected static ImageContainer $image;
     /**
      * Путь к оригинальному изображению
-     *
-     * @var string
      */
-    protected static $imagePath;
+    protected static string $imagePath;
     /**
      * Путь к сохраненному изображению
-     *
-     * @var string
      */
-    protected static $imageSavePath;
-
+    protected static string $imageSavePath;
     /**
-     * @inheritdoc
+     * Компонент для работы с изображениями
      */
-    protected function setUp()
-    {
-        parent::setUp();
-        $this->mockApplication();
-
-        self::$imagePath = \Yii::getAlias('@tests/data') . '/images/image.png';
-        self::$imageSavePath = \Yii::getAlias('@tests/runtime') . '/images/image.png';
-
-        $this->imageComponent = Instance::ensure($this->imageComponent);
-        if (empty(self::$image)) {
-            self::$image = $this->createImage();
-        }
-    }
+    protected ImageComponent|string $imageComponent = ImageComponent::class;
 
     /**
      * Тест создания изображения
      */
-    public function testCreateImage()
+    public function testCreateImage(): void
     {
         $this->assertInstanceOf(ImageContainer::class, self::$image);
     }
@@ -74,7 +50,7 @@ class ImageContainerTest extends TestCase
     /**
      * Получение свойств изображения
      */
-    public function testImageProperty()
+    public function testImageProperty(): void
     {
         $image = self::$image;
 
@@ -89,11 +65,11 @@ class ImageContainerTest extends TestCase
     /**
      * Тестирование генерации thumbnail
      */
-    public function testImageThumb()
+    public function testImageThumb(): void
     {
         $params = new ThumbParams(40, 40);
         $this->callFuncImgContainer('thumb', self::$imageSavePath, $params);
-        list($width, $height) = getimagesize(self::$imageSavePath);
+        [$width, $height] = getimagesize(self::$imageSavePath);
 
         $this->assertFileExists(self::$imageSavePath);
         $this->assertEquals(40, $width);
@@ -102,15 +78,39 @@ class ImageContainerTest extends TestCase
     }
 
     /**
+     * Вызов функции контейнера
+     *
+     * @param string $func
+     * @param string $path
+     * @param ImageParams $imageParams
+     * @return bool
+     */
+    protected function callFuncImgContainer(string $func, string $path, ImageParams $imageParams): bool
+    {
+        return self::$image->{$func}(
+            $path,
+            $imageParams
+        );
+    }
+
+    /**
+     * Удаление файла
+     */
+    protected function deleteFile(string $path): bool
+    {
+        return file_exists($path) && is_file($path) && unlink($path);
+    }
+
+    /**
      * Тестирование генерации cover
      */
-    public function testImageCover()
+    public function testImageCover(): void
     {
         $params = new ImageParams(50, 40);
         $params->coverPosition = Position::CENTER;
 
         $this->callFuncImgContainer('cover', self::$imageSavePath, $params);
-        list($width, $height) = getimagesize(self::$imageSavePath);
+        [$width, $height] = getimagesize(self::$imageSavePath);
 
         $this->assertFileExists(self::$imageSavePath);
         $this->assertEquals(50, $width);
@@ -121,13 +121,13 @@ class ImageContainerTest extends TestCase
     /**
      * Тестирование генерации contain
      */
-    public function testImageContain()
+    public function testImageContain(): void
     {
         $params = new ImageParams(50, 40);
         $params->coverPosition = Position::CENTER;
 
         $this->callFuncImgContainer('contain', self::$imageSavePath, $params);
-        list($width, $height) = getimagesize(self::$imageSavePath);
+        [$width, $height] = getimagesize(self::$imageSavePath);
 
         $this->assertFileExists(self::$imageSavePath);
         $this->assertEquals(50, $width);
@@ -138,13 +138,13 @@ class ImageContainerTest extends TestCase
     /**
      * Тестирование генерации widen
      */
-    public function testImageWiden()
+    public function testImageWiden(): void
     {
         $params = new ImageParams(50, 0);
         $params->coverPosition = Position::CENTER;
 
         $this->callFuncImgContainer('widen', self::$imageSavePath, $params);
-        list($width) = getimagesize(self::$imageSavePath);
+        [$width] = getimagesize(self::$imageSavePath);
 
         $this->assertFileExists(self::$imageSavePath);
         $this->assertEquals(50, $width);
@@ -154,13 +154,13 @@ class ImageContainerTest extends TestCase
     /**
      * Тестирование генерации heighten
      */
-    public function testImageHeighten()
+    public function testImageHeighten(): void
     {
         $params = new ImageParams(0, 50);
         $params->coverPosition = Position::CENTER;
 
         $this->callFuncImgContainer('heighten', self::$imageSavePath, $params);
-        list($w, $height) = getimagesize(self::$imageSavePath);
+        [$width, $height] = getimagesize(self::$imageSavePath);
 
         $this->assertFileExists(self::$imageSavePath);
         $this->assertEquals(50, $height);
@@ -168,42 +168,29 @@ class ImageContainerTest extends TestCase
     }
 
     /**
-     * Создание изображения
-     *
-     * @param string $path
-     * @return ImageContainer
+     * @inheritdoc
      */
-    protected function createImage($path = '')
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->mockApplication();
+
+        self::$imagePath = Yii::getAlias('@tests/data') . '/images/image.png';
+        self::$imageSavePath = Yii::getAlias('@tests/runtime') . '/images/image.png';
+
+        $this->imageComponent = Instance::ensure($this->imageComponent);
+        if (empty(self::$image)) {
+            self::$image = $this->createImage();
+        }
+    }
+
+    /**
+     * Создание изображения
+     */
+    protected function createImage(string $path = ''): ImageContainer
     {
         return $this->imageComponent->make(
-            empty($path) ? \Yii::getAlias('@tests/data') . '/images/image.png' : $path
-        );
-    }
-
-    /**
-     * Удаление файла
-     *
-     * @param string $path
-     * @return bool
-     */
-    protected function deleteFile($path)
-    {
-        return file_exists($path) && is_file($path) ? unlink($path) : false;
-    }
-
-    /**
-     * Вызов функциий контейнера
-     *
-     * @param string $func
-     * @param string $path
-     * @param ImageParams $imageParams
-     * @return bool
-     */
-    protected function callFuncImgContainer($func, $path, ImageParams $imageParams)
-    {
-        return self::$image->{$func}(
-            $path,
-            $imageParams
+            empty($path) ? Yii::getAlias('@tests/data') . '/images/image.png' : $path,
         );
     }
 }

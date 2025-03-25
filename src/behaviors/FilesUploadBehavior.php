@@ -20,7 +20,7 @@ class FilesUploadBehavior extends FileUploadBehavior
     /**
      * @var bool
      */
-    protected $isMultiple = true;
+    protected bool $isMultiple = true;
 
     /**
      * Проверка, инициализированы ли данные в массиве модели
@@ -28,7 +28,7 @@ class FilesUploadBehavior extends FileUploadBehavior
      * @param mixed $model
      * @return bool
      */
-    protected function isInstances($model)
+    protected function isInstances($model): bool
     {
         if (is_array($model)) {
             foreach ($model as $item) {
@@ -42,8 +42,7 @@ class FilesUploadBehavior extends FileUploadBehavior
 
     /**
      * Инициализация массива данных для модели
-     *
-     * @return mixed
+     * @return UploadInterface[]
      */
     protected function getInstances()
     {
@@ -60,9 +59,9 @@ class FilesUploadBehavior extends FileUploadBehavior
      *
      * @param UploadInterface[] $files
      */
-    protected function configureInstances($files)
+    protected function configureInstances($files): void
     {
-        if (!empty($this->repositoryOptions)) {
+        if (empty($this->repositoryOptions) === false) {
             foreach ($files as $file) {
                 $file->configure($this->repositoryOptions);
             }

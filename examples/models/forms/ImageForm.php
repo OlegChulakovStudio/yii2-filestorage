@@ -6,12 +6,12 @@
  * @link http://chulakov.com/
  */
 
-use yii\base\Model;
-use chulakov\filestorage\image\Position;
-use chulakov\filestorage\models\BaseFile;
-use chulakov\filestorage\managers\ImageManager;
-use chulakov\filestorage\uploaders\UploadedFile;
 use chulakov\filestorage\behaviors\FileUploadBehavior;
+use chulakov\filestorage\image\Position;
+use chulakov\filestorage\managers\ImageManager;
+use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\uploaders\UploadedFile;
+use yii\base\Model;
 
 /**
  * Class ImageForm
@@ -31,41 +31,49 @@ class ImageForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['image'], 'required']
+            [['image'], 'required'],
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                'class' => FileUploadBehavior::className(),
+                'class' => FileUploadBehavior::class,
                 'attribute' => 'image',
                 'group' => 'photos',
                 'fileStorage' => 'fileStorage',
                 'repository' => UploadedFile::class,
                 'repositoryOptions' => [
-                    'listeners' =>
+                    'listeners' => [
                         [
-                            [
-                                'class' => ImageManager::className(), // Класс менеджера
-                                'width' => 640, // Ширина
-                                'height' => 480, // Высота
-                                'encode' => 'jpg', // Расширение файла
-                                'quality' => 100, // Качество изображений
-                                'watermarkPath' => '/path/to/watermark/watermark.png', // Путь к водяной метке
-                                'watermarkPosition' => Position::CENTER, // Позиция водяной метки
-                                'imageComponent' => 'imageComponent', // Компонент для работы с изображениями
-                                'accessRole' => 'role_example', // Роль для RBAC
-                            ]
+                            /** Класс менеджера */
+                            'class' => ImageManager::class,
+                            /** Ширина */
+                            'width' => 640,
+                            /** Высота */
+                            'height' => 480,
+                            /** Расширение файла */
+                            'encode' => 'jpg',
+                            /** Качество изображений */
+                            'quality' => 100,
+                            /** Путь к водяной метке */
+                            'watermarkPath' => '/path/to/watermark/watermark.png',
+                            /** Позиция водяной метки */
+                            'watermarkPosition' => Position::CENTER,
+                            /** Компонент для работы с изображениями */
+                            'imageComponent' => 'imageComponent',
+                            /** Роль для RBAC */
+                            'accessRole' => 'role_example',
                         ],
-                ]
+                    ],
+                ],
             ],
         ];
     }

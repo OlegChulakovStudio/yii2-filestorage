@@ -8,8 +8,8 @@
 
 namespace backend\controllers\actions;
 
-use yii\base\Action;
 use chulakov\filestorage\models\Image;
+use yii\base\Action;
 
 /**
  * Class HeightenAction
@@ -20,9 +20,8 @@ class HeightenAction extends Action
     /**
      * Генерация изображения с действием heighten
      */
-    public function run()
+    public function run(): string
     {
-        /** @var Image[] $images */
         $images = Image::findAll(['group_code' => 'photos']);
 
         $links = [];

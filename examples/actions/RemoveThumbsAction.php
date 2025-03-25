@@ -8,8 +8,8 @@
 
 namespace backend\controllers\actions;
 
-use yii\base\Action;
 use chulakov\filestorage\models\Image;
+use yii\base\Action;
 
 /**
  * Class RemoveThumbsAction
@@ -20,13 +20,11 @@ class RemoveThumbsAction extends Action
     /**
      * Удаление thumbnail изображения
      */
-    public function run()
+    public function run(): void
     {
         /** @var Image $image */
         $image = Image::findOne(['id' => 1]);
 
-        if ($image) {
-            $image->removeAllThumbs();
-        }
+        $image?->removeAllThumbs();
     }
 }

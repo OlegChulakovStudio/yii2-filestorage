@@ -8,10 +8,11 @@
 
 namespace chulakov\filestorage\image;
 
-use yii\helpers\FileHelper;
-use Intervention\Image\Image;
-use Intervention\Image\Constraint;
 use chulakov\filestorage\params\ImageParams;
+use chulakov\filestorage\storage\StorageInterface;
+use Intervention\Image\Constraint;
+use Intervention\Image\Image;
+use yii\base\Exception;
 
 /**
  * Class ImageContainer
@@ -20,32 +21,22 @@ use chulakov\filestorage\params\ImageParams;
 class ImageContainer implements ImageInterface
 {
     /**
-     * @var Image
-     */
-    protected $image;
-    /**
      * Сохранено ли изображение
-     *
-     * @var bool
      */
-    protected $saved = false;
+    protected bool $saved = false;
 
     /**
      * Конструктор контейнера обработки изображения
-     *
-     * @param Image $image
      */
-    public function __construct(Image $image)
-    {
-        $this->image = $image;
-    }
+    public function __construct(
+        protected Image $image,
+        protected StorageInterface $storage,
+    ) {}
 
     /**
      * Проверка, сохранен ли файл
-     *
-     * @return bool
      */
-    public function isSaved()
+    public function isSaved(): bool
     {
         return $this->saved;
     }
@@ -53,7 +44,7 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function getWidth()
+    public function getWidth(): int
     {
         return $this->image->getWidth();
     }
@@ -61,7 +52,7 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function getHeight()
+    public function getHeight(): int
     {
         return $this->image->getHeight();
     }
@@ -69,7 +60,7 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function getMimeType()
+    public function getMimeType(): string
     {
         return $this->image->mime;
     }
@@ -77,7 +68,7 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function getExtension()
+    public function getExtension(): string
     {
         return $this->image->extension;
     }
@@ -85,7 +76,7 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function getFileSize()
+    public function getFileSize(): int|false
     {
         return $this->image->filesize();
     }
@@ -93,9 +84,9 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function watermark($watermarkPath, $position = Position::CENTER)
+    public function watermark(string $watermarkPath, string $position = Position::CENTER): void
     {
-        if (!empty($watermarkPath)) {
+        if (empty($watermarkPath) === false) {
             $this->image->insert($watermarkPath, $position);
         }
     }
@@ -103,19 +94,19 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function resize($width, $height)
+    public function resize(int $width, int $height): void
     {
         $currentWidth = $this->getWidth();
         $currentHeight = $this->getHeight();
 
-        if (!empty($width) && !empty($height)) {
+        if (empty($width) === false && empty($height) === false) {
             if ($this->checkSizeForResize($width, $height)) {
-                $this->image->resize($width, $height, function (Constraint $constraint) {
+                $this->image->resize($width, $height, static function (Constraint $constraint) {
                     $constraint->aspectRatio();
                 });
-            } elseif (!empty($width) && $currentWidth < $width) {
+            } elseif ($currentWidth < $width) {
                 $this->image->widen($currentWidth);
-            } elseif (!empty($height) && $currentHeight < $height) {
+            } elseif ($currentHeight < $height) {
                 $this->image->heighten($currentHeight);
             }
         }
@@ -124,141 +115,103 @@ class ImageContainer implements ImageInterface
     /**
      * @inheritdoc
      */
-    public function convert($encode)
+    public function convert($encode): void
     {
         $this->image->encode($encode);
     }
 
     /**
      * @inheritdoc
-     * @throws \yii\base\Exception
      */
-    public function save($path, $quality)
+    public function save(string $path, int $quality): bool
     {
-        $dir = dirname($path);
-        if (!is_dir($dir)) {
-            FileHelper::createDirectory($dir);
-        }
-        return $this->saved = (bool)$this->image->save($path, $quality);
+        return $this->saved = $this->storage->saveImage($this->image, $path, $quality);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function delete(string $path): void
+    {
+        $this->storage->removeFile($path);
     }
 
     /**
      * Получить текущее изображение
-     *
-     * @return Image
      */
-    public function getImage()
+    public function getImage(): Image
     {
         return $this->image;
     }
 
     /**
      * Проверка размера изображения
-     *
-     * @param integer $width
-     * @param integer $height
-     * @return bool
      */
-    protected function checkSizeForResize($width, $height)
+    protected function checkSizeForResize(int $width, int $height): bool
     {
         return ($this->getWidth() > $width) && ($this->getHeight() > $height);
     }
 
     /**
      * Вписывание изображения в область путем пропорционального масштабирования без обрезки
-     *
-     * @param string $savePath
-     * @param ImageParams $params
-     * @return bool
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
-    public function contain($savePath, ImageParams $params)
+    public function contain(string $savePath, ImageParams $params): bool
     {
-        if (!$this->image) {
-            return false;
-        }
         $this->image->resize(
             $params->width,
             $params->height,
-            function (Constraint $constraint) {
+            static function (Constraint $constraint) {
                 $constraint->aspectRatio();
-            }
+            },
         );
         return $this->save($savePath, $params->quality);
     }
 
     /**
      * Масштабирование по ширине без обрезки краев
-     *
-     * @param string $savePath
-     * @param ImageParams $params
-     * @return bool
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
-    public function widen($savePath, ImageParams $params)
+    public function widen(string $savePath, ImageParams $params): bool
     {
-        if (!$this->image) {
-            return false;
-        }
         $this->image->widen($params->width);
         return $this->save($savePath, $params->quality);
     }
 
     /**
      * Масштабирование по высоте без обрезки краев
-     *
-     * @param string $savePath
-     * @param ImageParams $params
-     * @return bool
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
-    public function heighten($savePath, ImageParams $params)
+    public function heighten(string $savePath, ImageParams $params): bool
     {
-        if (!$this->image) {
-            return false;
-        }
         $this->image->heighten($params->height);
         return $this->save($savePath, $params->quality);
     }
 
     /**
      * Заполнение области частью изображения с обрезкой исходного,
-     * отталкиваясь от точки позиционировани
-     *
-     * @param string $savePath
-     * @param ImageParams $params
-     * @return bool
-     * @throws \yii\base\Exception
+     * отталкиваясь от точки позиционирования
+     * @throws Exception
      */
-    public function cover($savePath, ImageParams $params)
+    public function cover(string $savePath, ImageParams $params): bool
     {
-        if (!$this->image) {
-            return false;
-        }
         $this->image->fit($params->width, $params->height, null, $params->coverPosition);
         return $this->save($savePath, $params->quality);
     }
 
     /**
      * Генерация thumbnail
-     *
-     * @param $savePath
-     * @param ImageParams $params
-     * @return bool
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
-    public function thumb($savePath, ImageParams $params)
+    public function thumb(string $savePath, ImageParams $params): bool
     {
-        if ($this->image) {
-            if (!empty($params->watermarkPath)) {
-                $this->image->insert($params->watermarkPath, $params->watermarkPosition);
-            }
-            if (!empty($params->encode)) {
-                $this->image->encode($params->encode);
-            }
-            $this->resize($params->width, $params->height);
-            return $this->save($savePath, $params->quality);
+        if (isset($params->watermarkPath)) {
+            $this->image->insert($params->watermarkPath, $params->watermarkPosition);
         }
-        return false;
+        if (isset($params->encode)) {
+            $this->image->encode($params->encode);
+        }
+        $this->resize($params->width, $params->height);
+        return $this->save($savePath, $params->quality);
     }
 }

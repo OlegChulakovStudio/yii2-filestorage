@@ -8,11 +8,13 @@
 
 namespace chulakov\filestorage\models\repositories;
 
-use chulakov\filestorage\models\File;
-use chulakov\filestorage\models\Image;
-use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\exceptions\DBModelException;
 use chulakov\filestorage\exceptions\NotFoundModelException;
+use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\models\File;
+use chulakov\filestorage\models\Image;
+use Throwable;
+use Yii;
 
 /**
  * Репозиторий обработки моделей по работе с файлами
@@ -23,12 +25,9 @@ class FileRepository
 {
     /**
      * Поиск в базе данных модели файла
-     *
-     * @param integer $id
-     * @return File|\yii\db\ActiveRecord
      * @throws NotFoundModelException
      */
-    public function getFile($id)
+    public function getFile(int|string $id): File
     {
         /** @var File $model */
         if ($model = File::find()->findById($id)->one()) {
@@ -39,12 +38,9 @@ class FileRepository
 
     /**
      * Поиск в базе данных модели изображения
-     *
-     * @param integer $id
-     * @return File|\yii\db\ActiveRecord
      * @throws NotFoundModelException
      */
-    public function getImage($id)
+    public function getImage(int|string $id): Image
     {
         /** @var Image $model */
         if ($model = Image::find()->findById($id)->one()) {
@@ -57,37 +53,43 @@ class FileRepository
 
     /**
      * Сохранение модели в базе данных
-     *
-     * @param BaseFile $file
-     * @return bool
      * @throws DBModelException
      */
-    public function save(BaseFile $file)
+    public function save(BaseFile $file, bool $throwException = true): bool
     {
-        if (!$file->save()) {
-            throw new DBModelException('Не удалось сохранить модель ' . get_class($file) . ' в базу данных.');
+        try {
+            if ($file->save() === false) {
+                throw new DBModelException('Не удалось сохранить модель ' . get_class($file) . ' в базу данных.');
+            }
+            return true;
+        } catch (Throwable $t) {
+            Yii::error($t);
+            if ($throwException) {
+                throw new DBModelException($t->getMessage(), $t->getCode(), $t->getPrevious());
+            }
+            return false;
         }
-        return true;
     }
 
     /**
      * Удаление модели в базе данных
-     *
-     * @param BaseFile $file
-     * @return bool
      * @throws DBModelException
      */
-    public function delete(BaseFile $file)
+    public function delete(BaseFile $file, bool $throwException = true): bool
     {
         try {
-            if (!$file->delete()) {
-                throw new \Exception('Не удалось удалить модель ' . get_class($file) . '::' . $file->id . ' из базы данных.');
+            if ($file->delete() === false) {
+                throw new NotFoundModelException(
+                    sprintf('Не удалось удалить модель %s::%s из базы данных.', get_class($file), $file->id),
+                );
             }
-        } catch (\Exception $e) {
-            throw new DBModelException($e->getMessage(), 0, $e);
-        } catch (\Throwable $t) {
-            throw new DBModelException($t->getMessage(), 0, $t);
+            return true;
+        } catch (Throwable $t) {
+            Yii::error($t);
+            if ($throwException) {
+                throw new DBModelException($t->getMessage(), 0, $t);
+            }
+            return false;
         }
-        return true;
     }
 }

@@ -15,17 +15,14 @@ namespace chulakov\filestorage\params;
 class ThumbParams extends ImageParams
 {
     /**
-     * @var string Категория превью
+     * Категория превью
      */
-    public $group = 'thumbs';
+    public string $group = 'thumbs';
 
     /**
      * Конструктор параметров
-     *
-     * @param integer $width
-     * @param integer $height
      */
-    public function __construct($width = 195, $height = 144)
+    public function __construct(int $width = 195, int $height = 144)
     {
         parent::__construct($width, $height);
     }
