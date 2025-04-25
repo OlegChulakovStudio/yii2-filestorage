@@ -8,15 +8,17 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use Exception;
-use chulakov\filestorage\observer\ObserverTrait;
 use chulakov\filestorage\observer\ObserverInterface;
+use chulakov\filestorage\observer\ObserverTrait;
+use Throwable;
+use yii\base\InvalidConfigException;
+use yii\web\UploadedFile as YiiUploadedFile;
 
 /**
  * Class UploadedFile
  * @package chulakov\filestorage\uploaders
  */
-class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, ObserverInterface
+class UploadedFile extends YiiUploadedFile implements UploadInterface, ObserverInterface
 {
     /**
      * Подключение реализации функционала Observer
@@ -25,19 +27,15 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
 
     /**
      * Системное имя файла
-     *
-     * @var string
      */
-    protected $sysName;
+    protected string $sysName;
 
     /**
      * Конфигурация компонента
      *
-     * @param array $config
-     * @return mixed|void
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    public function configure($config)
+    public function configure(array $config): void
     {
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
@@ -48,13 +46,13 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
     /**
      * @inheritdoc
      */
-    public function saveAs($file, $deleteFile = true)
+    public function saveAs($file, $deleteTempFile = true): bool
     {
         $result = true;
-        if ($this->beforeSave($file, $deleteFile)) {
+        if ($this->beforeSave($file, $deleteTempFile)) {
             $result = parent::saveAs($file, false);
         }
-        if ($deleteFile) {
+        if ($deleteTempFile) {
             unlink($this->getFile());
         }
         return $result;
@@ -62,12 +60,8 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
 
     /**
      * Удаление файла
-     *
-     * @param string $filePath
-     * @param Exception|null $exception
-     * @return bool
      */
-    public function deleteFile($filePath, $exception = null)
+    public function deleteFile(string $filePath, ?Throwable $exception = null): bool
     {
         if ($this->beforeDelete($filePath, $exception)) {
             if (file_exists($filePath)) {
@@ -79,88 +73,72 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
 
     /**
      * Получить ссылку на файл
-     *
-     * @return string
      */
-    public function getFile()
+    public function getFile(): string
     {
         return $this->tempName;
     }
 
     /**
-     * @return string Контент файла
+     * Получить контент файла
      */
-    public function getContent()
+    public function getContent(): string
     {
         return file_get_contents($this->tempName);
     }
 
     /**
      * Получить имя файла с расширением
-     *
-     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
      * Установка полного имени файла
-     *
-     * @param string $name
      */
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->name = $name;
     }
 
     /**
      * Получение MIME типа файла
-     *
-     * @return string
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
     /**
      * Установить mime тип файла
-     *
-     * @param string $mime
      */
-    public function setType($mime)
+    public function setType(string $mime): void
     {
         $this->type = $mime;
     }
 
     /**
      * Получение размера файла
-     *
-     * @return integer
      */
-    public function getSize()
+    public function getSize(): int
     {
         return $this->size;
     }
 
     /**
      * Установить размер файла
-     *
-     * @param integer $size
      */
-    public function setSize($size)
+    public function setSize(int $size): void
     {
         $this->size = $size;
     }
 
     /**
-     *  Получить системное имя файла
-     *
-     * @return string
+     * Получить системное имя файла
      */
-    public function getSysName()
+    public function getSysName(): string
     {
         if (empty($this->sysName)) {
             $this->sysName = uniqid();
@@ -170,21 +148,25 @@ class UploadedFile extends \yii\web\UploadedFile implements UploadInterface, Obs
 
     /**
      * Установить системное имя
-     *
-     * @param string $sysName
      */
-    public function setSysName($sysName)
+    public function setSysName(string $sysName): void
     {
         $this->sysName = $sysName;
     }
 
     /**
      * Установить расширение файла
-     *
-     * @param string $extension
      */
-    public function setExtension($extension)
+    public function setExtension(string $extension): void
     {
         $this->setName($this->getBaseName() . '.' . $extension);
+    }
+
+    /**
+     * Необходимость удаление временного файла после загрузки
+     */
+    public function needDeleteTempFile(): bool
+    {
+        return true;
     }
 }

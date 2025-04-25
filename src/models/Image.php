@@ -8,8 +8,8 @@
 
 namespace chulakov\filestorage\models;
 
-use yii\helpers\ArrayHelper;
 use chulakov\filestorage\behaviors\ImageBehavior;
+use yii\helpers\ArrayHelper;
 
 /**
  * Модель представления загруженного файла изображения
@@ -19,13 +19,13 @@ use chulakov\filestorage\behaviors\ImageBehavior;
  *
  * @method string thumb($w = 195, $h = 144, $q = 80, $p = null)
  *
- * @method string contain($w, $h, $q = 80)          Вписывание изображения в область путем пропорционального масштабирования без обрезки
+ * @method string contain($w, $h, $q = 80) Вписывание изображения в область путем пропорционального масштабирования без обрезки
  * @method string cover($w, $h, $q = 80, $p = null) Заполнение обаласти частью изображения с обрезкой исходного, отталкиваясь от точки позиционировани
- * @method string widen($w, $q = 80)                Масштабирование по ширине без обрезки краев
- * @method string heighten($h, $q = 80)             Масштабирование по высоте без обрезки краев
+ * @method string widen($w, $q = 80) Масштабирование по ширине без обрезки краев
+ * @method string heighten($h, $q = 80) Масштабирование по высоте без обрезки краев
  *
- * @method bool removeAllThumbs()                   Удаление всех превью данной модели
- * @method bool removeAllImages()                   Удаление всех превью данной мод
+ * @method bool removeAllThumbs() Удаление всех превью данной модели
+ * @method bool removeAllImages() Удаление всех превью данной мод
  *
  * @package chulakov\filestorage\models
  */
@@ -40,9 +40,8 @@ class Image extends BaseFile
      * Инициализация корректной модели файла
      *
      * @param array $row
-     * @return static
      */
-    public static function instantiate($row)
+    public static function instantiate($row): static
     {
         return new static();
     }
@@ -50,7 +49,7 @@ class Image extends BaseFile
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return ArrayHelper::merge(parent::behaviors(), [
             ImageBehavior::class,
@@ -59,13 +58,11 @@ class Image extends BaseFile
 
     /**
      * Получение информации о размерах от исходного изображения
-     *
-     * @return array
      */
-    public function getSize()
+    public function getSize(): array
     {
         if (empty($this->imageSize)) {
-            list($width, $height) = getimagesize($this->getPath());
+            [$width, $height] = getimagesize($this->getPath());
             $this->imageSize = [
                 'width' => $width,
                 'height' => $height,
@@ -76,38 +73,35 @@ class Image extends BaseFile
 
     /**
      * Получение информации о ширине изображения
-     *
-     * @return integer
      */
-    public function getWidth()
+    public function getWidth(): int
     {
         return $this->getSize()['width'];
     }
 
     /**
      * Получение информации о высоте изображения
-     *
-     * @return integer
      */
-    public function getHeight()
+    public function getHeight(): int
     {
         return $this->getSize()['height'];
     }
 
     /**
      * Корректировка размера изображения при изменении размеров
-     *
-     * @param int $width
-     * @param int $height
-     * @return array
      */
-    public function resolveSize($width = 0, $height = 0)
+    public function resolveSize(int $width = 0, int $height = 0): array
     {
-        $rw = $this->width  * ($height / $this->height);
-        $rh = $this->height * ($width  / $this->width);
+        $rw = $this->width * $height / $this->height;
+        $rh = $this->height * $width / $this->width;
         return [
-            $width  ?: $rw,
+            $width ?: $rw,
             $height ?: $rh,
         ];
+    }
+
+    public function isSvg(): bool
+    {
+        return $this->getExtension() === 'svg';
     }
 }

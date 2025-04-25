@@ -8,10 +8,11 @@
 
 namespace chulakov\filestorage\services;
 
-use yii\helpers\Url;
-use yii\helpers\FileHelper;
-use chulakov\filestorage\params\PathParams;
 use chulakov\filestorage\exceptions\NotFoundFileException;
+use chulakov\filestorage\params\PathParams;
+use yii\base\Exception;
+use yii\helpers\FileHelper;
+use yii\helpers\Url;
 
 /**
  * Сервис управления путями хранения файлов
@@ -21,101 +22,60 @@ use chulakov\filestorage\exceptions\NotFoundFileException;
 class PathService
 {
     /**
-     * Storage path
-     *
-     * @var string
-     */
-    protected $storagePath;
-    /**
-     * Папка с сохраняемыми файлами
-     *
-     * @var string
-     */
-    protected $storageDir = 'upload';
-    /**
-     * Базовый url путь
-     *
-     * @var bool
-     */
-    protected $storageBaseUrl = false;
-    /**
-     * Если заданы права, то после создания файла они будут принудительно назначены
-     *
-     * @var number|null
-     */
-    public $fileMode = 0775;
-
-    /**
      * Конструктор класса сервиса для работы с путями.
      *
-     * @param string $path
-     * @param string $storageDir
-     * @param string $storageBaseUrl
+     * @param string $storagePath Storage path
+     * @param string $storageDir Папка с сохраняемыми файлами
+     * @param string|false $storageBaseUrl Базовый url путь
+     * @param int|null $fileMode Если заданы права, то после создания файла они будут принудительно назначены
      */
-    public function __construct($path, $storageDir, $storageBaseUrl)
-    {
-        $this->storagePath = $path;
-        $this->storageDir = $storageDir;
-        $this->storageBaseUrl = $storageBaseUrl;
-    }
+    public function __construct(
+        protected string $storagePath,
+        protected string $storageDir,
+        protected string|false $storageBaseUrl,
+        protected ?int $fileMode = 0o775,
+    ) {}
 
     /**
      * Формирование относительного пути для сохранения файла
-     *
-     * @param PathParams $params
-     * @param array $extra
-     * @return string
      */
-    public function savedPath(PathParams $params, $extra = [])
+    public function savedPath(PathParams $params, array $extra = []): string
     {
-        $config  = $this->filterConfig($params->config());
+        $config = $this->filterConfig($params->config());
         $options = $this->filterConfig($params->options());
-        return $this->parsePattern($params->pathPattern, array_merge(
-            $config, $options, $extra
-        ));
+
+        return $this->parsePattern($params->pathPattern, array_merge($config, $options, $extra));
     }
 
     /**
      * Обновить path по паттерну
-     *
-     * @param string $path
-     * @param PathParams $params
-     * @return string
      */
-    public function makePath($path, PathParams $params)
+    public function makePath(string $path, PathParams $params): string
     {
-        return $this->parsePattern(
-            $params->pathPattern, $this->parseConfig($path, $params)
-        );
+        return $this->parsePattern($params->pathPattern, $this->parseConfig($path, $params));
     }
 
     /**
      * Получить удаляемые файлы
-     *
-     * @param string $path
-     * @param PathParams $params
-     * @return array
+     * @return string[]
      */
-    public function searchAllFiles($path, PathParams $params)
+    public function searchAllFiles(string $path, PathParams $params): array
     {
-        $patternPath = $this->getAbsolutePath($this->parsePattern(
-            $params->searchPattern, $this->parseConfig($path, $params)
-        ));
+        $patternPath = $this->getAbsolutePath(
+            $this->parsePattern($params->searchPattern, $this->parseConfig($path, $params)),
+        );
+
         return glob($patternPath);
     }
 
     /**
      * Формирование параметров для парсинга из полного пути файла
-     *
-     * @param string $path
-     * @param PathParams $params
-     * @return array
      */
-    public function parseConfig($path, PathParams $params)
+    public function parseConfig(string $path, PathParams $params): array
     {
         $name = basename($path);
         $root = dirname($path);
-        list($basename, $ext) = explode('.', $name, 2);
+        [$basename, $ext] = explode('.', $name, 2);
 
         $config = $this->filterConfig($params->config());
         $options = $this->filterConfig($params->options());
@@ -131,12 +91,8 @@ class PathService
 
     /**
      * Подстановка данных в паттерн
-     *
-     * @param string $pattern
-     * @param array $config
-     * @return string
      */
-    public function parsePattern($pattern, $config)
+    public function parsePattern(string $pattern, array $config): string
     {
         $path = trim(strtr($pattern, $config));
         $path = $this->convertSlashes($path);
@@ -145,13 +101,9 @@ class PathService
 
     /**
      * Проверка пути
-     *
-     * @param string $file
-     * @param string $uploadPath
-     * @return null|string
      * @throws NotFoundFileException
      */
-    public function findPath($file, $uploadPath)
+    public function findPath(string $file, string $uploadPath): ?string
     {
         if ($path = $this->checkSystemPath($file)) {
             return $path;
@@ -164,58 +116,46 @@ class PathService
 
     /**
      * Проверка path для получения url
-     *
-     * @param $file
-     * @param $uploadPath
-     * @param bool $isAbsolute
-     * @return string
      * @throws NotFoundFileException
      */
-    public function findUrl($file, $uploadPath, $isAbsolute = false)
+    public function findUrl(string $file, string $uploadPath, bool $isAbsolute = false): string
     {
         return $this->convertToUrl($this->findPath($file, $uploadPath), $isAbsolute);
     }
 
     /**
      * Формирование абсолютного пути до файлов с созданием новой директории, если ее еще не существует
-     *
-     * @param string $path
-     * @return string
      */
-    public function getAbsolutePath($path)
+    public function getAbsolutePath(string $path): string
     {
         return FileHelper::normalizePath(
-            implode(DIRECTORY_SEPARATOR, [
-                $this->getAbsolute(), $path,
-            ])
+            implode(DIRECTORY_SEPARATOR, [$this->getAbsolute(), $path]),
         );
     }
 
     /**
-     * Удаление файла
-     *
-     * @param string $path
+     * Удаление файла/директории
      */
-    public function removeFile($path)
+    public function removeFile(string $path): bool
     {
         if (is_file($path)) {
-            unlink($path);
+            return unlink($path);
         }
+        if (is_dir($path)) {
+            FileHelper::removeDirectory($path);
+            return true;
+        }
+
+        return false;
     }
 
     /**
      * Добавление в URL адрес исходной точки
-     *
-     * @param string $path
-     * @param bool $isAbsolute
-     * @return string
      */
-    public function convertToUrl($path, $isAbsolute = false)
+    public function convertToUrl(string $path, bool $isAbsolute = false): string
     {
         $path = $this->cutPath($path);
-        $url = $this->convertSlashes(implode('/', [
-            $this->storageDir, trim($path, '/'),
-        ]), '/');
+        $url = $this->convertSlashes(implode('/', [$this->storageDir, trim($path, '/')]), '/');
         if ($this->storageBaseUrl !== false) {
             $url = Url::to($this->storageBaseUrl . '/' . $url, true);
         } elseif ($isAbsolute) {
@@ -226,40 +166,25 @@ class PathService
 
     /**
      * Получить сокращенный путь из абсолютного
-     *
-     * @param string $path
-     * @return mixed
      */
-    public function cutPath($path)
+    public function cutPath(string $path): string
     {
-        return str_replace(
-            $this->getAbsolute(),
-            '',
-            $this->convertSlashes($path)
-        );
+        return str_replace($this->getAbsolute(), '', $this->convertSlashes($path));
     }
 
     /**
      * Фильтрация конфигураций
-     *
-     * @param array $config
-     * @return array
      */
-    public function filterConfig($config)
+    public function filterConfig(array $config): array
     {
-        return array_filter($config, function ($value) {
-            return $value !== null && $value !== '';
-        });
+        return array_filter($config, static fn ($value) => $value !== null && $value !== '');
     }
 
     /**
      * Проверка наличия директории с попыткой создать новую, если это возможно
-     *
-     * @param string $full
-     * @return boolean
-     * @throws \yii\base\Exception
+     * @throws Exception
      */
-    public function checkPath($full)
+    public function checkPath(string $full): bool
     {
         if (is_file($full)) {
             $full = dirname($full);
@@ -272,63 +197,42 @@ class PathService
 
     /**
      * Проверка существования файла
-     *
-     * @param string $path
-     * @return string|null
      */
-    protected function checkExistFile($path)
+    protected function checkExistFile(string $path): ?string
     {
         return is_file($path) ? $path : null;
     }
 
     /**
      * Проверка системного расположения файла
-     *
-     * @param string $file
-     * @return string
      */
-    protected function checkSystemPath($file)
+    protected function checkSystemPath(string $file): ?string
     {
         return $this->checkExistFile($this->getAbsolutePath($file));
     }
 
     /**
      * Проверка возможного перемещения файлов по новому шаблону
-     *
-     * @param string $file
-     * @param string $uploadPath
-     * @return string|null
      */
-    protected function checkMovedPath($file, $uploadPath)
+    protected function checkMovedPath(string $file, string $uploadPath): ?string
     {
-        return $this->checkSystemPath(implode(DIRECTORY_SEPARATOR, [
-            $uploadPath, basename($file)
-        ]));
+        return $this->checkSystemPath(implode(DIRECTORY_SEPARATOR, [$uploadPath, basename($file)]));
     }
 
     /**
      * Получить абсолютный путь
-     *
-     * @return string
      */
-    protected function getAbsolute()
+    protected function getAbsolute(): string
     {
         return $this->convertSlashes(
-            implode(DIRECTORY_SEPARATOR, [
-                $this->storagePath,
-                $this->storageDir,
-            ])
+            implode(DIRECTORY_SEPARATOR, [$this->storagePath, $this->storageDir]),
         );
     }
 
     /**
      * Конвертация пути в общий вид для ОС
-     *
-     * @param string $path
-     * @param string $slash
-     * @return string
      */
-    protected function convertSlashes($path, $slash = DIRECTORY_SEPARATOR)
+    protected function convertSlashes(string $path, string $slash = DIRECTORY_SEPARATOR): string
     {
         return str_replace(['\\', '\/'], $slash, $path);
     }

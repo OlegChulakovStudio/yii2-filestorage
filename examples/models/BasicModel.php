@@ -7,6 +7,8 @@
  */
 
 use chulakov\filestorage\models\Image;
+use yii\db\ActiveQuery;
+use yii\db\ActiveRecord;
 
 /**
  * Class BasicModel
@@ -14,12 +16,9 @@ use chulakov\filestorage\models\Image;
  * @property integer $id
  * @property Image $image
  */
-class BasicModel extends \yii\db\ActiveRecord
+class BasicModel extends ActiveRecord
 {
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getImage()
+    public function getImage(): ActiveQuery
     {
         return Image::find()->andWhere(['id' => $this->id]);
     }

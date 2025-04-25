@@ -8,12 +8,14 @@
 
 namespace chulakov\filestorage\uploaders;
 
+use Throwable;
+
 /**
  * Класс для работы с загрузкой локальных файлов
  *
  * @package chulakov\filestorage\uploaders
  */
-class LocalUploadedFile extends UploadedFile
+final class LocalUploadedFile extends UploadedFile
 {
     /**
      * Конструктор класса для работы с загрузкой локальных файлов
@@ -24,15 +26,17 @@ class LocalUploadedFile extends UploadedFile
     public function __construct($filePath, array $config = [])
     {
         $this->tempName = $filePath;
+
         parent::__construct($config);
     }
 
     /**
      * Инициализация базовых параметров файла
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
+
         $this->error = UPLOAD_ERR_OK;
         $this->setName(basename($this->tempName));
         $this->setType(mime_content_type($this->tempName));
@@ -42,9 +46,9 @@ class LocalUploadedFile extends UploadedFile
     /**
      * @inheritdoc
      */
-    public function saveAs($file, $deleteFile = false)
+    public function saveAs($file, $deleteTempFile = false): bool
     {
-        if ($this->beforeSave($file, $deleteFile)) {
+        if ($this->beforeSave($file, $deleteTempFile)) {
             return copy($this->getFile(), $file);
         }
         return false;
@@ -52,13 +56,17 @@ class LocalUploadedFile extends UploadedFile
 
     /**
      * Удаление файла
-     *
-     * @param string $filePath
-     * @param \Exception|null $exception
-     * @return bool
      */
-    public function deleteFile($filePath, $exception = null)
+    public function deleteFile(string $filePath, ?Throwable $exception = null): bool
     {
         return $this->beforeDelete($filePath, $exception);
+    }
+
+    /**
+     * Необходимость удаление временного файла после загрузки
+     */
+    public function needDeleteTempFile(): bool
+    {
+        return false;
     }
 }

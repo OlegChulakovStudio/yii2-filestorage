@@ -8,22 +8,21 @@
 
 namespace chulakov\filestorage\behaviors;
 
-use yii\rbac\Item;
-use yii\di\Instance;
-use yii\base\Behavior;
-use yii\db\ActiveRecord;
-use yii\helpers\FileHelper;
-use yii\base\ErrorException;
-use yii\base\InvalidConfigException;
+use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\FileStorage;
 use chulakov\filestorage\ImageComponent;
 use chulakov\filestorage\models\Image;
-use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\params\ImageParams;
 use chulakov\filestorage\params\PathParams;
 use chulakov\filestorage\params\ThumbParams;
-use chulakov\filestorage\params\ImageParams;
-use chulakov\filestorage\exceptions\NoAccessException;
-use chulakov\filestorage\exceptions\NotFoundFileException;
+use Exception;
+use Yii;
+use yii\base\Behavior;
+use yii\base\ErrorException;
+use yii\base\InvalidConfigException;
+use yii\db\BaseActiveRecord;
+use yii\di\Instance;
+use yii\rbac\Item;
 
 /***
  * Поведение, позволяющее модифицировать исходный файл изображения
@@ -38,43 +37,34 @@ class ImageBehavior extends Behavior
     public $owner;
     /**
      * Класс параметрической модели обработки превью
-     *
-     * @var string
      */
-    public $thumbParamsClass = 'chulakov\filestorage\params\ThumbParams';
+    public string $thumbParamsClass = 'chulakov\filestorage\params\ThumbParams';
     /**
      * Класс параметрической модели обработки изображений
-     *
-     * @var string
      */
-    public $imageParamsClass = 'chulakov\filestorage\params\ImageParams';
+    public string $imageParamsClass = 'chulakov\filestorage\params\ImageParams';
     /**
      * Название компонента для работы сохранением файлов
-     *
-     * @var string|FileStorage
      */
-    public $fileStorage = 'fileStorage';
+    public FileStorage|string $fileStorage = 'fileStorage';
     /**
      * Название компонента для работы с изображениями
-     *
-     * @var string|ImageComponent
      */
-    public $imageComponent = 'imageComponent';
+    public ImageComponent|string $imageComponent = 'imageComponent';
     /**
      * Проверка прав на доступ к файлу
-     *
-     * @var string|Item|null
      */
-    public $accessRole = null;
+    public Item|string|null $accessRole = null;
 
     /**
      * Инициализация
      *
      * @throws InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
+
         $this->fileStorage = Instance::ensure($this->fileStorage);
         $this->imageComponent = Instance::ensure($this->imageComponent);
     }
@@ -82,10 +72,10 @@ class ImageBehavior extends Behavior
     /**
      * @inheritdoc
      */
-    public function events()
+    public function events(): array
     {
         return [
-            ActiveRecord::EVENT_AFTER_DELETE => [$this, 'deleteFile']
+            BaseActiveRecord::EVENT_AFTER_DELETE => [$this, 'deleteFile'],
         ];
     }
 
@@ -95,65 +85,41 @@ class ImageBehavior extends Behavior
      * Если thumbnail закеширован, то сразу же будет выдан url на него
      * Если нет, то оригинальное сообщение будет обрезано под нужное разрешение,
      * после закешировано, и после этого будет выдано url на изображение
-     *
-     * @param integer $w
-     * @param integer $h
-     * @param integer $q
-     * @return string
      */
-    public function thumb($w = 195, $h = 144, $q = 80)
+    public function thumb(int $w = 195, int $h = 144, int $q = 80): bool|string
     {
         return $this->makeImage(__FUNCTION__, $this->buildThumbParams($w, $h, $q));
     }
 
     /**
      * Масштабирование по ширине без обрезки краев
-     *
-     * @param integer $w
-     * @param integer $q
-     * @return string
      */
-    public function widen($w, $q = 80)
+    public function widen(int $w, int $q = 80): bool|string
     {
         return $this->makeImage(__FUNCTION__, $this->buildImageParams($w, 0, $q));
     }
 
     /**
      * Масштабирование по высоте без обрезки краев
-     *
-     * @param integer $h
-     * @param integer $q
-     * @return string
      */
-    public function heighten($h, $q = 80)
+    public function heighten(int $h, int $q = 80): bool|string
     {
         return $this->makeImage(__FUNCTION__, $this->buildImageParams(0, $h, $q));
     }
 
     /**
      * Вписывание изображения в область путем пропорционального масштабирования без обрезки
-     *
-     * @param integer $w
-     * @param integer $h
-     * @param integer $q
-     * @return string
      */
-    public function contain($w, $h, $q = 80)
+    public function contain(int $w, int $h, int $q = 80): bool|string
     {
         return $this->makeImage(__FUNCTION__, $this->buildImageParams($w, $h, $q));
     }
 
     /**
-     * Заполнение обаласти частью изображения с обрезкой исходного,
-     * отталкиваясь от точки позиционировани
-     *
-     * @param integer $w
-     * @param integer $h
-     * @param integer $q
-     * @param string|null $p
-     * @return string
+     * Заполнение области частью изображения с обрезкой исходного,
+     * отталкиваясь от точки позиционировании
      */
-    public function cover($w, $h, $q = 80, $p = null)
+    public function cover(int $w, int $h, int $q = 80, ?string $p = null): bool|string
     {
         return $this->makeImage(__FUNCTION__, $this->buildImageParams($w, $h, $q, $p));
     }
@@ -163,7 +129,7 @@ class ImageBehavior extends Behavior
      *
      * @throws ErrorException
      */
-    public function deleteFile()
+    public function deleteFile(): void
     {
         $this->removeAllThumbs();
         $this->removeAllImages();
@@ -174,9 +140,9 @@ class ImageBehavior extends Behavior
      *
      * @throws ErrorException
      */
-    public function removeAllThumbs()
+    public function removeAllThumbs(): bool
     {
-        return $this->removeAllFiles($this->buildThumbParams(0, 0));
+        return $this->removeAllFiles($this->buildThumbParams());
     }
 
     /**
@@ -184,42 +150,23 @@ class ImageBehavior extends Behavior
      *
      * @throws ErrorException
      */
-    public function removeAllImages()
+    public function removeAllImages(): bool
     {
-        return $this->removeAllFiles($this->buildImageParams(0, 0));
+        return $this->removeAllFiles($this->buildImageParams());
     }
 
     /**
      * Удалить файлы по указанному параметру
-     *
-     * @param PathParams $params
-     * @return bool
-     * @throws ErrorException
      */
-    public function removeAllFiles(PathParams $params)
+    public function removeAllFiles(PathParams $params): bool
     {
-        $origPath = $this->getFullSysPath();
-        $files = $this->fileStorage->searchAllFiles($origPath, $params);
-        foreach ($files as $file) {
-            if (file_exists($file)) {
-                $dirName = dirname($file);
-                if (is_dir($dirName)) {
-                    FileHelper::removeDirectory($dirName);
-                }
-            }
-        }
-        return true;
+        return $this->fileStorage->removeAllFiles($this->owner, $params);
     }
 
     /**
      * Генерация параметров для thumbnails
-     *
-     * @param integer $w
-     * @param integer $h
-     * @param integer $q
-     * @return ThumbParams
      */
-    protected function buildThumbParams($w, $h, $q = 0)
+    protected function buildThumbParams(int $w = 0, int $h = 0, int $q = 0): ImageParams|ThumbParams
     {
         return $this->buildParams($this->thumbParamsClass, $w, $h, $q);
     }
@@ -233,7 +180,7 @@ class ImageBehavior extends Behavior
      * @param string|null $p Position
      * @return mixed
      */
-    protected function buildImageParams($w, $h, $q = 0, $p = null)
+    protected function buildImageParams(int $w = 0, int $h = 0, int $q = 0, ?string $p = null): mixed
     {
         return $this->buildParams($this->imageParamsClass, $w, $h, $q, $p);
     }
@@ -241,20 +188,20 @@ class ImageBehavior extends Behavior
     /**
      * Автоматическая обработка изображения в зависимости от наличия параметров
      *
-     * @param string $class
+     * @param class-string $class Класс параметров который будет создан
      * @param integer $w Width
      * @param integer $h Height
      * @param integer $q Quality
      * @param string|null $p Position
-     * @return PathParams|ImageParams|ThumbParams
      */
-    protected function buildParams($class, $w, $h, $q = 80, $p = null)
+    protected function buildParams(string $class, int $w, int $h, int $q = 80, ?string $p = null): ImageParams
     {
+        /** @var ImageParams $params */
         $params = new $class($w, $h);
         if ($q > 0) {
             $params->quality = $q;
         }
-        if (!empty($p)) {
+        if (isset($p)) {
             $params->coverPosition = $p;
         }
         return $params;
@@ -262,20 +209,14 @@ class ImageBehavior extends Behavior
 
     /**
      * Получить путь к изображению по его параметрам
-     *
-     * @param string $method
-     * @param ImageParams $params
-     * @return string
-     * @throws
      */
-    protected function makeImage($method, ImageParams $params)
+    protected function makeImage(string $method, ImageParams $params): bool|string
     {
-        /** @var BaseFile $model */
         $model = $this->owner;
-        if (!$model->isImage()) {
+        if ($model->isImage() === false) {
             return $this->getNoImage($params->width, $params->height);
         }
-        if ($model->getExtension() == 'svg') {
+        if ($model->isSvg()) {
             return $model->getUrl();
         }
 
@@ -283,40 +224,34 @@ class ImageBehavior extends Behavior
             $path = $this->getFilePath();
             $params->addOption('type', $method);
             $savePath = $this->fileStorage->getAbsolutePath(
-                $this->makePath($path, $params)
+                $this->makePath($path, $params),
             );
-            if (!is_file($savePath)) {
+            if ($this->existFile($savePath) === false) {
                 $image = $this->imageComponent->make($path);
-                if (!method_exists($image, $method)) {
+                if (method_exists($image, $method) === false) {
                     return $this->getNoImage($params->width, $params->height);
                 }
                 $image->{$method}($savePath, $params);
             }
             return $this->convertToUrl($savePath);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
+            Yii::error($e);
             return $this->getNoImage($params->width, $params->height);
         }
     }
 
     /**
      * URL до превью
-     *
-     * @param string $path
-     * @return string
      */
-    protected function convertToUrl($path)
+    protected function convertToUrl(string $path): string
     {
         return $this->fileStorage->convertToUrl($path);
     }
 
     /**
      * Парсинг пути для сохранения
-     *
-     * @param string $path
-     * @param ImageParams $params
-     * @return string
      */
-    protected function makePath($path, $params)
+    protected function makePath(string $path, ImageParams $params): string
     {
         return $this->fileStorage->makePath($path, $params);
     }
@@ -324,38 +259,26 @@ class ImageBehavior extends Behavior
     /**
      * Получить путь к файлу по модели
      *
-     * @return string
      * @throws NoAccessException
-     * @throws NotFoundFileException
-     * @throws InvalidConfigException
      */
-    protected function getFilePath()
+    protected function getFilePath(): string
     {
         return $this->fileStorage->getFilePath($this->owner, $this->accessRole);
     }
 
     /**
-     * Получить полный путь системного файла
-     *
-     * @return string
-     */
-    protected function getFullSysPath()
-    {
-        return $this->fileStorage->getFullSysPath($this->owner);
-    }
-
-    /**
      * Получение No Image файла
-     *
-     * @param integer $width
-     * @param integer $height
-     * @return bool|string
      */
-    protected function getNoImage($width = 50, $height = 50)
+    protected function getNoImage(int $width = 50, int $height = 50): bool|string
     {
         if ($this->owner->isImage()) {
-            list($width, $height) = $this->owner->resolveSize($width, $height);
+            [$width, $height] = $this->owner->resolveSize($width, $height);
         }
         return $this->fileStorage->getNoImage($width, $height);
+    }
+
+    protected function existFile(string $savePath): bool
+    {
+        return $this->fileStorage->existFile($savePath);
     }
 }

@@ -17,37 +17,29 @@ use yii\base\UnknownPropertyException;
 class PathParams
 {
     /**
-     * @var string Категория превью
+     * Категория превью
      */
-    public $group = 'cache';
+    public string $group = 'cache';
     /**
      * Шаблон сохранения thumbnails файлов
-     *
-     * @var string
      */
-    public $pathPattern = '{relay}/{group}/{basename}.{ext}';
+    public string $pathPattern = '{relay}/{group}/{basename}.{ext}';
     /**
      * Шаблон удаления файлов.
-     * Испольует glob для поиска всех файлов.
-     *
-     * @var string
+     * Использует glob для поиска всех файлов.
      */
-    public $searchPattern = '{relay}/{group}/{basename}*';
+    public string $searchPattern = '{relay}/{group}/{basename}*';
 
     /**
      * Расширенные опции.
-     * Добавлюяются последними и переопределяют все вышестоящие токены
-     *
-     * @var array
+     * Добавляются последними и переопределяют все вышестоящие токены
      */
-    protected $options = [];
+    protected array $options = [];
 
     /**
      * Получение расширенного списка параметров для генерации пути файла
-     *
-     * @return array
      */
-    public function config()
+    public function config(): array
     {
         return [
             '{group}' => $this->group,
@@ -56,43 +48,34 @@ class PathParams
 
     /**
      * Получение динамических опций
-     *
-     * @return array
      */
-    public function options()
+    public function options(): array
     {
         return $this->options;
     }
 
     /**
      * Назначение токена для генерации пути
-     *
-     * @param string $name
-     * @param string $value
      */
-    public function addOption($name, $value)
+    public function addOption(string $name, string $value): void
     {
         $this->options['{' . $name . '}'] = $value;
     }
 
     /**
      * Массовое назначение токенов для генерации пути
-     *
-     * @param $options
      */
-    public function setOptions($options)
+    public function setOptions(array $options): void
     {
-        foreach ((array)$options as $name => $option) {
+        foreach ($options as $name => $option) {
             $this->addOption($name, $option);
         }
     }
 
     /**
      * Конфигурирование
-     *
-     * @param array $config
      */
-    public function configure($config)
+    public function configure(array $config): void
     {
         foreach ($config as $key => $value) {
             $this->{$key} = $value;
@@ -101,12 +84,9 @@ class PathParams
 
     /**
      * Установка значения через функцию сеттера
-     *
-     * @param string $name
-     * @param mixed $value
      * @throws UnknownPropertyException
      */
-    public function __set($name, $value)
+    public function __set(string $name, mixed $value): void
     {
         $setter = 'set' . $name;
         if (method_exists($this, $setter)) {

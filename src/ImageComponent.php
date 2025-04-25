@@ -8,10 +8,11 @@
 
 namespace chulakov\filestorage;
 
-use yii\base\Component;
-use Intervention\Image\ImageManager;
-use chulakov\filestorage\params\ImageParams;
 use chulakov\filestorage\image\ImageContainer;
+use chulakov\filestorage\params\ImageParams;
+use chulakov\filestorage\storage\StorageInterface;
+use Intervention\Image\ImageManager;
+use yii\base\Component;
 
 /**
  * Class ImageComponent
@@ -22,70 +23,63 @@ class ImageComponent extends Component
     /**
      * Драйвер обработки изображений - GD
      */
-    const DRIVER_GD = 'gd';
+    public const DRIVER_GD = 'gd';
     /**
      * Драйвер обработки изображений - Imagick
      */
-    const DRIVER_IMAGICK = 'imagick';
+    public const DRIVER_IMAGICK = 'imagick';
 
     /**
-     * @var array Конфигурация драйвера
+     * Конфигурация драйвера
      */
+    public string|array $driver = self::DRIVER_GD;
+    protected ?ImageManager $manager = null;
 
-    public $driver = self::DRIVER_GD;
-
-    /**
-     * @var ImageManager
-     */
-    protected $manager;
+    public function __construct(
+        private readonly StorageInterface $storage,
+        $config = [],
+    ) {
+        parent::__construct($config);
+    }
 
     /**
      * Установить изображение в компонент
-     *
-     * @param string $file
-     * @return ImageContainer
      */
-    public function make($file)
+    public function make(string $file): ImageContainer
     {
         $image = $this->getManager()->make($file);
-        return new ImageContainer($image);
+        return new ImageContainer($image, $this->storage);
     }
 
     /**
      * Создание изображения
-     *
-     * @param string $path
-     * @param ImageParams $params
-     * @return ImageContainer
      */
-    public function createImage($path, ImageParams $params)
+    public function createImage(string $path, ImageParams $params): ImageContainer
     {
-        if ($image = $this->make($path)) {
-            if (!empty($params->watermarkPath)) {
-                $image->watermark($params->watermarkPath, $params->watermarkPosition);
-            }
-            if (!empty($params->extension)) {
-                $image->convert($params->extension);
-            }
-            $image->resize($params->width, $params->height);
-            return $image;
+        $image = $this->make($path);
+
+        if (isset($params->watermarkPath)) {
+            $image->watermark($params->watermarkPath, $params->watermarkPosition);
         }
-        return null;
+        if (isset($params->extension)) {
+            $image->convert($params->extension);
+        }
+        $image->resize($params->width, $params->height);
+        return $image;
     }
 
     /**
      * Инициализация и конфигурация менеджера изображений
-     *
-     * @return ImageManager
      */
-    protected function getManager()
+    protected function getManager(): ImageManager
     {
-        if (is_null($this->manager)) {
-            $config = [
-                'driver' => $this->driver,
-            ];
-            $this->manager = new ImageManager($config);
-        }
-        return $this->manager;
+        return $this->manager ??= $this->makeManager();
+    }
+
+    protected function makeManager(): ImageManager
+    {
+        return new ImageManager([
+            'driver' => $this->driver,
+        ]);
     }
 }

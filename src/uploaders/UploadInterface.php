@@ -8,7 +8,7 @@
 
 namespace chulakov\filestorage\uploaders;
 
-use Exception;
+use Throwable;
 use yii\base\Model;
 
 /**
@@ -19,18 +19,15 @@ interface UploadInterface
 {
     /**
      * Конфигурирование загрузчика
-     *
-     * @param array $config
-     * @return mixed
      */
-    public function configure($config);
+    public function configure(array $config): void;
 
     /**
      * Инициализация одной модели
      *
      * @param Model $model
      * @param string $attribute
-     * @return mixed
+     * @return UploadInterface
      */
     public static function getInstance($model, $attribute);
 
@@ -39,7 +36,7 @@ interface UploadInterface
      *
      * @param Model $model
      * @param string $attribute
-     * @return mixed
+     * @return UploadInterface[]
      */
     public static function getInstances($model, $attribute);
 
@@ -47,15 +44,15 @@ interface UploadInterface
      * Инициализация одной модели по имени атрибута
      *
      * @param string $name
-     * @return mixed
+     * @return UploadInterface
      */
     public static function getInstanceByName($name);
 
     /**
      * Инициализация массива моделей по имени атрибута
      *
-     * @param string $name
-     * @return mixed
+     * @param string|array $name
+     * @return UploadInterface[]
      */
     public static function getInstancesByName($name);
 
@@ -64,23 +61,18 @@ interface UploadInterface
      *
      * @param string $file
      * @param bool $deleteTempFile
-     * @return mixed
      */
-    public function saveAs($file, $deleteTempFile = true);
+    public function saveAs($file, $deleteTempFile = true): bool;
 
     /**
-     *  Путь до файла
-     *
-     * @return string
+     * Путь до файла
      */
-    public function getFile();
+    public function getFile(): string;
 
     /**
      * Контент файла
-     *
-     * @return string
      */
-    public function getContent();
+    public function getContent(): string;
 
     /**
      * Получение информации об оригинальном именовании файла
@@ -91,30 +83,23 @@ interface UploadInterface
 
     /**
      * Получить оригинальное имя файла
-     *
-     * @return mixed
      */
-    public function getSysName();
+    public function getSysName(): string;
 
     /**
      * Установить системное имя
-     * @param string $sysName
      */
-    public function setSysName($sysName);
+    public function setSysName(string $sysName): void;
 
     /**
      * Получить имя файла с расширением
-     *
-     * @return string
      */
-    public function getName();
+    public function getName(): string;
 
     /**
      * Установка полного имени файла
-     *
-     * @param string $name
      */
-    public function setName($name);
+    public function setName(string $name): void;
 
     /**
      * Получение расширения файла
@@ -125,44 +110,36 @@ interface UploadInterface
 
     /**
      * Установить расширение файла
-     * @param string $extension
      */
-    public function setExtension($extension);
+    public function setExtension(string $extension): void;
 
     /**
      * Получение MIME типа файла
-     *
-     * @return string
      */
-    public function getType();
+    public function getType(): string;
 
     /**
      * Установить mime тип файла
-     *
-     * @param string $mime
      */
-    public function setType($mime);
+    public function setType(string $mime): void;
 
     /**
      * Получение размера файла
-     *
-     * @return integer
      */
-    public function getSize();
+    public function getSize(): int;
 
     /**
      * Установить размер файла
-     *
-     * @param integer $size
      */
-    public function setSize($size);
+    public function setSize(int $size): void;
 
-    /**ы
+    /**
      * Удаление зависимостей файла
-     *
-     * @param string $savedPath
-     * @param Exception|null $exception
-     * @return bool|mixed
      */
-    public function deleteFile($savedPath, $exception = null);
+    public function deleteFile(string $filePath, ?Throwable $exception = null): bool;
+
+    /**
+     * Необходимость удаление временного файла
+     */
+    public function needDeleteTempFile(): bool;
 }

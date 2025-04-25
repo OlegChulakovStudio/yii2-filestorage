@@ -8,56 +8,49 @@
 
 namespace chulakov\filestorage\observer;
 
+use Exception;
+use yii\base\Event as BaseEvent;
+
 /**
  * Событие загрузки и обработки файлов
  *
  * @package chulakov\filestorage\observer
  */
-class Event extends \yii\base\Event
+class Event extends BaseEvent
 {
     /**
      * Событие сохранения
      */
-    const SAVE_EVENT = 'eventUploadSave';
+    public const SAVE_EVENT = 'eventUploadSave';
     /**
      * Событие удаления
      */
-    const DELETE_EVENT = 'eventUploadDelete';
+    public const DELETE_EVENT = 'eventUploadDelete';
 
     /**
      * Нужно ли сохранить
-     *
-     * @var bool
      */
-    public $needSave = true;
+    public bool $needSave = true;
     /**
      * Нужно ли удалить
-     *
-     * @var bool
      */
-    public $needDelete = false;
+    public bool $needDelete = false;
     /**
      * Путь
-     *
-     * @var string
      */
-    public $savedPath;
+    public ?string $savedPath = null;
     /**
      * Причина вызова события
-     *
-     * @var \Exception
      */
-    public $exception;
+    public ?Exception $exception = null;
 
     /**
      * Конструктор события
-     *
-     * @param object $sender
-     * @param array $config
      */
-    public function __construct($sender, $config = [])
+    public function __construct(object $sender, array $config = [])
     {
         $this->sender = $sender;
+
         parent::__construct($config);
     }
 }

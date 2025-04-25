@@ -9,20 +9,21 @@
 namespace chulakov\filestorage\observer;
 
 use chulakov\filestorage\models\BaseFile;
+use yii\base\Event;
 
-class SaveModelEvent extends \yii\base\Event
+class SaveModelEvent extends Event
 {
     /**
      * Событие обработки модели перед ее сохранением в базу данных
      */
-    const BEFORE_MODEL_SAVE = 'beforeModelSave';
+    public const BEFORE_MODEL_SAVE = 'beforeModelSave';
     /**
      * Событие обработки модели после ее сохранения в базу данных
      */
-    const AFTER_MODEL_SAVE = 'afterModelSave';
+    public const AFTER_MODEL_SAVE = 'afterModelSave';
 
     /**
-     * @var BaseFile
+     * Модель файла
      */
-    public $model;
+    public ?BaseFile $model = null;
 }

@@ -6,8 +6,8 @@
  * @link http://chulakov.com/
  */
 
-use yii\web\Controller;
 use yii\web\BadRequestHttpException;
+use yii\web\Controller;
 
 /**
  * Класс контроллер для загрузки файла
@@ -20,14 +20,17 @@ class LoadController extends Controller
      * @return string
      * @throws BadRequestHttpException
      */
-    public function actionIndex()
+    public function actionIndex(): string
     {
         $form = new ImageForm();
 
-        if (\Yii::$app->request->isPost) {
-            $form->load(\Yii::$app->request->post(), ''); // Загрузка параметров
-            if ($form->validate() && $form->upload()) { // Валидация и загрузка файлов
-                return json_encode(['success' => true]); // Выдача сообщения о успешной загрузке
+        if (Yii::$app->request->isPost) {
+            /** Загрузка параметров */
+            $form->load(Yii::$app->request->post(), '');
+            /** Валидация и загрузка файлов */
+            if ($form->validate() && $form->upload()) {
+                /** Выдача сообщения об успешной загрузке */
+                return json_encode(['success' => true]);
             }
         }
 

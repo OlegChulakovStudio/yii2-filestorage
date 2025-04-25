@@ -8,8 +8,8 @@
 
 namespace chulakov\filestorage\managers;
 
-use yii\helpers\FileHelper;
 use chulakov\filestorage\observer\Event;
+use Exception;
 
 /**
  * Class ThumbsManager
@@ -22,28 +22,26 @@ class ThumbsManager extends AbstractImageManager
      *
      * @var integer
      */
-    public $width = 192;
+    public int $width = 192;
     /**
      * Высота
      *
      * @var integer
      */
-    public $height = 144;
+    public int $height = 144;
 
     /**
      * Класс параметров
      *
      * @var string
      */
-    public $imageParamsClass = 'chulakov\filestorage\params\ThumbParams';
+    public string $imageParamsClass = 'chulakov\filestorage\params\ThumbParams';
 
     /**
      * Событие на сохранение thumbnail
-     *
-     * @param Event $event
-     * @throws \Exception
+     * @throws Exception
      */
-    public function handle(Event $event)
+    public function handle(Event $event): void
     {
         if ($this->validate($event->sender)) {
             $this->processing();
@@ -52,19 +50,13 @@ class ThumbsManager extends AbstractImageManager
     }
 
     /**
-     * @param Event $event
-     * @throws \Exception
+     * @throws Exception
      */
-    public function handleDelete(Event $event)
+    public function handleDelete(Event $event): void
     {
         if ($this->validate($event->sender)) {
             $path = $this->updatePath($event->savedPath);
-            if (is_file($path)) {
-                $path = dirname($path);
-            }
-            if (is_dir($path)) {
-                FileHelper::removeDirectory($path);
-            }
+            $this->deleteImage($path);
         }
     }
 }

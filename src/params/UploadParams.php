@@ -8,6 +8,8 @@
 
 namespace chulakov\filestorage\params;
 
+use yii\rbac\Item;
+
 /**
  * Class UploadParams
  * @package chulakov\filestorage\params
@@ -16,64 +18,46 @@ class UploadParams
 {
     /**
      * Категория файла
-     *
-     * @var string
      */
-    public $group_code;
+    public string $group_code;
     /**
      * Идентификатор родительской модели
-     *
-     * @var integer
      */
-    public $object_id = 0;
+    public int $object_id = 0;
     /**
      * Тип объекта
-     *
-     * @var string
      */
-    public $object_type = null;
+    public ?string $object_type = null;
     /**
      * Класс модели, который необходимо создать при сохранении информации о файле
-     *
-     * @var string
      */
-    public $modelClass = null;
+    public ?string $modelClass = null;
     /**
      * Роль доступа
-     *
-     * @var string
      */
-    public $accessRole = null;
+    public Item|string|null $accessRole = null;
     /**
      * Шаблон сохранения thumbnails файлов
-     *
-     * @var string
      */
-    public $pathPattern;
+    public ?string $pathPattern = null;
     /**
      * Расширенные опции.
-     * Добавлюяются последними и переопределяют все вышестоящие токены
-     *
-     * @var array
+     * Добавляются последними и переопределяют все вышестоящие токены
      */
-    public $options = [];
+    public array $options = [];
 
     /**
      * Базовый конструктор параметров генерации пути
-     *
-     * @param string $group
      */
-    public function __construct($group = 'default')
+    public function __construct(string $group = 'default')
     {
         $this->group_code = $group;
     }
 
     /**
      * Получение всех настроек для формирования пути
-     *
-     * @return array
      */
-    public function options()
+    public function options(): array
     {
         $options = [];
         foreach ($this->options as $name => $value) {

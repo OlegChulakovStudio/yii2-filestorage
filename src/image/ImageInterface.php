@@ -12,54 +12,38 @@ interface ImageInterface
 {
     /**
      * Получить ширину
-     *
-     * @return int
      */
-    public function getWidth();
+    public function getWidth(): int;
 
     /**
      * Получить высоту
-     *
-     * @return int
      */
-    public function getHeight();
+    public function getHeight(): int;
 
     /**
      * Получение информации о текущем типе файла
-     *
-     * @return string
      */
-    public function getMimeType();
+    public function getMimeType(): string;
 
     /**
      * Получение расширения файла
-     *
-     * @return string
      */
-    public function getExtension();
+    public function getExtension(): string;
 
     /**
      * Получение размера изображения
-     *
-     * @return mixed
      */
-    public function getFileSize();
+    public function getFileSize(): int|false;
 
     /**
      * Нанесение водяной метки на изображение
-     *
-     * @param string $watermarkPath
-     * @param string $position
      */
-    public function watermark($watermarkPath, $position = Position::CENTER);
+    public function watermark(string $watermarkPath, string $position = Position::CENTER): void;
 
     /**
      * Изменить размер изображения
-     *
-     * @param integer $width
-     * @param integer $height
      */
-    public function resize($width, $height);
+    public function resize(int $width, int $height): void;
 
     /**
      * Изменение кодировки изображения
@@ -78,14 +62,15 @@ interface ImageInterface
      *
      * @param $encode
      */
-    public function convert($encode);
+    public function convert($encode): void;
 
     /**
      * Сохранение файла
-     *
-     * @param string $path
-     * @param integer $quality
-     * @return boolean
      */
-    public function save($path, $quality);
+    public function save(string $path, int $quality): bool;
+
+    /**
+     * Удаление файла
+     */
+    public function delete(string $path): void;
 }

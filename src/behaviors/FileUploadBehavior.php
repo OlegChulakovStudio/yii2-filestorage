@@ -8,18 +8,22 @@
 
 namespace chulakov\filestorage\behaviors;
 
-use yii\rbac\Item;
-use yii\base\Model;
-use yii\di\Instance;
-use yii\base\Behavior;
-use yii\db\ActiveRecord;
-use yii\base\InvalidConfigException;
-use chulakov\filestorage\FileStorage;
-use chulakov\filestorage\params\UploadParams;
-use chulakov\filestorage\observer\UploadEvent;
-use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\exceptions\NoAccessException;
 use chulakov\filestorage\exceptions\NotUploadFileException;
+use chulakov\filestorage\FileStorage;
+use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\observer\UploadEvent;
+use chulakov\filestorage\params\UploadParams;
+use chulakov\filestorage\uploaders\UploadInterface;
+use Closure;
+use Exception;
+use Yii;
+use yii\base\Behavior;
+use yii\base\InvalidConfigException;
+use yii\base\Model;
+use yii\db\ActiveRecord;
+use yii\di\Instance;
+use yii\rbac\Item;
 
 /**
  * Поведение автоматической инициализации файла и загрузки его согласно настроек
@@ -32,78 +36,36 @@ class FileUploadBehavior extends Behavior
      * @var Model|ActiveRecord
      */
     public $owner;
-    /**
-     * @var string
-     */
-    public $attribute = 'file';
-    /**
-     * @var string
-     */
-    public $name;
-    /**
-     * @var string
-     */
-    public $group = 'default';
-    /**
-     * @var string
-     */
-    public $type = null;
-    /**
-     * @var bool
-     */
-    public $skipOnEmpty = false;
-    /**
-     * @var bool Устанавливать ошибку вместо исключения
-     */
-    public $setErrors = false;
-    /**
-     * @var string
-     */
-    public $uploadClass = 'chulakov\filestorage\params\UploadParams';
-    /**
-     * @var string
-     */
-    public $uploadPattern;
+    public string $attribute = 'file';
+    public ?string $name = null;
+    public string $group = 'default';
+    public ?string $type = null;
+    public bool $skipOnEmpty = false;
+    public bool $setErrors = false;
+    public string $uploadClass = 'chulakov\filestorage\params\UploadParams';
+    public ?string $uploadPattern = null;
     /**
      * @var array|callable
      */
     public $uploadOptions;
+    public string|UploadInterface $repository = 'chulakov\filestorage\uploaders\UploadedFile';
+    public array $repositoryOptions = [];
+    public FileStorage|string|array $fileStorage = 'fileStorage';
+    public Item|string|null $accessRole = null;
     /**
-     * @var string|UploadInterface
+     * Класс модели, который необходимо создать при сохранении информации о файле
      */
-    public $repository = 'chulakov\filestorage\uploaders\UploadedFile';
-    /**
-     * @var array
-     */
-    public $repositoryOptions = [];
-    /**
-     * @var string|array|FileStorage
-     */
-    public $fileStorage = 'fileStorage';
-    /**
-     * @var string|Item
-     */
-    public $accessRole = null;
-    /**
-     * @var string Класс модели, который необходимо создать при сохранении информации о файле
-     */
-    public $modelClass = null;
-
-    /**
-     * @var bool
-     */
-    protected $isUploaded = false;
-    /**
-     * @var bool
-     */
-    protected $isMultiple = false;
+    public ?string $modelClass = null;
+    protected bool $isUploaded = false;
+    protected bool $isMultiple = false;
 
     /**
      * @throws InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
+
         if (empty($this->attribute)) {
             throw new InvalidConfigException('Необходимо заполнить поле attribute!');
         }
@@ -116,7 +78,7 @@ class FileUploadBehavior extends Behavior
     /**
      * @inheritdoc
      */
-    public function events()
+    public function events(): array
     {
         return [
             Model::EVENT_BEFORE_VALIDATE => 'beforeValidate',
@@ -126,12 +88,14 @@ class FileUploadBehavior extends Behavior
 
     /**
      * Загрузка файлов через вызов события загрузки
+     * @return BaseFile|BaseFile[]|null
      */
-    public function upload()
+    public function upload(): BaseFile|array|null
     {
         $event = new UploadEvent();
         $this->owner->trigger(UploadEvent::UPLOAD_EVENT, $event);
-        if (!empty($event->uploadedFiles)) {
+        if (empty($event->uploadedFiles) === false) {
+            $this->owner->trigger(UploadEvent::AFTER_UPLOAD_EVENT, $event);
             if ($this->isMultiple) {
                 return $event->uploadedFiles;
             }
@@ -180,10 +144,12 @@ class FileUploadBehavior extends Behavior
         }
         try {
             /** @var UploadParams $params */
-            $params = \Yii::$container->get(
-                $this->uploadClass, [$this->group], $this->getUploadProperties()
+            $params = Yii::$container->get(
+                $this->uploadClass,
+                [$this->group],
+                $this->getUploadProperties(),
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new NotUploadFileException('Не удалось инициализировать DTO.', 0, $e);
         }
         try {
@@ -203,12 +169,12 @@ class FileUploadBehavior extends Behavior
      *
      * @return array
      */
-    protected function getUploadProperties()
+    protected function getUploadProperties(): array
     {
         $properties = [
             'object_type' => $this->type,
-            'accessRole'  => $this->accessRole,
-            'modelClass'  => $this->modelClass,
+            'accessRole' => $this->accessRole,
+            'modelClass' => $this->modelClass,
             'pathPattern' => $this->uploadPattern,
         ];
         // Идентификатор связки с моделью
@@ -221,10 +187,10 @@ class FileUploadBehavior extends Behavior
         }
         // Расширенные параметры для формирования пути сохранения
         if ($extraProperties = $this->uploadOptions) {
-            if ($extraProperties instanceof \Closure) {
+            if ($extraProperties instanceof Closure) {
                 $extraProperties = call_user_func($extraProperties, $properties);
             }
-            $properties['options'] = (array)$extraProperties;
+            $properties['options'] = (array) $extraProperties;
         }
         return $properties;
     }
@@ -242,17 +208,12 @@ class FileUploadBehavior extends Behavior
 
     /**
      * Инициализация данных для модели
-     *
-     * @return mixed
+     * @return UploadInterface
      */
     protected function getInstances()
     {
         $repository = $this->repository;
-        $file = $repository::getInstance($this->owner, $this->name);
-        if (empty($file)) {
-            $file = $repository::getInstanceByName($this->name);
-        }
-        return $file;
+        return $repository::getInstance($this->owner, $this->name);
     }
 
     /**
@@ -260,9 +221,9 @@ class FileUploadBehavior extends Behavior
      *
      * @param UploadInterface $file
      */
-    protected function configureInstances($file)
+    protected function configureInstances($file): void
     {
-        if (!empty($this->repositoryOptions)) {
+        if (empty($this->repositoryOptions) === false) {
             $file->configure($this->repositoryOptions);
         }
     }

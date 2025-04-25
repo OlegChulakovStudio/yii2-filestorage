@@ -8,8 +8,10 @@
 
 namespace chulakov\filestorage\observer;
 
-use yii\di\Instance;
+use Exception;
 use yii\base\Event as BaseEvent;
+use yii\base\InvalidConfigException;
+use yii\di\Instance;
 use yii\helpers\StringHelper;
 
 /**
@@ -20,29 +22,23 @@ trait ObserverTrait
 {
     /**
      * Слушатели
-     *
-     * @var array
      */
-    public $listeners = [];
+    public array $listeners = [];
     /**
      * Список событий
-     *
-     * @var array
      */
-    public $events = [];
+    public array $events = [];
     /**
-     * Обработчики, прикрепенные по непредсказуемому шаблону
-     *
-     * @var array
+     * Обработчики, прикрепленные по непредсказуемому шаблону
      */
-    protected $eventWildcards = [];
+    protected array $eventWildcards = [];
 
     /**
      * Инициализация слушателей
      *
-     * @throws \yii\base\InvalidConfigException
+     * @throws InvalidConfigException
      */
-    public function initListener()
+    public function initListener(): void
     {
         foreach ($this->listeners as $listener) {
             /** @var ListenerInterface $handler */
@@ -53,14 +49,10 @@ trait ObserverTrait
 
     /**
      * Привязка обработчика
-     *
-     * @param string $name
-     * @param callable $handler
-     * @param bool $append
      */
-    public function on($name, $handler, $append = true)
+    public function on(string $name, callable $handler, bool $append = true): void
     {
-        if (strpos($name, '*') !== false) {
+        if (str_contains($name, '*')) {
             if ($append || empty($this->eventWildcards[$name])) {
                 $this->eventWildcards[$name][] = $handler;
             } else {
@@ -78,27 +70,23 @@ trait ObserverTrait
 
     /**
      * Открепление обработчика
-     *
-     * @param string $name
-     * @param callable $handler
-     * @return bool
      */
-    public function off($name, $handler = null)
+    public function off(string $event, ?callable $handler = null): bool
     {
-        if (empty($this->events[$name]) && empty($this->eventWildcards[$name])) {
+        if (empty($this->events[$event]) && empty($this->eventWildcards[$event])) {
             return false;
         }
 
         if ($handler === null) {
-            unset($this->events[$name], $this->eventWildcards[$name]);
+            unset($this->events[$event], $this->eventWildcards[$event]);
             return true;
         }
 
-        if ($this->removeEvent($this->events, $name, $handler)) {
+        if ($this->removeEvent($this->events, $event, $handler)) {
             return true;
         }
 
-        if ($this->removeEvent($this->eventWildcards, $name, $handler)) {
+        if ($this->removeEvent($this->eventWildcards, $event, $handler)) {
             return true;
         }
 
@@ -107,11 +95,8 @@ trait ObserverTrait
 
     /**
      * Триггер выполнения
-     *
-     * @param string $name
-     * @param BaseEvent $event
      */
-    public function trigger($name, BaseEvent $event)
+    public function trigger(string $name, BaseEvent $event): void
     {
         $eventHandlers = [];
         foreach ($this->eventWildcards as $wildcard => $handlers) {
@@ -134,46 +119,28 @@ trait ObserverTrait
 
     /**
      * Псевдособытие сохранения
-     *
-     * @param $savedPath
-     * @param bool $deleteFile
-     * @return bool
      */
-    public function beforeSave($savedPath, $deleteFile = true)
+    public function beforeSave(string $savedPath, bool $deleteFile = true): bool
     {
-        $event = $this->createEvent(
-            $savedPath, true, $deleteFile
-        );
+        $event = $this->createEvent($savedPath, true, $deleteFile);
         $this->trigger(Event::SAVE_EVENT, $event);
         return $event->needSave;
     }
 
     /**
      * Событие удаления файлов
-     *
-     * @param string $filePath
-     * @param \Exception|null $exception
-     * @return bool
      */
-    public function beforeDelete($filePath, $exception = null)
+    public function beforeDelete(string $filePath, ?Exception $exception = null): bool
     {
-        $event = $this->createEvent(
-            $filePath, false, true, $exception
-        );
+        $event = $this->createEvent($filePath, false, true, $exception);
         $this->trigger(Event::DELETE_EVENT, $event);
         return $event->needDelete;
     }
 
     /**
      * Создание события
-     *
-     * @param string $savePath
-     * @param boolean $needSave
-     * @param boolean $needDelete
-     * @param \Exception|null $exception
-     * @return Event
      */
-    public function createEvent($savePath, $needSave, $needDelete, $exception = null)
+    public function createEvent(string $savePath, bool $needSave, bool $needDelete, ?Exception $exception = null): Event
     {
         $event = new Event($this);
         $event->savedPath = $savePath;
@@ -185,13 +152,8 @@ trait ObserverTrait
 
     /**
      * Удаление обработчика с события
-     *
-     * @param array $events
-     * @param string $name
-     * @param mixed $handler
-     * @return bool
      */
-    protected function removeEvent(&$events, $name, $handler)
+    protected function removeEvent(array &$events, string $name, callable $handler): bool
     {
         if (isset($events[$name])) {
             foreach ($events[$name] as $i => $event) {

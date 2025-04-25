@@ -6,13 +6,13 @@
  * @link http://chulakov.com/
  */
 
-use yii\base\Model;
+use chulakov\filestorage\behaviors\FileUploadBehavior;
 use chulakov\filestorage\image\Position;
-use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\managers\ImageManager;
 use chulakov\filestorage\managers\ThumbsManager;
+use chulakov\filestorage\models\BaseFile;
 use chulakov\filestorage\uploaders\RemoteUploadedFile;
-use chulakov\filestorage\behaviors\FileUploadBehavior;
+use yii\base\Model;
 
 /**
  * Class RemoteFileForm
@@ -32,49 +32,48 @@ class RemoteFileForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['link'], 'required']
+            [['link'], 'required'],
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                'class' => FileUploadBehavior::className(),
+                'class' => FileUploadBehavior::class,
                 'attribute' => 'link',
                 'group' => 'files',
                 'fileStorage' => 'fileStorage',
                 'repository' => RemoteUploadedFile::class,
                 'repositoryOptions' => [
-                    'listeners' =>
+                    'listeners' => [
                         [
-                            [
-                                'class' => ThumbsManager::className(),
-                                'encode' => 'jpg',
-                                'quality' => 80,
-                                'watermarkPath' => '/path/to/watermark/watermark.png',
-                                'watermarkPosition' => Position::CENTER,
-                                'imageComponent' => 'imageComponent',
-                            ],
-                            [
-                                'class' => ImageManager::className(),
-                                'width' => 640,
-                                'height' => 480,
-                                'encode' => 'jpg',
-                                'quality' => 100,
-                                'watermarkPath' => '/path/to/watermark/watermark.png',
-                                'watermarkPosition' => Position::CENTER,
-                                'imageComponent' => 'imageComponent',
-                                'accessRole' => 'role_example',
-                            ]
+                            'class' => ThumbsManager::class,
+                            'encode' => 'jpg',
+                            'quality' => 80,
+                            'watermarkPath' => '/path/to/watermark/watermark.png',
+                            'watermarkPosition' => Position::CENTER,
+                            'imageComponent' => 'imageComponent',
                         ],
-                ]
+                        [
+                            'class' => ImageManager::class,
+                            'width' => 640,
+                            'height' => 480,
+                            'encode' => 'jpg',
+                            'quality' => 100,
+                            'watermarkPath' => '/path/to/watermark/watermark.png',
+                            'watermarkPosition' => Position::CENTER,
+                            'imageComponent' => 'imageComponent',
+                            'accessRole' => 'role_example',
+                        ],
+                    ],
+                ],
             ],
         ];
     }

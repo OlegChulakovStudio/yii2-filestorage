@@ -18,29 +18,16 @@ interface ObserverInterface
 {
     /**
      * Триггер событий
-     *
-     * @param string $name
-     * @param BaseEvent $event
-     * @return mixed
      */
-    public function trigger($name, BaseEvent $event);
+    public function trigger(string $name, BaseEvent $event): void;
 
     /**
      * Привязка обработчика
-     *
-     * @param string $event
-     * @param callable $handle
-     * @param bool $append
-     * @return mixed
      */
-    public function on($event, $handle, $append = true);
+    public function on(string $event, callable $handle, bool $append = true): void;
 
     /**
      * Открепление обработчика
-     *
-     * @param string $event
-     * @param callable $handler
-     * @return mixed
      */
-    public function off($event, $handler = null);
+    public function off(string $event, ?callable $handler = null): bool;
 }

@@ -8,12 +8,12 @@
 
 namespace backend\managers;
 
-use Yii;
-use yii\base\BaseObject;
 use chulakov\filestorage\observer\Event;
-use chulakov\filestorage\uploaders\UploadInterface;
 use chulakov\filestorage\observer\ListenerInterface;
 use chulakov\filestorage\observer\ObserverInterface;
+use chulakov\filestorage\uploaders\UploadInterface;
+use Yii;
+use yii\base\BaseObject;
 
 /**
  * Класс(пример) майл-менеджера для оповещения пользователя о новом файле
@@ -24,10 +24,8 @@ class MailManager extends BaseObject implements ListenerInterface
 {
     /**
      * Обработка файла
-     *
-     * @param Event $event
      */
-    public function handle(Event $event)
+    public function handle(Event $event): void
     {
         if ($event->sender instanceof UploadInterface) {
             Yii::$app->mailer->compose()
@@ -41,10 +39,8 @@ class MailManager extends BaseObject implements ListenerInterface
 
     /**
      * Присоединение к Observer
-     *
-     * @param ObserverInterface $observer
      */
-    public function attach(ObserverInterface $observer)
+    public function attach(ObserverInterface $observer): void
     {
         $observer->on(Event::SAVE_EVENT, [$this, 'handle']);
     }

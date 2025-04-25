@@ -6,11 +6,11 @@
  * @link http://chulakov.com/
  */
 
+use chulakov\filestorage\uploaders\UploadInterface;
+use yii\db\StaleObjectException;
+use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\web\BadRequestHttpException;
-use chulakov\filestorage\models\Image;
-use chulakov\filestorage\uploaders\UploadInterface;
 
 /**
  * Класс контроллер для обновления файла
@@ -20,14 +20,12 @@ class UpdateController extends Controller
     /**
      * Обновление изображения
      *
-     * @param integer $id
-     * @return string
      * @throws Exception
      * @throws NotFoundHttpException
      * @throws Throwable
-     * @throws \yii\db\StaleObjectException
+     * @throws StaleObjectException
      */
-    public function actionUpdate($id)
+    public function actionUpdate(int $id): string
     {
         /** @var BasicModel $model */
         $model = BasicModel::find()->andWhere(['id' => $id])->one();
@@ -38,17 +36,21 @@ class UpdateController extends Controller
 
         $form = new FileValidatorForm($model);
 
-        if (\Yii::$app->request->isPost) {
-            $form->load(\Yii::$app->request->post(), ''); // Загрузка параметров
-            if ($form->validate() && $form->attachFile instanceof UploadInterface) { // Проверка на наличие загружаемого файла
-                /** @var Image $image */
+        if (Yii::$app->request->isPost) {
+            /** Загрузка параметров */
+            $form->load(Yii::$app->request->post(), '');
+            /** Проверка на наличие загружаемого файла */
+            if ($form->validate() && $form->attachFile instanceof UploadInterface) {
                 if ($image = $model->image) {
-                    if ($form->upload()) { // Загрузка файла
-                        $image->delete(); // Если файл уже был загружен, то удалим его
+                    /** Загрузка файла */
+                    if ($form->upload()) {
+                        /** Если файл уже был загружен, то удалим его */
+                        $image->delete();
                     }
                 }
             }
-            return json_encode(['success' => true]); // Выдача сообщения о успешной загрузке
+            /** Выдача сообщения об успешной загрузке */
+            return json_encode(['success' => true]);
         }
 
         throw new BadRequestHttpException("Ошибка при загрузке файла.");

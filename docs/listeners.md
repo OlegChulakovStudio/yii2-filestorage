@@ -128,7 +128,7 @@ function behaviors()
 {
     return [
         [
-            'class' => FileUploadBehavior::className(),
+            'class' => FileUploadBehavior::class,
             'attribute' => 'image',
             'repository' => UploadedFile::class,
             'repositoryOptions' => [

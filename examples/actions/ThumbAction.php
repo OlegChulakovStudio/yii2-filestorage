@@ -8,17 +8,16 @@
 
 namespace backend\controllers\actions;
 
-use yii\base\Action;
 use chulakov\filestorage\models\Image;
+use yii\base\Action;
 
 class ThumbAction extends Action
 {
     /**
      * Генерация thumbnail
      */
-    public function run()
+    public function run(): string
     {
-        /** @var Image[] $images */
         $images = Image::findAll(['group_code' => 'photos']);
 
         $links = [];

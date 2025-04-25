@@ -8,9 +8,12 @@
 
 namespace backend\controllers\actions;
 
-use yii\base\Action;
-use chulakov\filestorage\models\File;
 use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\models\File;
+use Exception;
+use Throwable;
+use yii\base\Action;
+use yii\db\StaleObjectException;
 
 /**
  * Class RemoveModelAction
@@ -21,11 +24,11 @@ class RemoveModelAction extends Action
     /**
      * Удаление файла
      *
-     * @throws \Exception
-     * @throws \Throwable
-     * @throws \yii\db\StaleObjectException
+     * @throws Exception
+     * @throws Throwable
+     * @throws StaleObjectException
      */
-    public function run()
+    public function run(): void
     {
         /** @var BaseFile $model */
         $model = File::findOne(['id' => 1]);
@@ -34,8 +37,6 @@ class RemoveModelAction extends Action
          * после чего удаляется все сгенерированные файлы
          * связанные с данным файлом.
          */
-        if ($model) {
-            $model->delete();
-        }
+        $model?->delete();
     }
 }

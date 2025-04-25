@@ -8,11 +8,15 @@
 
 namespace chulakov\filestorage\tests;
 
-use chulakov\filestorage\ImageComponent;
-use yii\helpers\FileHelper;
-use yii\helpers\ArrayHelper;
 use chulakov\filestorage\FileStorage;
+use chulakov\filestorage\ImageComponent;
+use chulakov\filestorage\storage\LocalStorage;
+use chulakov\filestorage\storage\StorageInterface;
 use PHPUnit\Framework\TestCase as BaseTestCase;
+use Yii;
+use yii\base\ErrorException;
+use yii\helpers\ArrayHelper;
+use yii\helpers\FileHelper;
 
 /**
  * Class TestCase
@@ -22,26 +26,30 @@ class TestCase extends BaseTestCase
 {
     /**
      * Инициализация Yii приложения
-     *
-     * @param array $config
-     * @param string $appClass
      */
-    protected function mockApplication($config = [], $appClass = '\yii\console\Application')
+    protected function mockApplication(array $config = [], string $appClass = '\yii\console\Application'): void
     {
         new $appClass(ArrayHelper::merge([
             'id' => 'testapp',
             'basePath' => __DIR__,
-            'components' => [
-                'fileStorage' => [
-                    'class' => FileStorage::className(),
-                    'storageBaseUrl' => false,
-                    'storagePath' => '@tests/runtime',
-                    'storageDir' => 'images',
+            'container' => [
+                'definitions' => [
+                    StorageInterface::class => [
+                        'class' => LocalStorage::class,
+                        '__construct()' => [
+                            'storagePath' => '@tests/runtime',
+                            'storageBaseUrl' => false,
+                            'storageDir' => 'images',
+                        ]
+                    ],
                 ],
+            ],
+            'components' => [
+                'fileStorage' => FileStorage::class,
                 'imageComponent' => [
-                    'class' => ImageComponent::className(),
-                    'driver' => ImageComponent::DRIVER_GD
-                ]
+                    'class' => ImageComponent::class,
+                    'driver' => ImageComponent::DRIVER_GD,
+                ],
             ],
             'vendorPath' => $this->getVendorPath(),
         ], $config));
@@ -49,14 +57,12 @@ class TestCase extends BaseTestCase
 
     /**
      * Получить путь к папке vendor
-     *
-     * @return string
      */
-    protected function getVendorPath()
+    protected function getVendorPath(): string
     {
-        $vendor = dirname(dirname(__DIR__)) . '/vendor';
-        if (!is_dir($vendor)) {
-            $vendor = dirname(dirname(dirname(dirname(__DIR__))));
+        $vendor = dirname(__DIR__, 2) . '/vendor';
+        if (is_dir($vendor) === false) {
+            $vendor = dirname(__DIR__, 4);
         }
         return $vendor;
     }
@@ -64,12 +70,11 @@ class TestCase extends BaseTestCase
     /**
      * Удаление сгенерированных директорий
      *
-     * @throws \yii\base\InvalidParamException
-     * @throws \yii\base\ErrorException
+     * @throws ErrorException
      */
-    protected function clearGenerateFile()
+    protected function clearGenerateFile(): void
     {
-        $dirs = glob(\Yii::getAlias('@tests/runtime/images/*'), GLOB_ONLYDIR);
+        $dirs = glob(Yii::getAlias('@tests/runtime/images/*'), GLOB_ONLYDIR);
         foreach ($dirs as $dir) {
             if (is_dir($dir)) {
                 FileHelper::removeDirectory($dir);
@@ -80,8 +85,8 @@ class TestCase extends BaseTestCase
     /**
      * Разрушить приложение
      */
-    protected function destroyApplication()
+    protected function destroyApplication(): void
     {
-        \Yii::$app = null;
+        Yii::$app = null;
     }
 }

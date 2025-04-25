@@ -8,11 +8,13 @@
 
 namespace chulakov\filestorage\exceptions;
 
+use Exception;
+
 /**
  * Не удалось найти сущность
  *
  * @package chulakov\components\exceptions
  */
-class NotFoundModelException extends \Exception
+class NotFoundModelException extends Exception
 {
 }

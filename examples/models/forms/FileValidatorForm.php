@@ -6,14 +6,14 @@
  * @link http://chulakov.com/
  */
 
+use chulakov\filestorage\behaviors\FileUploadBehavior;
+use chulakov\filestorage\models\BaseFile;
+use chulakov\filestorage\models\File;
+use chulakov\filestorage\uploaders\UploadedFile;
+use chulakov\filestorage\uploaders\UploadInterface;
+use chulakov\filestorage\validators\FileValidator;
 use yii\base\Model;
 use yii\db\ActiveRecord;
-use chulakov\filestorage\models\File;
-use chulakov\filestorage\models\BaseFile;
-use chulakov\filestorage\uploaders\UploadedFile;
-use chulakov\filestorage\validators\FileValidator;
-use chulakov\filestorage\uploaders\UploadInterface;
-use chulakov\filestorage\behaviors\FileUploadBehavior;
 
 /**
  * Класс для загрузки формы
@@ -51,13 +51,14 @@ class FileValidatorForm extends Model
     {
         // Прокидываем модель(если она есть) к которому привязываем файл.
         $this->setModel($model);
+
         parent::__construct($config);
     }
 
     /**
      * @inheritdoc
      */
-    public function init()
+    public function init(): void
     {
         if ($this->model) {
             $this->setAttributes($this->model->getAttributes([
@@ -73,7 +74,7 @@ class FileValidatorForm extends Model
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             // Проверяем, был ли загружен файл ранее или он пришел в форму.
@@ -84,11 +85,11 @@ class FileValidatorForm extends Model
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         return [
             [
-                'class' => FileUploadBehavior::className(),
+                'class' => FileUploadBehavior::class,
                 'type' => 'animal',
                 'group' => 'image',
                 'attribute' => 'attachFile',
@@ -100,20 +101,16 @@ class FileValidatorForm extends Model
 
     /**
      * Установить модель
-     *
-     * @param ActiveRecord $model
      */
-    protected function setModel($model)
+    protected function setModel(ActiveRecord $model): void
     {
         $this->model = $model;
     }
 
     /**
      * Пробрасывание ID
-     *
-     * @return int
      */
-    public function getPrimaryKey()
+    public function getPrimaryKey(): int
     {
         return !empty($this->model)
             ? $this->model->id
