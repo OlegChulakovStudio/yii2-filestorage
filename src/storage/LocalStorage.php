@@ -138,6 +138,11 @@ final class LocalStorage extends BaseStorage
 
     public function writeFileContent(string $path, string $content): bool
     {
+        $dir = dirname($path);
+        if (is_dir($dir) === false) {
+            FileHelper::createDirectory($dir);
+        }
+
         return (bool) file_put_contents($path, $content);
     }
 }
