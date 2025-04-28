@@ -116,7 +116,7 @@ final class S3Storage extends BaseStorage
             $file->beforeSave($filePath, $file->needDeleteTempFile());
         }
 
-        $this->writeFile($filePath, $file->getContent());
+        $this->writeFileContent($filePath, $file->getContent());
 
         if ($file->needDeleteTempFile()) {
             unlink($file->getFile());
@@ -125,12 +125,15 @@ final class S3Storage extends BaseStorage
         return $savePath;
     }
 
-    /**
-     * @throws FilesystemException
-     */
-    public function writeFile(string $path, string $content): void
+    public function writeFileContent(string $path, string $content): bool
     {
-        $this->fileSystem->write($path, $content);
+        try {
+            $this->fileSystem->write($path, $content);
+            return true;
+        } catch (FilesystemException $e) {
+            Yii::error($e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -208,7 +211,7 @@ final class S3Storage extends BaseStorage
     public function saveImage(Image $image, string $path, ?int $quality = null): bool
     {
         try {
-            $this->writeFile($path, $image->stream(quality: $quality)->getContents());
+            $this->writeFileContent($path, $image->stream(quality: $quality)->getContents());
             return true;
         } catch (FilesystemException $e) {
             Yii::error($e);

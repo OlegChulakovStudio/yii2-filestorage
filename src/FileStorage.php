@@ -322,4 +322,9 @@ class FileStorage extends Component
     {
         return $this->storage->existFile($filePath);
     }
+
+    public function writeFile(string $path, string $content): bool
+    {
+        return $this->storage->writeFileContent($path, $content);
+    }
 }

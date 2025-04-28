@@ -87,4 +87,9 @@ interface StorageInterface
      * Проверка существования файла
      */
     public function existFile(string $path): bool;
+
+    /**
+     * Сохранение контента файла
+     */
+    public function writeFileContent(string $path, string $content): bool;
 }
