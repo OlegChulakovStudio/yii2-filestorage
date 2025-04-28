@@ -135,4 +135,9 @@ final class LocalStorage extends BaseStorage
     {
         return is_file($path);
     }
+
+    public function writeFileContent(string $path, string $content): bool
+    {
+        return (bool) file_put_contents($path, $content);
+    }
 }
