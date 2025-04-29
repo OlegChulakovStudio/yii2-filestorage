@@ -23,6 +23,7 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\StorageAttributes;
 use Throwable;
 use Yii;
 
@@ -203,8 +204,8 @@ final class S3Storage extends BaseStorage
         $pattern = $this->pathService->parsePattern($params->searchPattern, $config);
 
         return $this->fileSystem
-            ->listContents('', true)
-            ->filter(static fn (FileAttributes $file) => $file->isFile() && fnmatch($pattern, $file->path()))
+            ->listContents(dirname($path), true)
+            ->filter(static fn (StorageAttributes $file) => $file->isFile() && fnmatch($pattern, $file->path()))
             ->toArray();
     }
 
